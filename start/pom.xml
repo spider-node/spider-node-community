@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cn.spider.framework</groupId>
+        <artifactId>spider-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>cn.spider.framework</groupId>
+    <artifactId>start</artifactId>
+    <version>${spider.version}</version>
+
+    <properties>
+        <spider.version>1.0.0-SNAPSHOT</spider.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven-jar-plugin-version>3.1.0</maven-jar-plugin-version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+        <junit-jupiter.version>5.7.0</junit-jupiter.version>
+        <vertx.version>4.4.3</vertx.version>
+    </properties>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <version>1.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-zookeeper</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-hazelcast</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+            <version>4.2.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-kubernetes</artifactId>
+            <version>2.2.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.hazelcast</groupId>
+                    <artifactId>hazelcast</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- 网关依赖 -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>gateway</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 核心组件-流程的管控与监控 -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>spider-flow</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 核心组件-跟worker通信 -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>linker-server</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 核心组件-事务组件 -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>transaction-server</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 核心组件-controller -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>controller</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 核心组件-领域功能 -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>domain</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 核心组件-log -->
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>spider-log-es</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <!--<exclusions>
+                <exclusion>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-elasticsearch</artifactId>
+                </exclusion>
+            </exclusions>-->
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.txt</include>
+                    <include>**/*.properties</include>
+                    <include>*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <!-- compiler插件参数设置，指定编码 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>utf-8</encoding>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.flow.cloud.start.SpiderStart</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--  这个插件是关键  -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <!--  这个是assembly 所在位置 -->
+                    <descriptor>src/main/assembly/assembly.xml</descriptor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin-version}</version>
+                <configuration>
+                    <archive>
+                        <!-- 生成的jar中，不要包含pom.xml和pom.properties这两个文件 -->
+                        <addMavenDescriptor>true</addMavenDescriptor>
+                        <manifest>
+                            <!-- 是否要把第三方jar放到manifest的classpath中 -->
+                            <addClasspath>true</addClasspath>
+                            <!-- 生成的manifest中classpath的前缀，填写依赖jar包相对于项目jar包的路径-->
+                            <!--我会把项目的jar包也打到lib目录下，所以这里使用当前目录-->
+                            <classpathPrefix>./</classpathPrefix>
+                            <!-- 应用的main class -->
+                            <mainClass>com.flow.cloud.start.SpiderStart</mainClass>
+                        </manifest>
+                        <!--将资源文件目录添加到classpath中，打包后运行项目时则会在该目录下加载配置文件-->
+                        <manifestEntries>
+                            <!--填写配置文件相对于项目jar包的路径-->
+                            <!--我的项目jar包在lib目录下，配置文件在和lib同级的conf目录下-->
+                            <Class-Path>../conf/</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                    <!--项目打包为jar包时排除这些文件，如果将配置文件打到jar包，则会优先读取jar包中的配置文件，不会读取conf目录下的配置文件-->
+                    <!--注意这玩意从编译结果目录开始算目录结构-->
+                    <excludes>
+                        <exclude>/*.yaml</exclude>
+                        <exclude>/*.yml</exclude>
+                        <exclude>/*.xml</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+        </plugins>
+        <finalName>spider-node-1.0.0.RELEASE</finalName>
+    </build>
+
+
+</project>

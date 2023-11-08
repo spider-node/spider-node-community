@@ -1,0 +1,47 @@
+/**
+ * 编译工具版本
+ */
+syntax = "proto3";
+/**
+ * 指定生成实体
+ */
+option java_multiple_files = true;
+/**
+ * 指定生成接口
+ */
+option java_generic_services = true;
+/**
+ * 声明包
+ */
+package cn.spider.framework.proto.grpc;
+
+/**
+ * 服务proto文件
+ */
+option java_outer_classname = "SpiderTransferServer";
+
+/**
+ * 统一返回实体
+ */
+message TransferResponse {
+  string message = 1;
+  int32 code = 2;
+  string data=3;
+}
+
+/**
+ * 声明接口
+ */
+service TransferServer {
+  rpc instruct (TransferRequest) returns (TransferResponse);
+}
+
+/**
+ * 统一请求
+ */
+message TransferRequest {
+  string header = 1;
+  string body=3;
+  string taskComponentName= 2;
+  string taskComponentVersion = 4;
+}

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>cn.spider.framework</groupId>
+    <artifactId>spider-flow</artifactId>
+    <version>${spider.version}</version>
+
+    <parent>
+        <groupId>cn.spider.framework</groupId>
+        <artifactId>spider-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <name>spider-flow</name>
+    <description>spider-flow</description>
+
+    <properties>
+        <spider.version>1.0.0-SNAPSHOT</spider.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
+        <dependency.collections.version>3.2.2</dependency.collections.version>
+        <dependency.fastjson.version>1.2.83</dependency.fastjson.version>
+        <dependency.lang3.version>3.12.0</dependency.lang3.version>
+        <dependency.guava.version>31.1-jre</dependency.guava.version>
+        <dependency.beanutils.version>1.9.4</dependency.beanutils.version>
+        <dependency.slf4j.version>1.7.30</dependency.slf4j.version>
+        <dependency.logback-classic.version>1.2.3</dependency.logback-classic.version>
+        <dependency.jcl-over-slf4j.version>1.7.30</dependency.jcl-over-slf4j.version>
+        <dependency.validator.version>6.1.7.Final</dependency.validator.version>
+        <dependency.javax.el.version>3.0.0</dependency.javax.el.version>
+        <dependency.camunda.version>7.17.0</dependency.camunda.version>
+        <dependency.reactor.version>3.4.24</dependency.reactor.version>
+        <dependency.junit.version>4.13.2</dependency.junit.version>
+        <jakarta.el.version>3.0.3</jakarta.el.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.camunda.bpm.model</groupId>
+            <artifactId>camunda-bpmn-model</artifactId>
+            <version>${dependency.camunda.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>${dependency.reactor.version}</version>
+        </dependency>
+
+
+        <!-- validator -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <scope>provided</scope>
+            <version>${dependency.validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+            <scope>provided</scope>
+            <version>${dependency.javax.el.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <scope>provided</scope>
+            <version>${dependency.javax.el.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>linker-server-sdk</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>db</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>annotation</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>container-sdk</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>transaction-server-sdk</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>controller-sdk</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,71 @@
+hostName: spider.dev.yunlizhi.net
+replicaCount: 2
+service:
+  type: ClusterIP
+  port: 8080
+  extend:
+  - name: hz-port
+    port: 5701
+    protocol: TCP
+  - name: ui-port
+    port: 6140
+    protocol: TCP
+
+resources: 
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi  
+        
+
+healthCheck:
+  enabled: true
+  readinessPath: /actuator/health
+  livenessPath: /actuator/health
+
+    
+jmx:
+  enabled: true
+  port: 8081
+  
+configs:
+  enabled: true
+  type: env
+  data:
+    TZ: Asia/Shanghai
+    SPRING_PROFILES_ACTIVE: dev
+
+anyYamls:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: hazelcast-cluster-role
+      namespace: spider-node
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - endpoints
+          - pods
+          - nodes
+          - services
+        verbs:
+          - get
+          - list
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: hazelcast-cluster-role-binding
+      namespace: spider-node
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: hazelcast-cluster-role
+    subjects:
+      - kind: ServiceAccount
+        name: spider-node-rest-service2
+        namespace: spider-node
+    

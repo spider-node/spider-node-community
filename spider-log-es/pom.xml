@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cn.spider.framework</groupId>
+        <artifactId>spider-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>cn.spider.framework</groupId>
+    <artifactId>spider-log-es</artifactId>
+    <version>${spider.version}</version>
+
+    <properties>
+        <spider.version>1.0.0-SNAPSHOT</spider.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+        <vertx.version>4.4.3</vertx.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-stack-depchain</artifactId>
+                <version>${vertx.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+        </dependency>
+
+        <!--引入es-high-level-client相关依赖  start-->
+
+        <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-elasticsearch -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-elasticsearch</artifactId>
+            <version>3.2.13.RELEASE</version>
+            <exclusions>
+
+                <exclusion>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-commons</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-buffer</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-http</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-common</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-handler</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-resolver</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-transport</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-tx</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-oxm</artifactId>
+                </exclusion>
+                <exclusion>
+
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-aop</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context-support</artifactId>
+                </exclusion>
+
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-sql-client-templates</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mysql-client</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+
+
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>6.8.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider.framework</groupId>
+            <artifactId>log-sdk</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>snack3</artifactId>
+            <version>3.2.72</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.14.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <version>2.3.7</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

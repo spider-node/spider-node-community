@@ -1,0 +1,11 @@
+include:
+  - project: 'devops/gitlabci-scaffold-pub'
+    file: '/java/springboot/maven-3-jdk-8.yml'
+
+variables:
+  ARTIFACT_PATH: start/target/spider-node-1.0.0.RELEASE.tar.gz
+  COMPILE_COMMAND: "mvn clean install -am -U -DskipTests -pl start"
+  MODULE_NAME: spider-node
+  FORCE_CI_VALUES_HOSTS: "true"
+
+
