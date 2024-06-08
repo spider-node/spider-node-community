@@ -6,7 +6,7 @@
 
     <groupId>cn.spider.framework</groupId>
     <artifactId>sdk</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${spider.version}</version>
     <packaging>pom</packaging>
     <name>spider-sdk</name>
     <description>spider-sdk</description>
@@ -14,7 +14,7 @@
     <parent>
         <groupId>cn.spider.framework</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${spider.version}</version>
     </parent>
 
     <modules>

@@ -11,14 +11,14 @@
     <parent>
         <groupId>cn.spider.framework</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${spider.version}</version>
     </parent>
 
     <name>spider-flow</name>
     <description>spider-flow</description>
 
     <properties>
-        <spider.version>1.0.0-SNAPSHOT</spider.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
@@ -81,31 +81,31 @@
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>linker-server-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>common</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>db</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>annotation</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>container-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
@@ -117,25 +117,25 @@
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>transaction-server-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>controller-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>domain-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>param-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
         <dependency>

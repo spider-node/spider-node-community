@@ -3,7 +3,7 @@
   <parent>
     <artifactId>spider-parent</artifactId>
     <groupId>cn.spider.framework</groupId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${spider.version}</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>cn.spider.framework</groupId>
@@ -21,7 +21,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>spider-node-1.0.1.RELEASE</finalName>
+    <finalName>spider-node-1.0.2.RELEASE</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -96,7 +96,6 @@
   <properties>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <spider.version>1.0.0-SNAPSHOT</spider.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>

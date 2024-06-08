@@ -11,11 +11,11 @@
     <parent>
         <groupId>cn.spider.framework</groupId>
         <artifactId>sdk</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${spider.version}</version>
     </parent>
 
     <properties>
-        <spider.version>1.0.0-SNAPSHOT</spider.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>cn.spider.framework</groupId>
             <artifactId>common</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${spider.version}</version>
         </dependency>
 
 

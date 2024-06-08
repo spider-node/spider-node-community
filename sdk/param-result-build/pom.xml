@@ -6,17 +6,17 @@
 
   <groupId>cn.spider.framework</groupId>
   <artifactId>param-result-build</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>${spider.version}</version>
 
   <parent>
     <groupId>cn.spider.framework</groupId>
     <artifactId>sdk</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${spider.version}</version>
   </parent>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spider.version>1.0.0-SNAPSHOT</spider.version>
+
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -51,13 +51,13 @@
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>common</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>annotation</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
     <dependency>

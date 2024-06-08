@@ -6,16 +6,16 @@
 
   <groupId>cn.spider.framework</groupId>
   <artifactId>spider-param</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>${spider.version}</version>
 
   <parent>
     <groupId>cn.spider.framework</groupId>
     <artifactId>spider-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${spider.version}</version>
   </parent>
 
   <properties>
-    <spider.version>1.0.0-SNAPSHOT</spider.version>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -49,26 +49,26 @@
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>common</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>db</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>domain-sdk</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
 
     <dependency>
       <groupId>cn.spider.framework</groupId>
       <artifactId>common</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${spider.version}</version>
     </dependency>
 
     <dependency>
@@ -85,7 +85,7 @@
       <dependency>
           <groupId>cn.spider.framework</groupId>
           <artifactId>param-sdk</artifactId>
-          <version>1.0.0-SNAPSHOT</version>
+          <version>${spider.version}</version>
           <scope>compile</scope>
       </dependency>
 
