@@ -50,4 +50,7 @@ public interface AreaInterface {
      * @return
      */
     Future<JsonObject> queryArea(JsonObject data);
+
+    // 查询bpmn-可部署sdk的url
+    Future<JsonObject> queryAreaSdk();
 }

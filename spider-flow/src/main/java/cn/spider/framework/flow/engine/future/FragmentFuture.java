@@ -20,7 +20,7 @@ package cn.spider.framework.flow.engine.future;
 /**
  * 流程片段 Future
  *
- * @author lykan
+ * @author dds
  */
 public interface FragmentFuture extends CancelableFuture {
 

@@ -1,8 +1,11 @@
 package cn.spider.framework.flow.business;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
+import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.flow.business.data.BusinessFunctions;
 import cn.spider.framework.flow.business.data.DerailFunctionVersion;
+import cn.spider.framework.flow.business.data.ExecuteFunctionInfo;
 import cn.spider.framework.flow.business.data.FunctionWeight;
 import cn.spider.framework.flow.business.enums.FunctionStatus;
 import cn.spider.framework.flow.business.enums.IsAsync;
@@ -37,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 public class BusinessManager {
     private MySQLPool client;
 
+    private FunctionInterface functionInterface;
+
     private RowMapper<BusinessFunctions> ROW_BUSINESS = row -> {
         BusinessFunctions businessFunctions = new BusinessFunctions();
         businessFunctions.setId(row.getString("id"));
@@ -62,8 +67,9 @@ public class BusinessManager {
             //构建cache实例
             .build();
 
-    public BusinessManager(MySQLPool client) {
+    public BusinessManager(MySQLPool client,FunctionInterface functionInterface) {
         this.client = client;
+        this.functionInterface = functionInterface;
     }
 
 
@@ -126,7 +132,7 @@ public class BusinessManager {
                     });
                     promise.complete(businessFunctionList);
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
 
@@ -195,7 +201,7 @@ public class BusinessManager {
         Promise<BusinessFunctions> promise = Promise.promise();
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", functionId);
-
+        // 查询功能版本信息
         SqlTemplate
                 .forQuery(client, "SELECT * FROM spider_function where id = #{id}")
                 .mapTo(ROW_BUSINESS)
@@ -221,4 +227,34 @@ public class BusinessManager {
 
         return promise.future();
     }
+
+    /**
+     * 从域中获取可执行的-BusinessFunctions 信息
+     */
+    public Future<BusinessFunctions> queryBusinessFunctions(String functionId) {
+        // 该spider-node版本没有支持功能多版本，-需要下个版本的规划
+        BusinessFunctions functions = cache.getIfPresent(functionId);
+        if (Objects.nonNull(functions)) {
+            return Future.succeededFuture(functions);
+        }
+        Promise<BusinessFunctions> promise = Promise.promise();
+        Future<JsonObject> functionObject = functionInterface.findExecuteFunction(new JsonObject().put("functionId", functionId));
+        functionObject.onSuccess(suss -> {
+            ExecuteFunctionInfo functionInfo = suss.mapTo(ExecuteFunctionInfo.class);
+            BusinessFunctions businessFunctions = new BusinessFunctions();
+            businessFunctions.setId(functionId);
+            businessFunctions.setStartId(functionInfo.getStartId());
+            businessFunctions.setName(functionInfo.getFunctionName());
+            businessFunctions.setIsAsync(IsAsync.AYNC);
+            businessFunctions.setResultMapping(functionInfo.getResultMapping());
+            businessFunctions.setRequestClass(functionInfo.getRequestClass());
+            cache.put(businessFunctions.getId(), businessFunctions);
+            promise.complete(businessFunctions);
+        }).onFailure(fail -> {
+            promise.fail(fail);
+        });
+        return promise.future();
+    }
+
+
 }

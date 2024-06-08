@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 /**
  * 方法调用核心
  *
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public abstract class BasicTaskCore implements Task {
@@ -122,8 +122,6 @@ public abstract class BasicTaskCore implements Task {
         if (!serviceTask.iterable() || taskServiceDef.isDemotionNode()) {
             doInvokeMethod(true, serviceTask, storyBus, role, methodWrapper, paramInjectDefs);
         }
-
-        MonitorTracking monitorTracking = storyBus.getMonitorTracking();
         Optional<Object> iteData = storyBus.getScopeDataOperator().getData(serviceTask.getIteSource()).map(d -> {
             if (!d.getClass().isArray()) {
                 return d;
@@ -178,4 +176,6 @@ public abstract class BasicTaskCore implements Task {
             LOGGER.warn("[{}] {} identity: {}", ExceptionEnum.ITERATE_ITEM_ERROR.getExceptionCode(), ExceptionEnum.ITERATE_ITEM_ERROR.getDesc(), serviceTask.identity(), e);
         }
     }
+
+
 }

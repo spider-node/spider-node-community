@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * InScopeData
  *
- * @author lykan
+ * @author dds
  */
 public class InScopeData extends RocksdbBusinessMap<Object, Object> implements ScopeData {
 

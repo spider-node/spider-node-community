@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * 服务节点资源项
  *
- * @author lykan
+ * @author dds
  */
 public class ServiceNodeResourceItem extends BasicIdentity implements ServiceNodeResourceAuth {
 

@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * - 包含网关、并行网关、结束事件支持多入度，其他元素均不支持多入度
  * - 一个流程中有且仅能有一个结束事件
  *
- * @author lykan
+ * @author dds
  */
 public class VerifyFlowPostProcessor extends DiagramTraverseSupport<Set<EndEvent>> implements StartEventPostProcessor {
 

@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * 代码方式注册简单BPMN流程图
  *
- * @author lykan
+ * @author dds
  */
 public interface BpmnDiagramRegister extends ConfigResource {
 

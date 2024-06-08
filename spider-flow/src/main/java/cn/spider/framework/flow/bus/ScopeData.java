@@ -22,7 +22,7 @@ import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 /**
  * ScopeData
  *
- * @author lykan
+ * @author dds
  */
 public interface ScopeData {
 

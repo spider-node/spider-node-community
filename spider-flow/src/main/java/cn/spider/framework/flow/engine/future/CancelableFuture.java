@@ -20,7 +20,7 @@ package cn.spider.framework.flow.engine.future;
 /**
  * 可取消的 Future
  *
- * @author lykan
+ * @author dds
  */
 public interface CancelableFuture {
 

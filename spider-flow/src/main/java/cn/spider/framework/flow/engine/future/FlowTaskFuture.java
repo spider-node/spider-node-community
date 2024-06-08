@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 主流程 FlowFuture
  *
- * @author lykan
+ * @author dds
  */
 public class FlowTaskFuture extends FragmentTaskFuture<AsyncTaskState> implements FlowFuture {
 

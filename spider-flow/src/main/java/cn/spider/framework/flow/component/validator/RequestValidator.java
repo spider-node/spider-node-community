@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  *  校验参数
  *
- * @author lykan
+ * @author dds
  */
 public class RequestValidator {
 

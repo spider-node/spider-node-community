@@ -20,7 +20,7 @@ package cn.spider.framework.flow.container;
 /**
  * 组件生命周期接口
  *
- * @author lykan
+ * @author dds
  */
 public interface ComponentLifecycle {
 

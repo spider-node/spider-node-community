@@ -52,18 +52,24 @@ public class OssConfigClient {
             OSS oss = createOssConnection();
 
             // 创建上传文件的元信息，可以通过文件元信息设置HTTP header。
-            ObjectMetadata meta = new ObjectMetadata();
-            meta.setCacheControl("no-store");
+            /*ObjectMetadata meta = new ObjectMetadata();
+            meta.setCacheControl("no-store");*/
 
-            PutObjectResult putObjectResult = oss.putObject(bucketName, path, uploadFile.getInputStream(),meta);
+            PutObjectResult putObjectResult = oss.putObject(bucketName, path, uploadFile.getInputStream());
             log.info("[OssConfigClient#upload] file:{} oss-return：{}",uploadFile.getFileName(), JSON.toJSONString(putObjectResult));
 
             // 设置签名URL过期时间，单位为毫秒,1个月可见时间
-            Date expiration = new Date(new Date().getTime() + 3600 * 1000 * 3600);
+            Date expiration = new Date(new Date().getTime() + 1000 * 3600 * 24 * 365 * 5);
             GeneratePresignedUrlRequest signRequest = new GeneratePresignedUrlRequest(bucketName, path, HttpMethod.GET);
             signRequest.setExpiration(expiration);
             URL url = oss.generatePresignedUrl(signRequest);
-            return url.toString();
+
+            String urlString = url.toString();
+
+            String substr = "?";
+
+            int index = urlString.indexOf(substr);
+            return urlString.substring(0, index);
         } finally {
             OSS oss = ossThreadLocal.get();
             if (oss != null) {

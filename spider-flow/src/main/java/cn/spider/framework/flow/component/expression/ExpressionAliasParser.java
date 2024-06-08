@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 /**
  * 表达式别名解析器
  *
- * @author lykan
+ * @author dds
  */
 public class ExpressionAliasParser {
 

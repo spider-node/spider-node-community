@@ -95,7 +95,7 @@ public class SpiderCoreStart {
     private void initContainer() {
         ContainerService containerService = applicationContext.getBean(ContainerService.class);
 
-        String containerAddr = BrokerRole.LEADER.name() + ContainerService.ADDRESS;
+        String containerAddr = ContainerService.ADDRESS;
         MessageConsumer<JsonObject> containerConsumer = this.binder
                 .setAddress(containerAddr)
                 .register(ContainerService.class, containerService);
@@ -103,7 +103,7 @@ public class SpiderCoreStart {
 
         BusinessService businessService = applicationContext.getBean(BusinessService.class);
 
-        String businessAddr = BrokerRole.LEADER.name() + BusinessService.ADDRESS;
+        String businessAddr = BusinessService.ADDRESS;
 
         this.businessConsumer = this.binder
                 .setAddress(businessAddr)

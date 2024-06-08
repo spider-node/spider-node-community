@@ -25,7 +25,7 @@ import cn.spider.framework.flow.resource.service.ServiceNodeResourceAuth;
 /**
  * TaskService Wrapper
  *
- * @author lykan
+ * @author dds
  */
 public interface TaskServiceWrapper extends RoleMatchResource {
 

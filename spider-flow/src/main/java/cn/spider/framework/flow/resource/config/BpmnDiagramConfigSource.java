@@ -28,7 +28,7 @@ import java.util.Map;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class BpmnDiagramConfigSource implements ConfigSource {
 

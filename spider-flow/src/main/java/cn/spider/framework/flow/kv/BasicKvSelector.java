@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class BasicKvSelector implements KvSelector {
 

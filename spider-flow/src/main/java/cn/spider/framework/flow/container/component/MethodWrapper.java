@@ -45,7 +45,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class MethodWrapper {
@@ -85,6 +85,7 @@ public class MethodWrapper {
         this.taskInstructWrapper = taskInstructWrapper;
         this.invokeProperties = new InvokeProperties(annotation.invoke());
         methodParser(method);
+
     }
 
     public Method getMethod() {
@@ -131,7 +132,6 @@ public class MethodWrapper {
         Parameter[] parameters = method.getParameters();
         // 获取到对应的接口-方法参数名称
         String[] parameterNames = queryParameterNames(parameters);
-        log.info("加载的参数为 {}",JSON.toJSONString(parameterNames));
         if (ArrayUtils.isNotEmpty(parameters)) {
             AssertUtil.isTrue(parameterNames != null && Objects.equals(parameters.length, parameterNames.length), ExceptionEnum.SERVICE_PARAM_ERROR,
                     "The actual parameters of the method do not match the number of parameters resolved by the method entry name. except: {}, actual: {}",
@@ -351,7 +351,7 @@ public class MethodWrapper {
     }
 
     /**
-     * @author lykan
+     * @author dds
      */
     public static class TaskFieldProperty {
 

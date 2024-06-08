@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * 自定义 Subscriber
  *
- * @author lykan
+ * @author dds
  */
 public abstract class FlowTaskSubscriber extends BaseSubscriber<Object> {
 

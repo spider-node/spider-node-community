@@ -25,6 +25,11 @@ public class QueryVersionFunctionParam {
     private String functionName;
 
     /**
+     * 版本
+     */
+    private String version;
+
+    /**
      * 状态
      */
     private String status;

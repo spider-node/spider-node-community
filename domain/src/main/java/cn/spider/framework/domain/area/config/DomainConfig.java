@@ -13,11 +13,15 @@ import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.impl.AreaImpl;
 import cn.spider.framework.domain.area.impl.FunctionImpl;
 import cn.spider.framework.domain.area.impl.NodeInterfaceImpl;
+import cn.spider.framework.domain.area.impl.VersionImpl;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.log.sdk.interfaces.LogInterface;
+import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLPool;
 import org.springframework.context.annotation.Bean;
@@ -49,18 +53,23 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client) {
-        return new VersionManager(client);
+    public VersionManager buildVersionManager(MySQLPool client,ContainerService containerService) {
+        return new VersionManager(client,containerService);
     }
 
     @Bean
-    public AreaManger buildAreaManger(MySQLPool client, ContainerService containerService) {
-        return new AreaManger(client, containerService);
+    public AreaManger buildAreaManger(MySQLPool client, ContainerService containerService, ParamRefreshInterface paramRefreshInterface) {
+        return new AreaManger(client, containerService,paramRefreshInterface);
     }
 
     @Bean
-    public NodeManger buildNodeManger(MySQLPool client) {
-        return new NodeManger(client);
+    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx){
+        return ParamRefreshInterface.createProxy(vertx,ParamRefreshInterface.ADDRESS);
+    }
+
+    @Bean
+    public NodeManger buildNodeManger(MySQLPool client,AreaManger areaManger) {
+        return new NodeManger(client,areaManger);
     }
 
     @Bean
@@ -70,7 +79,7 @@ public class DomainConfig {
 
     @Bean
     public ContainerService buildContainerService(Vertx vertx) {
-        return ContainerService.createProxy(vertx, BrokerRole.LEADER.name() + ContainerService.ADDRESS);
+        return ContainerService.createProxy(vertx, ContainerService.ADDRESS);
     }
 
     @Bean
@@ -79,12 +88,22 @@ public class DomainConfig {
     }
 
     @Bean
-    public FunctionInterface buildFunctionImpl(FunctionManger functionManger) {
-        return new FunctionImpl(functionManger);
+    public FunctionInterface buildFunctionImpl(FunctionManger functionManger,LogInterface logInterface) {
+        return new FunctionImpl(functionManger,logInterface);
+    }
+
+    @Bean
+    public LogInterface buildLogInterface(Vertx vertx){
+        return LogInterface.createProxy(vertx,LogInterface.ADDRESS);
     }
 
     @Bean
     public NodeInterface buildNodeInterface(NodeManger nodeManger){
         return new NodeInterfaceImpl(nodeManger);
+    }
+
+    @Bean
+    public VersionInterface buildVersionImpl(VersionManager versionManager){
+        return new VersionImpl(versionManager);
     }
 }

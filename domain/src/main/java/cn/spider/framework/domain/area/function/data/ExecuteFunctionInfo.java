@@ -33,4 +33,19 @@ public class ExecuteFunctionInfo {
      * 版本id
      */
     private String versionId;
+
+    /**
+     * 功能名称
+     */
+    private String functionName;
+
+    /**
+     * 功能版本执行的请求参数
+     */
+    private String requestClass;
+
+    /**
+     * 返回参数的隐射
+     */
+    private String resultMapping;
 }

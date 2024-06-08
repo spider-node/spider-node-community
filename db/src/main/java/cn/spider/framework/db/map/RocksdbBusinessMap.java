@@ -47,7 +47,6 @@ public class RocksdbBusinessMap<k, v> extends HashMap {
         this.inScopeDataMap = new HashMap<>();
         this.rocksdbKeyManager = rocksdbKeyManager;
         this.classLoaderInterface = classLoaderInterface;
-
     }
 
 

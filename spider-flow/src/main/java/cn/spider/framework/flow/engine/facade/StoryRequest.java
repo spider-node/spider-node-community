@@ -30,12 +30,13 @@ import cn.spider.framework.flow.util.AssertUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class StoryRequest<T> {
 
@@ -116,6 +117,19 @@ public class StoryRequest<T> {
     private String functionName;
 
     private FlowExampleRole flowExampleRole;
+
+    /**
+     * 返回结果的映射
+     */
+    private Map<String,String> resultMapping;
+
+    public Map<String, String> getResultMapping() {
+        return resultMapping;
+    }
+
+    public void setResultMapping(Map<String, String> resultMapping) {
+        this.resultMapping = resultMapping;
+    }
 
     public FlowExampleRole getFlowExampleRole() {
         return flowExampleRole;

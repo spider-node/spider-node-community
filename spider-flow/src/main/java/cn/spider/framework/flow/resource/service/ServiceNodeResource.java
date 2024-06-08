@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * 服务节点资源
  *
- * @author lykan
+ * @author dds
  */
 public interface ServiceNodeResource extends ServiceNodeIdentity {
 

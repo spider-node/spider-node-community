@@ -20,7 +20,7 @@ package cn.spider.framework.flow.enums;
 /**
  * 线程池类型
  *
- * @author lykan
+ * @author dds
  */
 public enum ExecutorType {
 

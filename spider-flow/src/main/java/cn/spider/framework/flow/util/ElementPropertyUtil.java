@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * ElementPropertyUtil
  *
- * @author lykan
+ * @author dds
  */
 public class ElementPropertyUtil {
 

@@ -20,7 +20,7 @@ package cn.spider.framework.flow.enums;
 /**
  * 判断是否允许执行下一个节点的状态标
  *
- * @author lykan
+ * @author dds
  */
 public enum ElementAllowNextEnum {
 

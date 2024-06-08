@@ -27,7 +27,7 @@ import java.util.concurrent.Future;
 /**
  * 流程片段 Future
  *
- * @author lykan
+ * @author dds
  */
 public class FragmentTaskFuture<T> implements FragmentFuture {
 

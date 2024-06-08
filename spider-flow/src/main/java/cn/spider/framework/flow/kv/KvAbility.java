@@ -23,7 +23,7 @@ import java.util.Optional;
 /**
  * 键值获取能力定义
  *
- * @author lykan
+ * @author dds
  */
 public interface KvAbility extends KValue {
 

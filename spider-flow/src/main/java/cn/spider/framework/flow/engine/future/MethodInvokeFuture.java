@@ -29,7 +29,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * 流程片段 Future
  *
- * @author lykan
+ * @author dds
  */
 public class MethodInvokeFuture extends FragmentTaskFuture<Object> implements InvokeFuture {
 

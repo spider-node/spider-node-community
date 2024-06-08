@@ -2,6 +2,7 @@ package cn.spider.framework.flow;
 
 import cn.spider.framework.flow.config.SpiderCoreConfig;
 import cn.spider.framework.flow.init.SpiderCoreStart;
+import cn.spider.framework.flow.timer.SystemTimer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -32,18 +33,10 @@ public class SpiderCoreVerticle extends AbstractVerticle {
     public void start(Promise<Void> startPromise) throws Exception {
         this.clusterVertx = vertx;
         this.factory = new AnnotationConfigApplicationContext(SpiderCoreConfig.class);
-
-       /* SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");*/
         SpiderCoreStart spiderCoreStart = this.factory.getBean(SpiderCoreStart.class);
         spiderCoreStart.noCenterInit();
-        // 去中心化模式
-        /*if (localMap.get("cluster_mode").equals(Constant.N0_CENTER_MODE)) {
-            spiderCoreStart.noCenterInit();
-        }else {
-            spiderCoreStart.startComponentByLeader();
-            spiderCoreStart.necessaryComponent();
-        }*/
+        SystemTimer systemTimer = this.factory.getBean(SystemTimer.class);
+        systemTimer.delayLoadResource();
         // 提供接口出来
         startPromise.complete();
     }

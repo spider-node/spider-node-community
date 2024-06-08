@@ -29,7 +29,7 @@ import io.vertx.core.Future;
 /**
  * 流程片段执行任务
  *
- * @author lykan
+ * @author dds
  */
 public class FragmentTask extends FlowTaskCore implements Task {
 
@@ -47,6 +47,6 @@ public class FragmentTask extends FlowTaskCore implements Task {
     }
 
     public Future<Object> runPlan() {
-        return runFlowElement(example.getRole(), flowElement, example.getFlowRegister());
+        return runFlowElement(flowElement,example);
     }
 }

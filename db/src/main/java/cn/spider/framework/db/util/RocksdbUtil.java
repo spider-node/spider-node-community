@@ -31,7 +31,7 @@ public class RocksdbUtil {
 
     private static ColumnFamilyHandle columnFamilyHandle;
 
-    public static RocksdbUtil getInstance() {
+    public static synchronized RocksdbUtil getInstance() {
         if (Objects.isNull(rocksdbUtil)) {
             rocksdbUtil = new RocksdbUtil();
         }

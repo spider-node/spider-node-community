@@ -11,6 +11,8 @@ import cn.spider.framework.common.event.data.DeployBpmnData;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.data.*;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
+import cn.spider.framework.domain.sdk.data.SdkUrlQueryResult;
+import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.flow.business.data.BusinessFunctions;
 import cn.spider.framework.flow.funtion.data.Bpmn;
 import cn.spider.framework.flow.funtion.data.BpmnRow;
@@ -151,7 +153,7 @@ public class ContainerServiceImpl implements ContainerService {
                     }
 
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -167,7 +169,7 @@ public class ContainerServiceImpl implements ContainerService {
                 .bpmnName(param.getBpmnUrl())
                 .build();
         eventManager.sendMessage(EventType.DESTROY_BPMN, destroyBpmnData);
-        return null;
+        return Future.succeededFuture();
     }
 
     @Override
@@ -210,7 +212,7 @@ public class ContainerServiceImpl implements ContainerService {
                     }
 
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -277,7 +279,7 @@ public class ContainerServiceImpl implements ContainerService {
                     }
 
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -357,7 +359,7 @@ public class ContainerServiceImpl implements ContainerService {
                     }
 
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -386,7 +388,7 @@ public class ContainerServiceImpl implements ContainerService {
                     queryBpmnResponse.setBpmns(bpmnList);
                     promise.complete(JsonObject.mapFrom(queryBpmnResponse));
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -429,7 +431,7 @@ public class ContainerServiceImpl implements ContainerService {
                     querySdkResponse.setSdk(sdks);
                     promise.complete(JsonObject.mapFrom(querySdkResponse));
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();

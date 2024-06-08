@@ -2,7 +2,6 @@ package cn.spider.framework.domain.area.data;
 
 import cn.spider.framework.domain.area.data.enums.SdkStatus;
 import lombok.Data;
-import sun.dc.pr.PRError;
 
 /**
  * @BelongsProject: spider-node

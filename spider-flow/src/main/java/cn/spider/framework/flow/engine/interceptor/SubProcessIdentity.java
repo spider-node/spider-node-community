@@ -24,7 +24,7 @@ import cn.spider.framework.flow.util.TaskServiceUtil;
 /**
  * 子流程身份标志
  *
- * @author lykan
+ * @author dds
  */
 public class SubProcessIdentity extends BasicIdentity {
 

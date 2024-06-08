@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class BusinessRole {
 

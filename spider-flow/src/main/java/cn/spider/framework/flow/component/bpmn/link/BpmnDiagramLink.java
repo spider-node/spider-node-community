@@ -37,7 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * BPMN 元素代码方式连接能力核心能力支持
  *
- * @author lykan
+ * @author dds
  */
 public abstract class BpmnDiagramLink {
 

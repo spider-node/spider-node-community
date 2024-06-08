@@ -23,6 +23,8 @@
         <module>sdk</module>
         <module>controller</module>
         <module>domain</module>
+        <module>spider-param</module>
+        <module>area-method-param</module>
     </modules>
 
     <properties>
@@ -30,9 +32,8 @@
         <dependency.spring.version>5.3.23</dependency.spring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <vertx.version>4.4.3</vertx.version>
+        <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
-        <vertx.ignite>4.2.3</vertx.ignite>
         <spring.version>5.3.23</spring.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>
     </properties>

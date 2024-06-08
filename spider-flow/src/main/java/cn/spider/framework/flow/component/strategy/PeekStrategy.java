@@ -19,11 +19,12 @@ package cn.spider.framework.flow.component.strategy;
 
 import cn.spider.framework.flow.bpmn.FlowElement;
 import cn.spider.framework.flow.bus.ContextStoryBus;
+import io.vertx.core.Future;
 
 /**
  * 节点执行策略
  *
- * @author lykan
+ * @author dds
  */
 public interface PeekStrategy {
 
@@ -52,7 +53,7 @@ public interface PeekStrategy {
      * @param contextStoryBus contextStoryBus
      * @return true：需要
      */
-    boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus);
+    Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus);
 
     /**
      * 允许出度为空

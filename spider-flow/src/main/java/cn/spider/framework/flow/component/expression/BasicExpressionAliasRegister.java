@@ -31,7 +31,7 @@ import java.util.Objects;
 /**
  * 注册基础别名
  *
- * @author lykan
+ * @author dds
  */
 public class BasicExpressionAliasRegister implements ExpressionAliasRegister {
 

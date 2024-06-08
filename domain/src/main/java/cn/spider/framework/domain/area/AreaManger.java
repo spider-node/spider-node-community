@@ -6,7 +6,9 @@ import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
 import cn.spider.framework.domain.area.data.enums.SdkStatus;
 import cn.spider.framework.domain.sdk.data.RefreshSdkParam;
+import cn.spider.framework.domain.sdk.data.SdkInfo;
 import cn.spider.framework.domain.sdk.data.UploadSdkParam;
+import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -18,10 +20,7 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @BelongsProject: spider-node
@@ -38,9 +37,12 @@ public class AreaManger {
 
     private ContainerService containerService;
 
-    public AreaManger(MySQLPool client, ContainerService containerService) {
+    private ParamRefreshInterface paramRefreshInterface;
+
+    public AreaManger(MySQLPool client, ContainerService containerService, ParamRefreshInterface paramRefreshInterface) {
         this.client = client;
         this.containerService = containerService;
+        this.paramRefreshInterface = paramRefreshInterface;
     }
 
     private RowMapper<AreaModel> ROW_BUSINESS = row -> {
@@ -63,6 +65,9 @@ public class AreaManger {
      */
     public Future<Void> createArea(AreaModel model) {
         Promise<Void> promise = Promise.promise();
+        if(Objects.isNull(model.getSdkStatus())){
+            model.setSdkStatus(SdkStatus.INIT);
+        }
         StringBuilder sql = new StringBuilder();
         model.setId(UUID.randomUUID().toString());
         sql.append("insert into spider_area (`id`,`area_name`,`desc`,sdk_url,sdk_status,scan_class_path,`sdk_name`) values (#{id},#{areaName},#{desc},#{sdkUrl},#{sdkStatus},#{scanClassPath},#{sdkName})");
@@ -88,7 +93,7 @@ public class AreaManger {
     public Future<Void> updateArea(AreaModel model) {
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
-        sql.append("update spider_area set `area_name` = #{areaName} ,`desc` = #{desc},sdk_url = #{sdkUrl},sdk_status = #{sdkStatus},scan_class_path = #{scanClassPath},sdk_name = #{sdkName} where id = #{id})");
+        sql.append("update spider_area set `area_name` = #{areaName} ,`desc` = #{desc},sdk_url = #{sdkUrl},sdk_status = #{sdkStatus},scan_class_path = #{scanClassPath},sdk_name = #{sdkName} where id = #{id}");
         JsonObject param = JsonObject.mapFrom(model);
         Map<String, Object> parameters = param.getMap();
         SqlTemplate
@@ -104,6 +109,7 @@ public class AreaManger {
 
     /**
      * 查询域
+     *
      * @param areaModel
      * @return
      */
@@ -112,10 +118,13 @@ public class AreaManger {
         StringBuilder sql = new StringBuilder();
         areaModel.setPage((areaModel.getPage() - 1) * areaModel.getSize());
         sql.append("select * from spider_area where 1=1 ");
-        if(StringUtils.isNotEmpty(areaModel.getAreaName())){
-            sql.append("area = #{areaName}");
+        if (StringUtils.isNotEmpty(areaModel.getAreaName())) {
+            sql.append(" and area_name = #{areaName}");
         }
-        sql.append(" order by id limit #{page},#{size}");
+        if(StringUtils.isNotEmpty(areaModel.getId())){
+            sql.append(" and id = #{id}");
+        }
+        sql.append(" order by create_time limit #{page},#{size}");
         JsonObject params = JsonObject.mapFrom(areaModel);
         Map<String, Object> parameters = params.getMap();
         SqlTemplate
@@ -130,23 +139,23 @@ public class AreaManger {
                     });
                     promise.complete(areaModels);
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
     }
 
     // 上传sdk
-    public Future<Void> uploadSdk(UploadSdkParam param){
+    public Future<Void> uploadSdk(UploadSdkParam param) {
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
         sql.append("update spider_area set sdk_url = #{sdkUrl},scan_class_path = #{scanClassPath},sdk_name = #{sdkName} where id = #{id})");
 
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("sdkUrl",param.getSdkUrl());
-        parameters.put("scanClassPath",param.getScanClassPath());
-        parameters.put("id",param.getAreaId());
-        parameters.put("sdkName",param.getSdkName());
+        parameters.put("sdkUrl", param.getSdkUrl());
+        parameters.put("scanClassPath", param.getScanClassPath());
+        parameters.put("id", param.getAreaId());
+        parameters.put("sdkName", param.getSdkName());
 
         SqlTemplate
                 .forUpdate(client, sql.toString())
@@ -161,15 +170,16 @@ public class AreaManger {
 
     /**
      * 查询域对象钟的sdk信息-》调用containerService 进行刷新
+     *
      * @param param
      * @return
      */
-    public Future<Void> refreshSdk(RefreshSdkParam param){
+    public Future<Void> refreshSdk(RefreshSdkParam param) {
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
         sql.append("select * from spider_area where id = #{id}");
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("id",param.getAreaId());
+        parameters.put("id", param.getAreaId());
         SqlTemplate
                 .forQuery(client, sql.toString())
                 .mapTo(ROW_BUSINESS)
@@ -182,20 +192,48 @@ public class AreaManger {
                     });
                     AreaModel areaModel = areaModels.get(0);
                     JsonObject refSdkJson = new JsonObject()
-                            .put("sdkName",areaModel.getSdkName())
-                                    .put("classPath",areaModel.getScanClassPath())
-                            .put("sdkUrl",areaModel.getSdkUrl());
-                    // 调用flow节点-进行刷新
-                    containerService.refreshSdk(refSdkJson).onSuccess(refSdkSuss->{
+                            .put("sdkName", areaModel.getSdkName())
+                            .put("classPath", areaModel.getScanClassPath())
+                            .put("url", areaModel.getSdkUrl());
+                    // 去刷新 -- 数据
+                    paramRefreshInterface.refreshMethod(refSdkJson).onSuccess(suss->{
                         promise.complete();
-                    }).onFailure(refSdkFail->{
-                        promise.fail(refSdkFail);
+                    }).onFailure(fail->{
+                        promise.fail(fail);
                     });
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
     }
+
+    public Future<Set<SdkInfo>> querySdkUrl() {
+        Promise<Set<SdkInfo>> promise = Promise.promise();
+        StringBuilder sql = new StringBuilder();
+        sql.append("select * from spider_area where sdk_status = #{sdkStatus}");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("sdkStatus", SdkStatus.DEPLOY.name());
+        SqlTemplate
+                .forQuery(client, sql.toString())
+                .mapTo(ROW_BUSINESS)
+                .execute(parameters)
+                .onSuccess(users -> {
+                    RowSet<AreaModel> function = users;
+                    Set<SdkInfo> urls = new HashSet<>();
+                    function.forEach(item -> {
+                        if (StringUtils.isEmpty(item.getSdkUrl())) {
+                            return;
+                        }
+                        urls.add(new SdkInfo(item.getSdkUrl(), item.getSdkName(), item.getScanClassPath()));
+                    });
+                    promise.complete(urls);
+                }).onFailure(fail -> {
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
+                    promise.fail(fail);
+                });
+        return promise.future();
+    }
+
 
 }

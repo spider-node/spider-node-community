@@ -1,5 +1,6 @@
 package cn.spider.framework.common.utils;
 
+import cn.spider.framework.common.config.Constant;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -52,6 +53,13 @@ public class BrokerInfoUtil {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         return localMap.get("function-port");
+    }
+
+    public static Boolean queryStartSpiderNode(Vertx vertx){
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        String isNew = localMap.containsKey(Constant.START_SPIDER_IS_NEW) ? localMap.get(Constant.START_SPIDER_IS_NEW) : "false";
+        return Boolean.parseBoolean(isNew);
     }
 
 

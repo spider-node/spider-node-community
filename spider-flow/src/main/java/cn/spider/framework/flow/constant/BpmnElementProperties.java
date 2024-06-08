@@ -20,7 +20,7 @@ package cn.spider.framework.flow.constant;
 /**
  * BpmnConstant
  *
- * @author lykan
+ * @author dds
  */
 public interface BpmnElementProperties {
 
@@ -102,6 +102,8 @@ public interface BpmnElementProperties {
 
     String SERVICE_TASK_TYPE = "service_task_type";
 
+    String SERVICE_TASK_TYPE_NEW = "service-task-type";
+
     String POLL_COUNT = "poll_count";
 
     String VERIFY_COUNT = "verify_count";
@@ -111,4 +113,7 @@ public interface BpmnElementProperties {
     String FIELD_MAPPING = "field_mapping";
 
     String BACK_ID = "back_id";
+
+    // appoint
+    String APPOINT = "appoint_param";
 }

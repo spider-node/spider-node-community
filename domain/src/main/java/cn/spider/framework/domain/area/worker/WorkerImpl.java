@@ -68,10 +68,15 @@ public class WorkerImpl implements WorkerInterface {
                     WorkerModel workerModel = businessFunctionList.get(0);
                     promise.complete(JsonObject.mapFrom(workerModel));
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
 
+    }
+
+    @Override
+    public Future<Void> addWorker(JsonObject data) {
+        return null;
     }
 }

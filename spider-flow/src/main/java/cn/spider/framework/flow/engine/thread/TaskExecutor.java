@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * 任务执行器
  *
- * @author lykan
+ * @author dds
  */
 public interface TaskExecutor {
 

@@ -20,7 +20,7 @@ package cn.spider.framework.flow.engine.future;
 /**
  * 方法调用 Future
  *
- * @author lykan
+ * @author dds
  */
 public interface InvokeFuture extends FragmentFuture {
 

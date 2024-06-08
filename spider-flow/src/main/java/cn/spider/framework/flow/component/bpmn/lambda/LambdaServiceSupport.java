@@ -26,7 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * 支持Lambda表达式定义服务节点
  *
- * @author lykan
+ * @author dds
  */
 public interface LambdaServiceSupport {
 

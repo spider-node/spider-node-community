@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 用于暴露给使用方，作为查询 StoryBus 中数据的入口
  *
- * @author lykan
+ * @author dds
  */
 public interface ScopeDataQuery {
 

@@ -27,7 +27,7 @@ import java.util.Optional;
 /**
  * 将元素中的出入度变为不可变对象，防止后面程序修改了出入度导致链路出错
  *
- * @author lykan
+ * @author dds
  */
 public class ImmutablePostProcessor extends DiagramTraverseSupport<Object> implements StartEventPostProcessor {
 

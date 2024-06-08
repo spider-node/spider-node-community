@@ -21,7 +21,7 @@ package cn.spider.framework.flow.role;
  * 使用该角色，无需授权就可以执行全部的服务节点，但是服务能力节点不会被执行。
  * 如果分配了服务能力节点，与之对应的服务节点权限将不允许被分配，否则会出现匹配到多个能力的异常
  *
- * @author lykan
+ * @author dds
  */
 public class ServiceTaskRole extends BasicRole {
 

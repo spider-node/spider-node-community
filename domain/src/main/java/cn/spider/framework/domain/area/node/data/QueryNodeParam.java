@@ -1,6 +1,9 @@
 package cn.spider.framework.domain.area.node.data;
 
+import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import lombok.Data;
+
+import java.util.Set;
 
 /**
  * 查询节点的参数
@@ -14,6 +17,13 @@ public class QueryNodeParam {
     private String taskComponent;
 
     private String taskService;
+
+    private String areaName;
+
+    /**
+     * 状态
+     */
+    private NodeStatus status;
 
     private Integer page;
 

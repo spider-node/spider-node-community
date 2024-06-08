@@ -27,7 +27,7 @@ import cn.spider.framework.flow.enums.ResourceTypeEnum;
 /**
  * 类路径配资资源：属性变量
  *
- * @author lykan
+ * @author dds
  */
 public class PropertiesClassPathConfigSource extends ClassPathConfigSource implements ConfigSource {
 

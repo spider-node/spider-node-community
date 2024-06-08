@@ -16,6 +16,7 @@ import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
 import cn.spider.framework.gateway.oss.OssConfigClient;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
+import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -54,7 +55,7 @@ public class SpringConfig {
      */
     @Bean
     public ContainerService buildContainerService(Vertx vertx) {
-        return ContainerService.createProxy(vertx, BrokerRole.LEADER.name() + ContainerService.ADDRESS);
+        return ContainerService.createProxy(vertx, ContainerService.ADDRESS);
     }
 
     /**
@@ -76,7 +77,7 @@ public class SpringConfig {
      */
     @Bean
     public BusinessService buildBusinessService(Vertx vertx) {
-        return BusinessService.createProxy(vertx, BrokerRole.LEADER.name() + BusinessService.ADDRESS);
+        return BusinessService.createProxy(vertx, BusinessService.ADDRESS);
     }
 
     /**
@@ -123,7 +124,7 @@ public class SpringConfig {
                                                         RRateLimiter rateLimiter,
                                                         FunctionInterface functionInterface,
                                                         NodeInterface nodeInterface,
-                                                        VersionInterface versionInterface) {
+                                                        VersionInterface versionInterface,ParamRefreshInterface paramRefreshInterface,Vertx vertx) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -134,7 +135,7 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface);
+                versionInterface,paramRefreshInterface,vertx);
     }
 
     @Bean
@@ -178,6 +179,11 @@ public class SpringConfig {
     @Bean
     public VersionInterface buildVersionInterface(Vertx vertx){
         return VersionInterface.createProxy(vertx,VersionInterface.ADDRESS);
+    }
+
+    @Bean
+    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx){
+        return ParamRefreshInterface.createProxy(vertx,ParamRefreshInterface.ADDRESS);
     }
 
 }

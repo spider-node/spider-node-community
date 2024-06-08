@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class InvokeProperties {
 

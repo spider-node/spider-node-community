@@ -28,7 +28,7 @@ import cn.spider.framework.flow.role.permission.PermissionAuth;
 /**
  * 服务节点资源，支持鉴权
  *
- * @author lykan
+ * @author dds
  */
 public interface ServiceNodeResourceAuth extends ServiceNodeResource, PermissionAuth {
 

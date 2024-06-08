@@ -20,10 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @BelongsProject: spider-node
@@ -49,7 +46,9 @@ public class FunctionManger {
         businessFunctions.setDesc(row.getString("desc"));
         businessFunctions.setDirector(row.getString("director"));
         businessFunctions.setAreaId(row.getString("area_id"));
-        businessFunctions.setStatus(FunctionStatus.valueOf(row.getString("status")));
+        businessFunctions.setServiceName(row.getString("service_name"));
+
+        businessFunctions.setStatus(StringUtils.isNotEmpty(row.getString("status")) ? FunctionStatus.valueOf(row.getString("status")) : null);
         return businessFunctions;
     };
 
@@ -68,7 +67,8 @@ public class FunctionManger {
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
         functionModel.setId(UUID.randomUUID().toString());
-        sql.append("insert into spider_business_function (`id`,`function_name`,`desc`,`director`,`status`,`area_id`) values (#{id},#{functionName},#{desc},#{director},#{status},#{areaId})");
+        functionModel.setStatus(FunctionStatus.STOP);
+        sql.append("insert into spider_business_function (`id`,`function_name`,`desc`,`director`,`status`,`area_id`,`service_name`) values (#{id},#{functionName},#{desc},#{director},#{status},#{areaId},#{serviceName})");
 
         JsonObject param = JsonObject.mapFrom(functionModel);
         Map<String, Object> parameters = param.getMap();
@@ -92,7 +92,7 @@ public class FunctionManger {
     public Future<Void> updateFunctionManger(FunctionModel functionModel) {
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
-        sql.append("update spider_business_function set function_name = #{functionName},`desc` = #{desc},director = #{director}, `status` = #{status}, `area_id` = #{areaId} where id = #{id}");
+        sql.append("update spider_business_function set function_name = #{functionName},`desc` = #{desc},director = #{director}, `status` = #{status}, `area_id` = #{areaId},service_name = #{serviceName} where id = #{id}");
         JsonObject param = JsonObject.mapFrom(functionModel);
         Map<String, Object> parameters = param.getMap();
         SqlTemplate
@@ -161,7 +161,7 @@ public class FunctionManger {
         if (StringUtils.isNotEmpty(param.getAreaId())) {
             sql.append(" and area_id = #{areaId} ");
         }
-        sql.append("order by id limit #{page},#{size}");
+        sql.append("order by create_time limit #{page},#{size}");
 
         SqlTemplate
                 .forQuery(client, sql.toString())
@@ -175,7 +175,7 @@ public class FunctionManger {
                     });
                     promise.complete(businessFunctionList);
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -204,25 +204,27 @@ public class FunctionManger {
                     versionParam.setFunctionId(param.getFunctionId());
                     versionParam.setStatus("START");
                     versionParam.setPage(1);
-                    versionParam.setSize(1);
+                    versionParam.setSize(10);
                     Future<List<FunctionVersionModel>> versions = versionManager.selectVersion(versionParam);
                     versions.onSuccess(versionSuss -> {
                         List<FunctionVersionModel> functionVersionModels = versionSuss;
-                        if (CollectionUtils.isEmpty(functionVersionModels)) {
-                            promise.fail("没有找到可以执行的功能版本");
+                        if (CollectionUtils.isEmpty(functionVersionModels) || functionVersionModels.size() > 2) {
+                            promise.fail("没有找到可以执行的功能版本，或者找到了多个版本");
                         }
                         FunctionVersionModel functionVersionModel = functionVersionModels.get(0);
                         ExecuteFunctionInfo functionInfo = ExecuteFunctionInfo.builder()
                                 .functionId(functionVersionModel.getFunctionId())
                                 .startId(functionVersionModel.getStartEventId())
+                                .functionName(functionVersionModel.getFunctionName())
                                 .versionId(functionVersionModel.getId())
+                                .resultMapping(functionVersionModel.getResultMapping())
                                 .build();
                         promise.complete(functionInfo);
                     }).onFailure(fail -> {
                         promise.fail(fail);
                     });
                 }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
+                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();

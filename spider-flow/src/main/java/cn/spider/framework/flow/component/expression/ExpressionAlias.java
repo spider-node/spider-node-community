@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 /**
  * 表达式别名
  *
- * @author lykan
+ * @author dds
  */
 public class ExpressionAlias {
 

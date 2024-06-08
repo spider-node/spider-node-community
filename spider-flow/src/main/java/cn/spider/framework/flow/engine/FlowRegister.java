@@ -22,6 +22,7 @@ import cn.spider.framework.flow.bpmn.ParallelGateway;
 import cn.spider.framework.flow.bpmn.SequenceFlow;
 import cn.spider.framework.flow.bpmn.StartEvent;
 import cn.spider.framework.flow.bus.ContextStoryBus;
+import cn.spider.framework.flow.component.strategy.NeedResult;
 import cn.spider.framework.flow.component.strategy.PeekStrategy;
 import cn.spider.framework.flow.component.strategy.PeekStrategyRepository;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
@@ -34,13 +35,16 @@ import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.ExceptionUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import com.google.common.collect.Lists;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -181,31 +185,60 @@ public class FlowRegister {
     }
 
 
-    public void predictNextElementNew(ContextStoryBus contextStoryBus, FlowElement currentFlowElement) {
+    public Future<Void> predictNextElementNew(ContextStoryBus contextStoryBus, FlowElement currentFlowElement) {
 
         if (contextStoryBus.getEndTaskPedometer() == null) {
             contextStoryBus.setPrevElement(prevElement);
             contextStoryBus.setJoinGatewayComingMap(joinGatewayComingMap);
-           // contextStoryBus.setEndTaskPedometer();
+            // contextStoryBus.setEndTaskPedometer();
         }
 
         AssertUtil.notNull(currentFlowElement);
         Optional<FlowElement> elementOptional = Optional.of(currentFlowElement);
         // 匹配可参与执行的子分支
         PeekStrategy peekStrategy = getPeekStrategy(currentFlowElement);
-        List<FlowElement> flowList =
-                elementOptional.get().outingList().stream().filter(flow -> peekStrategy.needPeek(flow, contextStoryBus)).collect(Collectors.toList());
-        if (!peekStrategy.allowOutingEmpty(currentFlowElement)) {
-            AssertUtil.notEmpty(flowList, ExceptionEnum.STORY_FLOW_ERROR, "Match to the next process node as empty! identity: {}", currentFlowElement.identity());
-        }
-        prevElement = currentFlowElement;
-        flowElementStack.pushList(elementOptional.get(), flowList);
-        // 无需执行的子流程，可能会参与驱动之后的流程
-        if (!Objects.equals(flowList.size(), elementOptional.get().outingList().size())) {
-            processNotMatchElement(contextStoryBus, flowList, elementOptional.get());
-        }
-    }
+        List<FlowElement> flowLists = elementOptional.get().outingList();
 
+        if (!peekStrategy.allowOutingEmpty(currentFlowElement)) {
+            AssertUtil.notEmpty(flowLists, ExceptionEnum.STORY_FLOW_ERROR, "Match to the next process node as empty! identity: {}", currentFlowElement.identity());
+        }
+
+        Map<String,FlowElement> flowElementMap = flowLists.stream().collect(Collectors.toMap(FlowElement::getId, Function.identity()));
+        List<Future> needFutures = new ArrayList<>();
+        for (FlowElement flowElement : flowLists) {
+            Future<NeedResult> needFuture = peekStrategy.needPeek(flowElement, contextStoryBus);
+            needFutures.add(needFuture);
+        }
+        Promise<Void> promise = Promise.promise();
+        CompositeFuture.all(needFutures).onSuccess(suss -> {
+            List<FlowElement> flowList = new ArrayList<>();
+            int size = suss.size();
+            for (int i = 0; i < size; i++) {
+                NeedResult need = suss.resultAt(i);
+                if (need.getNeed()) {
+                    flowList.add(flowElementMap.get(need.getId()));
+                }
+            }
+            // 是否允许节点为空
+            if (!peekStrategy.allowOutingEmpty(currentFlowElement)) {
+                if(CollectionUtils.isEmpty(flowList)){
+                    promise.fail("Match to the next process node as empty! identity: "+ currentFlowElement.identity());
+                    return;
+                }
+                //AssertUtil.notEmpty(flowList, ExceptionEnum.STORY_FLOW_ERROR, "Match to the next process node as empty! identity: {}", currentFlowElement.identity());
+            }
+            prevElement = currentFlowElement;
+            flowElementStack.pushList(elementOptional.get(), flowList);
+            // 无需执行的子流程，可能会参与驱动之后的流程
+            if (!Objects.equals(flowList.size(), elementOptional.get().outingList().size())) {
+                processNotMatchElement(contextStoryBus, flowList, elementOptional.get());
+            }
+            promise.complete();
+        }).onFailure(fail -> {
+            promise.fail(fail);
+        });
+        return promise.future();
+    }
 
 
     private PeekStrategy getPeekStrategy(FlowElement currentFlowElement) {

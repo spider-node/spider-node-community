@@ -20,7 +20,7 @@ package cn.spider.framework.flow.engine.facade;
 /**
  * Task 执行后返回结果
  *
- * @author lykan
+ * @author dds
  */
 public class TaskResponseBox<T> implements TaskResponse<T> {
 

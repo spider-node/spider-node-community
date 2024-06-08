@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 /**
  * Kstry 核心组件加载
  *
- * @author lykan
+ * @author dds
  */
 public class KstryContextResolver implements ApplicationContextAware, InitializingBean {
 

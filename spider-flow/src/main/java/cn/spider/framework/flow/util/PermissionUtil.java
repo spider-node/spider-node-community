@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 /**
  * 权限工具类
  *
- * @author lykan
+ * @author dds
  */
 public class PermissionUtil {
 

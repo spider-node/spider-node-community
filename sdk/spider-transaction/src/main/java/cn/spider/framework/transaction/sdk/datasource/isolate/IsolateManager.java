@@ -1,5 +1,6 @@
 package cn.spider.framework.transaction.sdk.datasource.isolate;
 
+import cn.spider.framework.transaction.sdk.context.RootContext;
 import cn.spider.framework.transaction.sdk.datasource.ConnectionContext;
 import cn.spider.framework.transaction.sdk.datasource.ConnectionProxy;
 import cn.spider.framework.transaction.sdk.datasource.Phase2Context;
@@ -11,6 +12,9 @@ import cn.spider.framework.transaction.sdk.datasource.undo.BranchUndoLog;
 import cn.spider.framework.transaction.sdk.datasource.undo.SQLUndoLog;
 import cn.spider.framework.transaction.sdk.datasource.undo.UndoLogManager;
 import cn.spider.framework.transaction.sdk.sqlparser.SQLType;
+import cn.spider.framework.transaction.sdk.util.Constants;
+import cn.spider.framework.transaction.sdk.util.StringUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.sql.Connection;
@@ -34,8 +38,9 @@ public class IsolateManager {
         if (!connectionContext.hasUndoLog()) {
             return;
         }
+
         List<SQLUndoLog> sqlUndoLogs = connectionContext.getUndoItems();
-        isolateDataOperation(sqlUndoLogs, cp.getTargetConnection(), 0, TransactionOperationStatus.COMMIT);
+        isolateDataOperation(sqlUndoLogs, cp.getTargetConnection(), RootContext.BRANCH_ID, TransactionOperationStatus.COMMIT);
 
     }
 
@@ -46,7 +51,7 @@ public class IsolateManager {
                 throw new IllegalArgumentException("phase2Context.getXid():" + phase2Context.getXid());
             }
             List<SQLUndoLog> sqlUndoLogs = branchUndoLog.getSqlUndoLogs();
-            isolateDataOperation(sqlUndoLogs, conn, 1, status);
+            isolateDataOperation(sqlUndoLogs, conn, RootContext.BRANCH_ID, status);
         }
     }
 
@@ -59,11 +64,11 @@ public class IsolateManager {
             throw new IllegalArgumentException("phase2Context.getXid():" + xid);
         }
         List<SQLUndoLog> sqlUndoLogs = branchUndoLog.getSqlUndoLogs();
-        isolateDataOperation(sqlUndoLogs, conn, 1, status);
+        isolateDataOperation(sqlUndoLogs, conn, null, status);
     }
 
 
-    private void isolateDataOperation(List<SQLUndoLog> sqlUndoLogs, Connection conn, Integer status, TransactionOperationStatus operationStatus) throws SQLException {
+    private void isolateDataOperation(List<SQLUndoLog> sqlUndoLogs, Connection conn, String branchId, TransactionOperationStatus operationStatus) throws SQLException {
         for (SQLUndoLog item : sqlUndoLogs) {
             try {
                 if (item.getSqlType().equals(SQLType.INSERT) || item.getSqlType().equals(SQLType.UPDATE)) {
@@ -73,10 +78,19 @@ public class IsolateManager {
                     TableRecords afterTableRecords = operationStatus.equals(TransactionOperationStatus.COMMIT) ? item.getAfterImage() : item.getBeforeImage();
                     List<List<Row>> rows = Lists.partition(afterTableRecords.getRows(), 500);
                     for (List<Row> rows1 : rows) {
-                        afterTableRecords.getRows();
                         String validDataSql = buildValidDataSql(afterTableRecords, rows1.size());
                         PreparedStatement updatePST = conn.prepareStatement(validDataSql);
-                        updatePST.setInt(1, status);
+                        if (operationStatus.equals(TransactionOperationStatus.COMMIT)) {
+                            TableRecords tableRecords = item.getBeforeImage();
+                            Row rowAfter = tableRecords.getRows().get(0);
+                            String afterBranchId = queryBranchId(rowAfter);
+                            if(StringUtils.isNotEmpty(afterBranchId)){
+                                Preconditions.checkArgument(!afterBranchId.equals(branchId), "分支事务对应的branchId不一致");
+                                Row rowFirst = rows1.get(0);
+                                branchId = queryBranchId(rowFirst);
+                            }
+                        }
+                        updatePST.setString(1, branchId);
                         int paramsIndex = 2;
                         for (Row row : rows1) {
                             Field field = row.getFields().stream().filter(items -> items.getKeyType().equals(KeyType.PRIMARY_KEY)).findFirst().get();
@@ -101,9 +115,14 @@ public class IsolateManager {
         }
     }
 
+    private String queryBranchId(Row row) {
+        Field field = row.getFields().stream().filter(items -> items.getName().equals(Constants.BRANCH_ID)).findFirst().get();
+        return Objects.isNull(field.getValue()) ? null : (String) field.getValue();
+    }
+
     private String buildValidDataSql(TableRecords afterTableRecords, int size) {
         StringBuilder sqlBuilder = new StringBuilder(64);
-        sqlBuilder.append("UPDATE ").append(afterTableRecords.getTableName()).append(" SET  ").append("commit_status = ?");
+        sqlBuilder.append("UPDATE ").append(afterTableRecords.getTableName()).append(" SET  ").append("branch_id = ?");
         sqlBuilder.append(" WHERE ").append("ID").append(" IN ");
         appendInParam(size, sqlBuilder);
         return sqlBuilder.toString();

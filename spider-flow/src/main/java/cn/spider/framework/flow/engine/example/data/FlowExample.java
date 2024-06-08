@@ -136,6 +136,58 @@ public class FlowExample {
 
     private Boolean allowRemove;
 
+    /**
+     * 重试的实例请求id
+     */
+    private String parentRequestId;
+
+    /**
+     * 请求重试的类型
+     */
+    private String retryType;
+
+    /**
+     * 重试的节点id
+     */
+    private String retryNodeId;
+
+    /**
+     * 执行类型
+     */
+    private String runType;
+
+    public String getRunType() {
+        return runType;
+    }
+
+    public void setRunType(String runType) {
+        this.runType = runType;
+    }
+
+    public String getParentRequestId() {
+        return parentRequestId;
+    }
+
+    public void setParentRequestId(String parentRequestId) {
+        this.parentRequestId = parentRequestId;
+    }
+
+    public String getRetryType() {
+        return retryType;
+    }
+
+    public void setRetryType(String retryType) {
+        this.retryType = retryType;
+    }
+
+    public String getRetryNodeId() {
+        return retryNodeId;
+    }
+
+    public void setRetryNodeId(String retryNodeId) {
+        this.retryNodeId = retryNodeId;
+    }
+
     public void setAllowRemove(Boolean allowRemove) {
         this.allowRemove = allowRemove;
     }

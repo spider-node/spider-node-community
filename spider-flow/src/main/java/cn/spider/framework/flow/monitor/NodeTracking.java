@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 @SuppressWarnings("unused")
 public class NodeTracking {

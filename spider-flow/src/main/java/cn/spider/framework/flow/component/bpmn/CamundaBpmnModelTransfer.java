@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 /**
  * Camunda 解析器实现
  *
- * @author lykan
+ * @author dds
  */
 public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInstance> {
 
@@ -236,8 +236,15 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.TASK_TRANSACTION_GROUP_ID).ifPresent(serviceTaskImpl::setTransactionGroupId);
         // service_类型-- 等待节点，需要被唤醒才能让流程继续走
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.SERVICE_TASK_TYPE).ifPresent(serviceTaskImpl::setServiceTaskType);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.SERVICE_TASK_TYPE_NEW).ifPresent(serviceTaskImpl::setServiceTaskType);
+
         // 设置轮询次数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.POLL_COUNT).ifPresent(serviceTaskImpl::setPollCount);
+
+        // 设置指定参数
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.APPOINT).ifPresent(serviceTaskImpl::setAppointParam);
+
 
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.VERIFY_COUNT).ifPresent(serviceTaskImpl::setVerifyInfo);
         // 设置延迟时间

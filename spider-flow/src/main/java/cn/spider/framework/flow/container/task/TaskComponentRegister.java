@@ -20,7 +20,7 @@ package cn.spider.framework.flow.container.task;
 /**
  * 服务组件类注册
  *
- * @author lykan
+ * @author dds
  */
 public interface TaskComponentRegister {
 

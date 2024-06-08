@@ -22,7 +22,7 @@ import cn.spider.framework.flow.bpmn.FlowElement;
 /**
  * 提供在元素之间的 BPMN 元素代码方式连接能力
  *
- * @author lykan
+ * @author dds
  */
 public class BpmnElementDiagramLink<T extends FlowElement> extends BpmnDiagramLink implements ProcessLink {
 

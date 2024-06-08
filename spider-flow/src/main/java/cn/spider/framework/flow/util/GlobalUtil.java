@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 /**
  * GlobalUtil
  *
- * @author lykan
+ * @author dds
  */
 public class GlobalUtil {
 

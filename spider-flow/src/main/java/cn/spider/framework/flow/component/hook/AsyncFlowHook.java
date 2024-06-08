@@ -22,7 +22,7 @@ import cn.spider.framework.flow.bpmn.extend.AsyncFlowElement;
 /**
  * 异步流程开启回调
  *
- * @author lykan
+ * @author dds
  */
 public class AsyncFlowHook<T> extends SimpleHook<T> implements AsyncFlowElement {
 

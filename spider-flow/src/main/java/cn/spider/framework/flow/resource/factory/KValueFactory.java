@@ -34,7 +34,7 @@ import cn.spider.framework.flow.util.GlobalUtil;
 /**
  * KValue 资源创建工厂
  *
- * @author lykan
+ * @author dds
  */
 public class KValueFactory extends BasicResourceFactory<KValue> {
 

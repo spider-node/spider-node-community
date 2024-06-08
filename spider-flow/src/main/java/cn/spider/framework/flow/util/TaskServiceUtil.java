@@ -18,12 +18,10 @@
 package cn.spider.framework.flow.util;
 
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.flow.bpmn.FlowElement;
 import cn.spider.framework.flow.bpmn.ServiceTask;
-import cn.spider.framework.flow.bus.InstructContent;
-import cn.spider.framework.flow.bus.ScopeDataOperator;
-import cn.spider.framework.flow.bus.ScopeDataQuery;
-import cn.spider.framework.flow.bus.StoryBus;
+import cn.spider.framework.flow.bus.*;
 import cn.spider.framework.flow.constant.GlobalProperties;
 import cn.spider.framework.flow.container.component.ParamInjectDef;
 import cn.spider.framework.flow.container.component.TaskInstructWrapper;
@@ -33,14 +31,20 @@ import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.monitor.ParamTracking;
 import cn.spider.framework.flow.role.Role;
+import cn.spider.framework.param.sdk.data.QueryFunctionParam;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.noear.snack.ONode;
 import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
@@ -50,7 +54,7 @@ import java.util.function.Function;
 /**
  * TaskServiceUtil
  *
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class TaskServiceUtil {
@@ -78,20 +82,44 @@ public class TaskServiceUtil {
         return left + sign + right;
     }
 
+
+    /**
+     * 获取功能执行-返回的参数
+     * @param resultMapping
+     * @param paramInterface
+     * @param requestId
+     * @return
+     */
+    public static Future<Map<String, Object>> getResultObject(Map<String, String> resultMapping, ParamInterface paramInterface,String requestId) {
+        Map<String, Object> resultObject = Maps.newHashMap();
+        if (resultMapping.isEmpty()) {
+            return Future.succeededFuture(resultObject);
+        }
+        Promise<Map<String, Object>> promise = Promise.promise();
+        QueryFunctionParam queryFunctionParam = new QueryFunctionParam(resultMapping,requestId);
+        paramInterface.queryFunctionResult(JsonObject.mapFrom(queryFunctionParam)).onSuccess(suss->{
+            promise.complete(suss.getMap());
+        }).onFailure(fail->{
+            log.error("获取返回参数失败-{}", ExceptionMessage.getStackTrace(fail));
+            promise.complete(new HashMap<>());
+        });
+        return promise.future();
+    }
+
     /**
      * 获取目标方法入参 -- 改造成异步
      */
-    public static Map<String,Object> getTaskParams(boolean isCustomRole, boolean tracking, ServiceTask serviceTask, StoryBus storyBus, Role role, TaskInstructWrapper taskInstructWrapper,
-                                         List<ParamInjectDef> paramInjectDefs, Function<ParamInjectDef, Object> paramInitStrategy, ApplicationContext applicationContext) {
+    public static Map<String, Object> getTaskParams(boolean isCustomRole, boolean tracking, ServiceTask serviceTask, StoryBus storyBus, Role role, TaskInstructWrapper taskInstructWrapper,
+                                                    List<ParamInjectDef> paramInjectDefs, Function<ParamInjectDef, Object> paramInitStrategy, ApplicationContext applicationContext) {
 
-        if(CollectionUtils.isEmpty(paramInjectDefs)){
+        if (CollectionUtils.isEmpty(paramInjectDefs)) {
             return new HashMap<>();
         }
         AssertUtil.notNull(serviceTask);
         //Long starts = System.currentTimeMillis();
-      //  log.info("获取参数-------------start {} 时间 {}",serviceTask.getTaskService(),starts);
+        //  log.info("获取参数-------------start {} 时间 {}",serviceTask.getTaskService(),starts);
         Optional<MonitorTracking> trackingOptional = Optional.of(storyBus.getMonitorTracking()).filter(t -> tracking);
-        Map<String,Object> paramMap = new HashMap<>();
+        Map<String, Object> paramMap = new HashMap<>();
         for (int i = 0; i < paramInjectDefs.size(); i++) {
 
             // 没有参数定义时，取默认值
@@ -104,7 +132,7 @@ public class TaskServiceUtil {
             boolean isPrimitive = iDef.getParamType().isPrimitive();
             if (isPrimitive) {
                 Object object = ElementParserUtil.initPrimitive(iDef.getParamType());
-                paramMap.put(iDef.getFieldName(),object);
+                paramMap.put(iDef.getFieldName(), object);
             }
             if (iDef.notNeedInject()) {
                 continue;
@@ -115,27 +143,27 @@ public class TaskServiceUtil {
                 // 转换
                 trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
                         ParamTracking.build(iDef.getFieldName(), storyBus.getReq(), ScopeTypeEnum.REQUEST, ScopeTypeEnum.REQUEST.name().toLowerCase())));
-                paramMap.put(iDef.getFieldName(),storyBus.getReq());
+                paramMap.put(iDef.getFieldName(), storyBus.getReq());
                 continue;
             }
 
             if (taskInstructWrapper != null && StringUtils.isNotBlank(serviceTask.getTaskInstruct()) && InstructContent.class.isAssignableFrom(iDef.getParamType())) {
                 InstructContent instructContent = new InstructContent(serviceTask.getTaskInstruct(), serviceTask.getTaskInstructContent());
                 trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () -> ParamTracking.build(iDef.getFieldName(), null, ScopeTypeEnum.EMPTY, "instruct")));
-                paramMap.put(iDef.getFieldName(),instructContent);
+                paramMap.put(iDef.getFieldName(), instructContent);
             }
 
             // 如果目标类是 CustomRole 且方法入参需要 Role 时，直接透传 role
             if (isCustomRole && Role.class.isAssignableFrom(iDef.getParamType())) {
                 trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () -> ParamTracking.build(iDef.getFieldName(), null, ScopeTypeEnum.EMPTY, "role")));
-                paramMap.put(iDef.getFieldName(),role);
+                paramMap.put(iDef.getFieldName(), role);
                 continue;
             }
 
             // 入参是 ScopeDataOperator 时，注入ScopeDataOperator
             if (ScopeDataQuery.class.isAssignableFrom(iDef.getParamType())) {
                 trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () -> ParamTracking.build(iDef.getFieldName(), null, ScopeTypeEnum.EMPTY, "dataOperator")));
-                paramMap.put(iDef.getFieldName(),storyBus.getScopeDataOperator());
+                paramMap.put(iDef.getFieldName(), storyBus.getScopeDataOperator());
                 continue;
             }
 
@@ -144,26 +172,32 @@ public class TaskServiceUtil {
                 String targetName = serviceTask.queryConfigFieldName(iDef.getTargetName());
 
                 ScopeTypeEnum scopeTypeEnum = iDef.getScopeDataEnum();
-                if(targetName.startsWith("req.")){
+                if (targetName.startsWith("req.")) {
                     targetName = targetName.substring(4);
                     scopeTypeEnum = ScopeTypeEnum.REQUEST;
                 }
-                Object r = storyBus.getValue(scopeTypeEnum, targetName).orElse(null);
+                Object rs = storyBus.getValueNode(scopeTypeEnum, targetName).orElse(null);
                 String targetNameNew = targetName;
-                if (r == PropertyUtil.GET_PROPERTY_ERROR_SIGN) {
+                if (rs == PropertyUtil.GET_PROPERTY_ERROR_SIGN) {
                     trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
                             ParamTracking.build(iDef.getFieldName(), MonitorTracking.BAD_VALUE, iDef.getScopeDataEnum(), targetNameNew)));
                     continue;
                 }
-                if (isPrimitive && r == null) {
+                if (isPrimitive && rs == null) {
                     Object primitiveFinalObj = paramMap.get(iDef.getFieldName());
                     trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
                             ParamTracking.build(iDef.getFieldName(), primitiveFinalObj, iDef.getScopeDataEnum(), targetNameNew)));
                     continue;
                 }
+                Object r = null;
+                if (rs instanceof ONode) {
+                    ONode node = (ONode) r;
+                    r = node.toObject(iDef.getParamType());
+                } else {
+                    r = rs;
+                }
                 checkParamType(serviceTask, iDef, r);
-                paramMap.put(iDef.getFieldName(),r);
-                trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () -> ParamTracking.build(iDef.getFieldName(), r, iDef.getScopeDataEnum(), targetNameNew)));
+                paramMap.put(iDef.getFieldName(), r);
                 continue;
             }
 
@@ -187,31 +221,114 @@ public class TaskServiceUtil {
                         }
                         String targetName = serviceTask.queryConfigFieldName(def.getTargetName());
                         ScopeTypeEnum scopeTypeEnum = def.getScopeDataEnum();
-                        if(targetName.startsWith("req.")){
-                            targetName = targetName.substring(4);
-                            scopeTypeEnum = ScopeTypeEnum.REQUEST;
+                        Object value = null;
+                        if(targetName.startsWith("spider.")){
+                            Map<String,Object> param = serviceTask.obtainAppointParam();
+                            targetName = targetName.substring(7);
+                            if(!param.containsKey(targetName)){
+                                return;
+                            }
+                            Object spiderValue = param.get(targetName);
+                            ONode node = ONode.loadObj(spiderValue);
+                            value = node.toObject(def.getParamType());
+                        }else {
+                            if (targetName.startsWith("req.")) {
+                                targetName = targetName.substring(4);
+                                scopeTypeEnum = ScopeTypeEnum.REQUEST;
+                            }
+                            // 处理targetName
+                            String targetNames = targetNameHandler(targetName);
+                            log.info("获取参数的.targetName {} targetNames {} ", targetName, targetNames);
+                            Object values = storyBus.getValueNode(scopeTypeEnum, targetNames).orElse(null);
+
+                            if (values == PropertyUtil.GET_PROPERTY_ERROR_SIGN) {
+                                trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
+                                        ParamTracking.build(iDef.getFieldName() + "." + def.getFieldName(), MonitorTracking.BAD_VALUE, def.getScopeDataEnum(), def.getTargetName())));
+                                return;
+                            } else if (values instanceof ONode) {
+                                if(Objects.nonNull(values)){
+                                    ONode node = buildConvertParam(targetName, (ONode) values);
+
+                                    value = node.toObject(def.getParamType());
+                                }
+                            } else {
+                                value = values;
+                            }
                         }
-                        Object value = storyBus.getValue(scopeTypeEnum, targetName).orElse(null);
-                        if (value == PropertyUtil.GET_PROPERTY_ERROR_SIGN) {
-                            trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
-                                    ParamTracking.build(iDef.getFieldName() + "." + def.getFieldName(), MonitorTracking.BAD_VALUE, def.getScopeDataEnum(), def.getTargetName())));
-                            return;
-                        }
-                        log.info("获取参数的.targetName {}",targetName);
                         checkParamType(serviceTask, def, value);
-                        boolean setSuccess = PropertyUtil.setProperty(o, def.getFieldName(), value);
-                        if (setSuccess) {
-                            trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
-                                    ParamTracking.build(iDef.getFieldName() + "." + def.getFieldName(), value, def.getScopeDataEnum(), def.getTargetName())));
-                        }
+                        PropertyUtil.setProperty(o, def.getFieldName(), value);
                     });
                 }
-                paramMap.put(iDef.getFieldName(),o);
+                paramMap.put(iDef.getFieldName(), o);
             }
 
         }
-       // log.info("获取参数-------------end {} 时间 {}",serviceTask.getId(),System.currentTimeMillis()-starts);
-       return paramMap;
+        // log.info("获取参数-------------end {} 时间 {}",serviceTask.getId(),System.currentTimeMillis()-starts);
+        return paramMap;
+    }
+
+    private static String targetNameHandler(String targetName) {
+        if (targetName.contains(".convert(")) {
+            int indexOfConvert = targetName.indexOf(".convert");
+            return targetName.substring(0, indexOfConvert);
+        }
+        return targetName;
+    }
+
+    /**
+     * 支持转换不同域中的功能
+     *
+     * @param targetName
+     * @param node
+     * @return
+     */
+    private static ONode buildConvertParam(String targetName, ONode node) {
+        if (targetName.contains(".convert(")) {
+            int indexOfConvert1 = targetName.indexOf("(");
+            String afterConvert1 = targetName.substring(indexOfConvert1 + 1, targetName.length() - 1);
+            Map<String, String> paramConvert = new HashMap<>();
+            // afterConvert1 根据逗号进行分割成字符串的数组
+            String[] split = afterConvert1.split(",");
+            for (String mappingKey : split) {
+                String[] split2 = mappingKey.split(":");
+                paramConvert.put(split2[0], split2[1]);
+            }
+            // 判断是否为数组
+            if (node.isArray()) {
+                List<Map> results = node.toObjectList(Map.class);
+                List<Map<String, Object>> result = new ArrayList<>(results.size());
+                for (Map map : results) {
+                    Map<String, Object> convertObject = new HashMap<>();
+                    for (Object key : map.keySet()) {
+                        if (!paramConvert.containsKey(key)) {
+                            continue;
+                        }
+                        Object object = map.get(key);
+                        String convertKey = paramConvert.get(key);
+                        convertObject.put(convertKey, object);
+                    }
+                    if (!convertObject.isEmpty()) {
+                        result.add(convertObject);
+                    }
+                }
+                return ONode.load(result);
+            }
+            // 为单纯对象不为数组
+            Map<String, Object> resultMap = node.toObject(Map.class);
+            Map<String, Object> convertObject = new HashMap<>();
+            for (String key : resultMap.keySet()) {
+                if (!paramConvert.containsKey(key)) {
+                    continue;
+                }
+                String convertKey = paramConvert.get(key);
+                Object result = resultMap.get(key);
+                convertObject.put(convertKey, result);
+            }
+            if (!convertObject.isEmpty()) {
+                return ONode.load(convertObject);
+            }
+        }
+        return node;
     }
 
     private static void checkParamType(FlowElement flowElement, ParamInjectDef def, Object value) {
@@ -225,7 +342,7 @@ public class TaskServiceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static void fillTaskParams(Map<String,Object> paramMap, Map<String, Object> taskParams,
+    public static void fillTaskParams(Map<String, Object> paramMap, Map<String, Object> taskParams,
                                       List<ParamInjectDef> paramInjectDefs, Function<ParamInjectDef, Object> paramInitStrategy, ScopeDataOperator scopeDataOperator) {
         if (!GlobalProperties.SERVICE_NODE_DEFINE_PARAMS) {
             return;
@@ -248,19 +365,19 @@ public class TaskServiceUtil {
             if (val == null) {
 
                 Object object = iDef.getParamType().isPrimitive() ? ElementParserUtil.initPrimitive(iDef.getParamType()) : null;
-                paramMap.put(iDef.getFieldName(),object);
+                paramMap.put(iDef.getFieldName(), object);
                 continue;
             }
             try {
                 if (val instanceof String) {
                     Object object = parseParamValue((String) val, scopeDataOperator, iDef.getParamType());
-                    paramMap.put(iDef.getFieldName(),object);
+                    paramMap.put(iDef.getFieldName(), object);
                     continue;
                 }
                 if (val instanceof Map) {
                     if (!paramMap.containsKey(iDef.getFieldName())) {
                         Object object = paramInitStrategy.apply(iDef);
-                        paramMap.put(iDef.getFieldName(),object);
+                        paramMap.put(iDef.getFieldName(), object);
                     }
                     AssertUtil.notNull(paramMap.get(iDef.getFieldName()));
                     Map<String, ?> valMap = (Map<String, ?>) val;

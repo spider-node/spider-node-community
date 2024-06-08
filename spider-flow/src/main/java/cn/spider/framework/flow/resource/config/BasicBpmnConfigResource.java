@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * BPMN 配置信息，一个对象对应一个 BPMN 文件
  *
- * @author lykan
+ * @author dds
  */
 public class BasicBpmnConfigResource extends AbstractConfigResource implements BpmnConfigResource {
 

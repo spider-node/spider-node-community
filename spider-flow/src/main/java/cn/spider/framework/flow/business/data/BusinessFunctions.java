@@ -3,8 +3,6 @@ package cn.spider.framework.flow.business.data;
 import cn.spider.framework.flow.business.enums.FunctionStatus;
 import cn.spider.framework.flow.business.enums.IsAsync;
 import cn.spider.framework.flow.business.enums.IsRetry;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
 /**
@@ -65,6 +63,26 @@ public class BusinessFunctions {
     private Integer retryCount;
 
     private IsRetry isRetry;
+
+    private String requestClass;
+
+    private String resultMapping;
+
+    public String getResultMapping() {
+        return resultMapping;
+    }
+
+    public void setResultMapping(String resultMapping) {
+        this.resultMapping = resultMapping;
+    }
+
+    public String getRequestClass() {
+        return requestClass;
+    }
+
+    public void setRequestClass(String requestClass) {
+        this.requestClass = requestClass;
+    }
 
     public IsRetry getIsRetry() {
         return isRetry;

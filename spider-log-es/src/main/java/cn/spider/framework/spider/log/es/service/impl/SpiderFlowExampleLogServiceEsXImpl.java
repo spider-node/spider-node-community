@@ -10,6 +10,7 @@ import cn.spider.framework.spider.log.es.esx.EsQuery;
 import cn.spider.framework.spider.log.es.esx.model.EsData;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,24 +59,26 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
 
             EsData<SpiderFlowExampleLog> result = esContext.indice(index)
                     .where(c -> c.useScore().terms("id", flowExampleLogMap.keySet()))
-                    .limit(500)
+                    .limit(700)
                     .selectList(SpiderFlowExampleLog.class);
 
             Map<String, SpiderFlowExampleLog> spiderFlowExampleLogMap = result.getList().stream().collect(Collectors.toMap(SpiderFlowExampleLog::getId, Function.identity(), (v1, v2) -> v2));
 
-            List<SpiderFlowExampleLog> logsNew = Lists.newArrayList();
+            List<SpiderFlowExampleLog> insert = Lists.newArrayList();
+
+            Map<String, Object> updateMap = new HashMap<>();
+
             for (String key : flowExampleLogMap.keySet()) {
                 Map<String, Object> spiderFlowMap = Maps.newHashMap();
                 if (spiderFlowExampleLogMap.containsKey(key)) {
                     SpiderFlowExampleLog spiderFlowExampleLog = spiderFlowExampleLogMap.get(key);
+
                     Map<String, Object> ben2Map =
                             JSON.parseObject(JSON.toJSONString(spiderFlowExampleLog), Map.class);
                     spiderFlowMap.putAll(ben2Map);
                 }
-
                 List<SpiderFlowExampleLog> spiderFlowExampleLogs = flowExampleLogMap.get(key);
                 for (SpiderFlowExampleLog spiderFlowExampleLog : spiderFlowExampleLogs) {
-
                     Map<String, Object> ben2Map =
                             JSON.parseObject(JSON.toJSONString(spiderFlowExampleLog), Map.class);
                     spiderFlowMap.putAll(ben2Map);
@@ -84,9 +88,18 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
                     Long endTime = (Long) spiderFlowMap.get("endTime");
                     spiderFlowMap.put("takeTime", endTime - startTime);
                 }
-                logsNew.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowExampleLog.class));
+                if(spiderFlowExampleLogMap.containsKey(key)){
+                    updateMap.putAll(spiderFlowMap);
+                }else {
+                    insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowExampleLog.class));
+                }
             }
-            esContext.indice(index).insertList(logsNew);
+            if(!updateMap.isEmpty()){
+                esContext.indice(index).upsertList(updateMap);
+            }
+            if(CollectionUtils.isNotEmpty(insert)){
+                esContext.indice(index).insertList(insert);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,6 +113,7 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
             Integer start = (queryFlowExample.getPage() - 1) * queryFlowExample.getSize();
             EsData<FlowExample> result = buildEsQuery(queryFlowExample)
                     .minScore(1)
+                    .andByDesc("startTime")
                     .limit(start, queryFlowExample.getSize())
                     .selectList(FlowExample.class);
             List<FlowExample> flowExampleList = result.getList();

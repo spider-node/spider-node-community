@@ -42,7 +42,7 @@ import java.util.Optional;
  * 重排链路
  *  - 如果排他网关、包含网关中指定了 TaskService，这个流程会把指定的 TaskService 单独拎出来作为执行节点加入到链路中
  *
- * @author lykan
+ * @author dds
  */
 public class RearrangeFlowPostProcessor extends DiagramTraverseSupport<Object> implements StartEventPostProcessor {
 

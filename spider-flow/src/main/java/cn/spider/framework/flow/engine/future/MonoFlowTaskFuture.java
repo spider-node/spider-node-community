@@ -31,7 +31,7 @@ import java.util.concurrent.Future;
 /**
  * 异步版本的主流程 FlowFuture
  *
- * @author lykan
+ * @author dds
  */
 public class MonoFlowTaskFuture extends FragmentTaskFuture<AsyncTaskState> implements MonoFlowFuture {
 

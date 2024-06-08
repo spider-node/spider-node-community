@@ -35,6 +35,7 @@ import io.vertx.core.Promise;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedBy;
@@ -48,7 +49,7 @@ import java.util.function.Supplier;
 /**
  * BasicStoryBus
  *
- * @author lykan
+ * @author dds
  */
 public class BasicStoryBus implements StoryBus {
 
@@ -168,18 +169,46 @@ public class BasicStoryBus implements StoryBus {
             if (scopeTypeEnum == ScopeTypeEnum.RESULT) {
                 return getResult();
             }
+            ScopeData scopeData = null;
             if (scopeTypeEnum == ScopeTypeEnum.STABLE) {
-                return PropertyUtil.getProperty(getSta(), key);
+                scopeData = getSta();
             } else if (scopeTypeEnum == ScopeTypeEnum.VARIABLE) {
-                return PropertyUtil.getProperty(getVar(), key);
+                scopeData = getVar();
             } else if (scopeTypeEnum == ScopeTypeEnum.REQUEST) {
                 return PropertyUtil.getProperty(getReq(), key);
             } else {
                 throw ExceptionUtil.buildException(null, ExceptionEnum.STORY_ERROR, null);
             }
+            return PropertyUtil.getProperty(scopeData, key);
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<Object> getValueNode(ScopeTypeEnum scopeTypeEnum, String key) {
+        if (scopeTypeEnum == ScopeTypeEnum.RESULT) {
+            return getResult();
+        }
+        ScopeData scopeData = null;
+        if (scopeTypeEnum == ScopeTypeEnum.STABLE) {
+            scopeData = getSta();
+        } else if (scopeTypeEnum == ScopeTypeEnum.VARIABLE) {
+            scopeData = getVar();
+        } else if (scopeTypeEnum == ScopeTypeEnum.REQUEST) {
+            Object req = getReq();
+            return PropertyUtil.getReqPropertyNode(req,key);
+        } else {
+            throw ExceptionUtil.buildException(null, ExceptionEnum.STORY_ERROR, null);
+        }
+        return buildResult(scopeData,key);
+    }
+
+    private Optional<Object> buildResult(Object param,String key){
+        if(key.contains(".")){
+            return PropertyUtil.getPropertyNode(param,key);
+        }
+        return PropertyUtil.getProperty(param,key);
     }
 
     @Override
@@ -245,6 +274,12 @@ public class BasicStoryBus implements StoryBus {
         int t = (int) (timeoutMillis - (System.currentTimeMillis() - beginTimeMillis));
         return Math.max(t, 0);
     }
+
+    @Override
+    public String queryRequestId() {
+        return requestId;
+    }
+
 
     @SuppressWarnings("unchecked")
     @Override

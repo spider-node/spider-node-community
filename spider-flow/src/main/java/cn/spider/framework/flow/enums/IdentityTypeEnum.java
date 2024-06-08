@@ -18,7 +18,7 @@
 package cn.spider.framework.flow.enums;
 
 /**
- * @author lykan
+ * @author dds
  */
 public enum IdentityTypeEnum {
 

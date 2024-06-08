@@ -22,7 +22,7 @@ import cn.spider.framework.flow.engine.thread.EndTaskPedometer;
 /**
  * 主线路 TaskFuture
  *
- * @author lykan
+ * @author dds
  */
 public interface MainTaskFuture extends FragmentFuture {
 

@@ -1,5 +1,6 @@
 package cn.spider.framework.domain.area.function.version.data;
 
+import cn.spider.framework.domain.area.data.enums.BpmnStatus;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
 import lombok.Data;
 
@@ -60,13 +61,12 @@ public class FunctionVersionModel {
     private String desc;
 
     /**
-     * 请求参数的启动类
-     */
-    private String reqParamClassType;
-
-    /**
      * bpmn状态
      */
-    private String bpmnStatus;
+    private BpmnStatus bpmnStatus;
 
+    /**
+     * 返回参数的隐射
+     */
+    private String resultMapping;
 }

@@ -229,6 +229,11 @@ public class TaskManager {
         Parameter[] parameters = method.getParameters();
         String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
         Object[] params = new Object[parameterNames.length];
+        if(parameterNames.length == 1){
+            Class paramType = parameters[0].getType();
+            params[0] = JSON.parseObject(JSON.toJSONString(paramMap), paramType);
+            return params;
+        }
         for (int i = 0; i < parameterNames.length; i++) {
             Parameter parameter = parameters[i];
             String parameterName = parameterNames[i];

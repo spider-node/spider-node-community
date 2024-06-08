@@ -29,7 +29,7 @@ import java.util.Optional;
 /**
  * 权限类型
  *
- * @author lykan
+ * @author dds
  */
 public enum PermissionType {
 

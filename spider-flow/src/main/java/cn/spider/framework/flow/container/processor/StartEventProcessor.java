@@ -27,7 +27,7 @@ import java.util.Optional;
 /**
  * 开始节点加工器
  *
- * @author lykan
+ * @author dds
  */
 public class StartEventProcessor {
 

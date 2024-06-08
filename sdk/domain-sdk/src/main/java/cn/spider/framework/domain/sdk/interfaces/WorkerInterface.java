@@ -26,5 +26,5 @@ public interface WorkerInterface {
 
     Future<JsonObject> queryWorkerInfo(JsonObject data);
 
-
+    Future<Void> addWorker(JsonObject data);
 }

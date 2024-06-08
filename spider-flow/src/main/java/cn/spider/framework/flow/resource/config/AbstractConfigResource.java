@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.net.URI;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class AbstractConfigResource implements ConfigResource {
 

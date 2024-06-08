@@ -23,7 +23,7 @@ import cn.spider.framework.flow.resource.identity.Identity;
 /**
  * 权限
  *
- * @author lykan
+ * @author dds
  */
 public interface Permission extends Identity, PermissionAuth {
 

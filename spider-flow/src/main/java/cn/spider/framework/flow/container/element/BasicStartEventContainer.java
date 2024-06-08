@@ -37,7 +37,7 @@ import java.util.*;
 /**
  * StartEvent 容器
  *
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class BasicStartEventContainer implements StartEventContainer {
@@ -80,7 +80,7 @@ public class BasicStartEventContainer implements StartEventContainer {
         Map<String, StartEvent> startEventMap = Maps.newHashMap();
         resourceList.stream().map(event -> startEventProcessor.postStartEvent(event).orElse(null)).filter(Objects::nonNull).forEach(event -> startEventMap.put(event.getId(), event));
         this.globalStartEventMap.putAll(startEventMap);
-        log.info("refreshStartEvent-globalStartEventMap {}", JSON.toJSONString(globalStartEventMap));
+        log.info("refreshStartEvent-globalStartEventMap {}", JSON.toJSONString(startEventMap));
     }
 
     public void removeStartId(Set<String> startIds){

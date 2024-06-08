@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * 资源创建工厂
  *
- * @author lykan
+ * @author dds
  */
 public interface ResourceFactory<R> {
 

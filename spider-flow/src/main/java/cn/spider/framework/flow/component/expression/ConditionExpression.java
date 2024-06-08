@@ -18,11 +18,12 @@
 package cn.spider.framework.flow.component.expression;
 
 import cn.spider.framework.flow.bus.StoryBus;
+import io.vertx.core.Future;
 import org.springframework.core.Ordered;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public interface ConditionExpression extends Ordered {
 
@@ -32,7 +33,7 @@ public interface ConditionExpression extends Ordered {
      * @param storyBus scopeData
      * @return 表达式结果
      */
-    boolean condition(StoryBus storyBus);
+    Future<Boolean> condition(StoryBus storyBus);
 
     /**
      * 根据表达式判断是否需要使用该类型表达式
@@ -47,4 +48,5 @@ public interface ConditionExpression extends Ordered {
      * @param aliasParser 别名解析器
      */
     void parserConditionExpression(ExpressionAliasParser aliasParser);
+
 }

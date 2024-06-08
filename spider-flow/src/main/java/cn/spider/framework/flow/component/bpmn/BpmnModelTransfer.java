@@ -27,7 +27,7 @@ import java.util.Optional;
 /**
  * 将 BPMN 文件解析成链路流程对象
  *
- * @author lykan
+ * @author dds
  */
 public interface BpmnModelTransfer<T> {
 

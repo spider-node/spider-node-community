@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 /**
  * 遍历流程图对象的模版。传入 StartEvent 可遍历整个流程图
  *
- * @author lykan
+ * @author dds
  */
 public class DiagramTraverseSupport<T> {
 

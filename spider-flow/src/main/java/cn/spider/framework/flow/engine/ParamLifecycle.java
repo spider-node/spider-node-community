@@ -22,7 +22,7 @@ import cn.spider.framework.flow.bus.ScopeDataOperator;
 /**
  * 参数生命周期接口
  *
- * @author lykan
+ * @author dds
  */
 public interface ParamLifecycle {
 

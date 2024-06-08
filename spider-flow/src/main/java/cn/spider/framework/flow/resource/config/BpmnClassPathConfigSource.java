@@ -25,7 +25,7 @@ import cn.spider.framework.flow.enums.ResourceTypeEnum;
 /**
  * BPMN 文件类路径配置来源
  *
- * @author lykan
+ * @author dds
  */
 public class BpmnClassPathConfigSource extends ClassPathConfigSource implements ConfigSource {
 

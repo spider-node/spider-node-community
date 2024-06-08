@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public enum TrackingTypeEnum {
 

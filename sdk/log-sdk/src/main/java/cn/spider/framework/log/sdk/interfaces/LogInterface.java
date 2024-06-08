@@ -26,6 +26,6 @@ public interface LogInterface {
 
     Future<JsonObject> queryFlowExample(JsonObject param);
 
-    Future<JsonObject> queryExampleExample(JsonObject param);
+    Future<JsonObject> queryElementExample(JsonObject param);
 
 }

@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 /**
  * 方法调用任务
  *
- * @author lykan
+ * @author dds
  */
 public class MethodInvokeTask extends BasicTaskCore implements Task {
 

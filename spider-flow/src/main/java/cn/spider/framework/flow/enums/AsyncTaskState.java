@@ -20,7 +20,7 @@ package cn.spider.framework.flow.enums;
 /**
  * 异步任务执行结果
  *
- * @author lykan
+ * @author dds
  */
 public enum AsyncTaskState {
 

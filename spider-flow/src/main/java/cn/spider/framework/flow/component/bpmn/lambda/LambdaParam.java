@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 @SuppressWarnings("unused")
 public interface LambdaParam {

@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 服务组件类包装器
  *
- * @author lykan
+ * @author dds
  */
 public class TaskComponentRegisterWrapper extends BasicIdentity implements RootTaskService {
 

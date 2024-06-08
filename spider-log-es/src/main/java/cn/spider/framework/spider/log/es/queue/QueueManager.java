@@ -73,14 +73,14 @@ public class QueueManager {
         if (flowExampleQueue.size() == 0) {
             return;
         }
-        List<String> list = new ArrayList<>();
         spiderLogPool.execute(() -> {
             try {
-                Queues.drain(flowExampleQueue, list, 800, 15, TimeUnit.SECONDS);
+                List<String> list = new ArrayList<>();
+                Queues.drain(flowExampleQueue, list, 600, 6, TimeUnit.SECONDS);
                 if (CollectionUtils.isEmpty(list)) {
                     return;
                 }
-
+                // 加入另外一个队列，保证是单个线程处理
                 List<SpiderFlowElementExampleLog> elementExampleLogs = Lists.newArrayList();
                 List<SpiderFlowExampleLog> flowExampleLogs = Lists.newArrayList();
                 for (String value : list) {
@@ -98,6 +98,7 @@ public class QueueManager {
                             break;
                     }
                 }
+
                 spiderFlowElementExampleService.upsertBatchFlowElementExampleLog(elementExampleLogs);
                 exampleLogService.upsetBatchFlowExampleLog(flowExampleLogs);
             } catch (Exception e) {
@@ -105,14 +106,12 @@ public class QueueManager {
             }
         });
 
-
+        // 根据requestId+nodeId 查询出来整个流程的数据
     }
 
     public void registerTimer() {
-        this.vertx.setPeriodic(1000 * 15, id -> {
-            vertx.executeBlocking(promise -> {
-                consumerByBatch();
-            });
+        this.vertx.setPeriodic(1000 * 6, id -> {
+            consumerByBatch();
         });
     }
 }

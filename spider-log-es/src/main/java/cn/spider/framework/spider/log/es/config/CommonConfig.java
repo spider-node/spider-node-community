@@ -54,11 +54,11 @@ public class CommonConfig {
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //核心线程池大小
-        executor.setCorePoolSize(4);
+        executor.setCorePoolSize(1);
         //最大线程数
-        executor.setMaxPoolSize(8);
+        executor.setMaxPoolSize(1);
         //队列容量
-        executor.setQueueCapacity(100);
+        executor.setQueueCapacity(500);
         //活跃时间
         executor.setKeepAliveSeconds(200);
         //线程名字前缀

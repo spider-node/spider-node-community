@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationContext;
 /**
  * 参数生命周期接口
  *
- * @author lykan
+ * @author dds
  */
 public interface SpringParamLifecycle extends ParamLifecycle {
 

@@ -19,7 +19,7 @@ package cn.spider.framework.flow.exception;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class ResourceException extends KstryException {
 

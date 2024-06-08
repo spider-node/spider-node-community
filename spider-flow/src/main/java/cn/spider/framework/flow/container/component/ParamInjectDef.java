@@ -25,11 +25,12 @@ import java.util.List;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class ParamInjectDef {
 
     private final boolean needInject;
+
     private final Class<?> paramType;
 
     private final String fieldName;

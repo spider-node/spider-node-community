@@ -32,7 +32,7 @@ import cn.spider.framework.flow.component.bpmn.lambda.LambdaServiceSupport;
 /**
  * BPMN 元素代码方式连接能力
  *
- * @author lykan
+ * @author dds
  */
 public interface ProcessLink extends LambdaServiceSupport {
 

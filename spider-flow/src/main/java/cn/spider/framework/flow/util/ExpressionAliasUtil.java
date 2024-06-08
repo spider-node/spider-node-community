@@ -30,7 +30,7 @@ import java.util.*;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 @SuppressWarnings("unused")
 public class ExpressionAliasUtil {

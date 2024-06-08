@@ -25,7 +25,7 @@ import java.util.Optional;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class CustomRoleInfo {
 

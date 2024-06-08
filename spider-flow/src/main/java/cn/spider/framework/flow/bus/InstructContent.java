@@ -20,7 +20,7 @@ package cn.spider.framework.flow.bus;
 /**
  * 指令
  *
- * @author lykan
+ * @author dds
  */
 public class InstructContent {
 

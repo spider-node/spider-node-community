@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * 对 ServiceTask 支持
  *
- * @author lykan
+ * @author dds
  */
 public interface ServiceTaskSupport {
 

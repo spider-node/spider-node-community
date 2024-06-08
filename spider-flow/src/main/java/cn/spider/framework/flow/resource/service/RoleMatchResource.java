@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 /**
  * 角色匹配资源
  *
- * @author lykan
+ * @author dds
  */
 public interface RoleMatchResource extends ServiceNodeIdentity {
 

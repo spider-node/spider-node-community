@@ -21,8 +21,18 @@ public interface VersionInterface {
     Future<Void> insertVersion(JsonObject data);
     // 更新版本
     Future<Void> updateVersion(JsonObject data);
+
+    // 启停版本
+    Future<Void> startOrStopVersion(JsonObject data);
+
     // 刷新bpmn
     Future<Void> refreshVersion(JsonObject data);
     // 查询版本
     Future<JsonObject> queryVersion(JsonObject data);
+
+    // 查询bpmn-url
+    Future<JsonObject> queryBpmnUrl();
+
+    // 根据功能id查询版本信息
+    Future<JsonObject> queryVersionByFunctionId(JsonObject data);
 }

@@ -26,7 +26,7 @@ import cn.spider.framework.flow.bpmn.StartEvent;
 /**
  * StartEvent 创建过程加工器
  *
- * @author lykan
+ * @author dds
  */
 public interface StartEventPostProcessor extends Ordered {
 

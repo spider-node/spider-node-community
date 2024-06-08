@@ -20,7 +20,7 @@ package cn.spider.framework.flow.bpmn.enums;
 /**
  * BPMN 元素类型
  *
- * @author lykan
+ * @author dds
  */
 public enum BpmnTypeEnum {
 

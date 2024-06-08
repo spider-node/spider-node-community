@@ -21,7 +21,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>spider-node-1.0.0.RELEASE</finalName>
+    <finalName>spider-node-1.0.1.RELEASE</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -100,7 +100,7 @@
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
-    <vertx.version>4.4.3</vertx.version>
+    <vertx.version>4.3.7</vertx.version>
     <maven-jar-plugin-version>3.1.0</maven-jar-plugin-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>

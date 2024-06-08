@@ -2,6 +2,7 @@ package cn.spider.framework.linker.server;
 
 import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.config.SpringConfig;
 import cn.spider.framework.linker.server.external.LinkerServiceImpl;
@@ -43,7 +44,8 @@ public class LinkerMainVerticle extends AbstractVerticle {
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
         this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
         ClientRegisterCenter clientRegisterCenter = factory.getBean(ClientRegisterCenter.class);
-        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx);
+        FunctionInterface functionInterface = factory.getBean(FunctionInterface.class);
+        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface);
         // 发布接口
         this.binder = new ServiceBinder(vertx);
         MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(this.brokerName + LinkerService.ADDRESS)

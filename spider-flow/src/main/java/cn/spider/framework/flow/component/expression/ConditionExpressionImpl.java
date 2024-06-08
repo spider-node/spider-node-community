@@ -18,13 +18,21 @@
 package cn.spider.framework.flow.component.expression;
 
 import cn.spider.framework.flow.bus.StoryBus;
+import cn.spider.framework.flow.load.SpringBeanUtils;
 import cn.spider.framework.flow.util.AssertUtil;
+import cn.spider.framework.param.sdk.data.QueryExpressionParam;
+import cn.spider.framework.param.sdk.data.QueryExpressionResult;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
 import java.util.function.BiPredicate;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class ConditionExpressionImpl implements ConditionExpression {
 
@@ -53,18 +61,33 @@ public class ConditionExpressionImpl implements ConditionExpression {
      */
     private final BiPredicate<StoryBus, String> testCondition;
 
+    private ParamInterface paramInterface;
+
     public ConditionExpressionImpl(BiPredicate<StoryBus, String> testCondition) {
         AssertUtil.notNull(testCondition);
         this.testCondition = testCondition;
+        if(Objects.isNull(this.paramInterface)){
+            this.paramInterface = SpringBeanUtils.getBean(ParamInterface.class);
+        }
     }
 
     @Override
-    public boolean condition(StoryBus storyBus) {
+    public Future<Boolean> condition(StoryBus storyBus) {
         if (storyBus == null) {
-            return false;
+            Future.succeededFuture(false);
         }
-        AssertUtil.notBlank(this.conditionExpression);
-        return this.testCondition.test(storyBus, this.conditionExpression);
+        AssertUtil.notBlank(this.expression);
+        // 进行查询 param角色获取true,false
+        Promise<Boolean> promise = Promise.promise();
+        QueryExpressionParam queryExpressionParam = new QueryExpressionParam(this.expression,storyBus.queryRequestId());
+        Future<JsonObject> future = paramInterface.getParamValue(JsonObject.mapFrom(queryExpressionParam));
+        future.onSuccess(suss->{
+            QueryExpressionResult expressionResult = suss.mapTo(QueryExpressionResult.class);
+            promise.complete(expressionResult.getResult());
+        }).onFailure(fail->{
+            promise.fail(fail);
+        });
+        return promise.future();
     }
 
     @Override
@@ -104,6 +127,14 @@ public class ConditionExpressionImpl implements ConditionExpression {
         conditionExpression.order = order;
         conditionExpression.expression = expression;
         conditionExpression.needParserExpression = needParserExpression;
+        return conditionExpression;
+    }
+
+    public String getExpression() {
+        return expression;
+    }
+
+    public String getConditionExpression() {
         return conditionExpression;
     }
 }

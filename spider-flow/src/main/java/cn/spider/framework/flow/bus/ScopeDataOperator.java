@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 /**
  * 用于暴露给使用方，作为操作 StoryBus 中数据的入口
  *
- * @author lykan
+ * @author dds
  */
 public interface ScopeDataOperator extends ScopeDataQuery {
 

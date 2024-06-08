@@ -22,7 +22,7 @@ import cn.spider.framework.flow.enums.ExceptionTypeEnum;
 /**
  * 错误枚举
  *
- * @author lykan
+ * @author dds
  */
 public enum ExceptionEnum {
 

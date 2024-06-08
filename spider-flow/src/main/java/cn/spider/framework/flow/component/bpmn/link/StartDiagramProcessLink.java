@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * BPMN 元素代码方式连接起点
  *
- * @author lykan
+ * @author dds
  */
 public class StartDiagramProcessLink extends BpmnDiagramLink implements StartProcessLink {
 

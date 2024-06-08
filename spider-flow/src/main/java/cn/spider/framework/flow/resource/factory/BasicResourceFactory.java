@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author lykan
+ * @author dds
  */
 public abstract class BasicResourceFactory<R> implements ResourceFactory<R> {
 
@@ -61,10 +61,10 @@ public abstract class BasicResourceFactory<R> implements ResourceFactory<R> {
     /**
      * 通过指定文件名称获取多余的ConfigResource
      * @param resourceType
-     * @param fillName
+     * @param url
      * @return
      */
-    protected List<ConfigResource> getConfigResource(ResourceTypeEnum resourceType,String fillName) {
+    protected List<ConfigResource> getConfigResource(ResourceTypeEnum resourceType,String url) {
         AssertUtil.notNull(resourceType);
         Map<String, ConfigSource> configSourceMap = applicationContext.getBeansOfType(ConfigSource.class);
         if (MapUtils.isEmpty(configSourceMap)) {
@@ -74,6 +74,6 @@ public abstract class BasicResourceFactory<R> implements ResourceFactory<R> {
         if (CollectionUtils.isEmpty(configSource)) {
             return Lists.newArrayList();
         }
-        return configSource.stream().flatMap(source -> source.getConfigResourceList(fillName).stream()).collect(Collectors.toList());
+        return configSource.stream().flatMap(source -> source.getConfigResourceList(url).stream()).collect(Collectors.toList());
     }
 }

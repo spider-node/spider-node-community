@@ -25,6 +25,12 @@ public interface FlowService {
     // 通知 执行执行状态
     Future<JsonObject> startFlow(JsonObject data);
 
+    // 执行spider中配置的功能
+    Future<JsonObject> startFlowV2(JsonObject data);
+
+    // 执行spider中配置的功能
+    Future<JsonObject> startFlowRetry(JsonObject data);
+
     Future<Void> activation(JsonObject data);
 
     /**

@@ -20,7 +20,7 @@ package cn.spider.framework.flow.engine.thread;
 /**
  * Kstry 执行任务
  *
- * @author lykan
+ * @author dds
  */
 public interface Task{
 

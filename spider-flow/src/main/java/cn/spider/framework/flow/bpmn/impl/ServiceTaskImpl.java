@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ServiceTaskImpl
@@ -123,6 +124,8 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     // 回溯到对于的节点
     private String backId;
 
+    private Map<String,Object> appointParam;
+
     /**
      * 延迟时间
      */
@@ -130,6 +133,10 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
 
     public String getBackId() {
         return backId;
+    }
+
+    public Map<String, Object> getAppointParam() {
+        return appointParam;
     }
 
     public void setBackId(String backId) {
@@ -144,12 +151,21 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
         return this.delayTime;
     }
 
+    public void setAppointParam(String appointParam) {
+        this.appointParam = StringUtils.isEmpty(appointParam) ? new HashMap<>() :JSON.parseObject(appointParam).getInnerMap();
+    }
+
     @Override
     public String queryConfigFieldName(String fieldName) {
         if(Objects.nonNull(fieldMapping) && fieldMapping.containsKey(fieldName)){
             return fieldMapping.get(fieldName);
         }
         return fieldName;
+    }
+
+    @Override
+    public Map<String,Object> obtainAppointParam() {
+        return this.appointParam;
     }
 
     public Integer getPollCount() {
@@ -407,11 +423,6 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
         return ServerTaskTypeEnum.valueOf(StringUtils.isEmpty(this.serviceTaskType) ? "NORMAL" : this.serviceTaskType);
     }
 
-    @Override
-    public Promise<Object> getPromise() {
-        return this.taskServicePromise;
-    }
-
     public void setTaskInstructContent(String taskInstructContent) {
         this.taskInstructContent = taskInstructContent;
     }
@@ -424,6 +435,11 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     @Override
     public Map<String, Object> getTaskParams() {
         return taskParams;
+    }
+
+    @Override
+    public Map<String, String> getFiledMapping() {
+        return fieldMapping;
     }
 
     public void setTaskParams(String taskParams) {

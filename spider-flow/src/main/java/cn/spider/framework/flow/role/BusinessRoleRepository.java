@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 /**
  * 角色资源库，可以根据业务ID决策使用哪个角色
  *
- * @author lykan
+ * @author dds
  */
 public class BusinessRoleRepository {
 

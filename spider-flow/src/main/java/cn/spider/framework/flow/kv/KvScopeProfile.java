@@ -19,7 +19,7 @@ package cn.spider.framework.flow.kv;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class KvScopeProfile {
 

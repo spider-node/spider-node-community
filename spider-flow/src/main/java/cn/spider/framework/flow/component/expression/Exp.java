@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 @SuppressWarnings({"unchecked", "unused"})
 public class Exp<T extends Exp<?>> {

@@ -17,14 +17,17 @@
  */
 package cn.spider.framework.flow.util;
 
+import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.flow.constant.ConfigPropertyNameConstant;
 import cn.spider.framework.flow.constant.GlobalProperties;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import com.alibaba.fastjson.JSON;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -34,7 +37,7 @@ import java.util.Optional;
 /**
  * PropertyUtil
  *
- * @author lykan
+ * @author dds
  */
 public class PropertyUtil {
 
@@ -62,6 +65,43 @@ public class PropertyUtil {
         }
     }
 
+
+    public static Optional<Object> getPropertyNode(Object bean, String propertyName) {
+        if (bean == null || StringUtils.isBlank(propertyName)) {
+            return Optional.empty();
+        }
+        try {
+            int index = propertyName.indexOf(".");
+            // 获取jsonPath变量中第一个逗号前面的数据
+            String domainName = propertyName.substring(0, index);
+            // 获取jsonPath变量中第二个逗号后面的数据
+            String subPropertyName = propertyName.substring(index + 1);
+            Object object = PropertyUtils.getProperty(bean, domainName);
+            ONode node = ONode.load(object);
+            return Optional.ofNullable(node.select(Constant.JSON_PATH_PREFIX + subPropertyName));
+        } catch (NoSuchMethodException e) {
+            LOGGER.warn("[{}] Error accessing a non-existent variable! propertyName: {}, class: {}",
+                    ExceptionEnum.FAILED_GET_PROPERTY.getExceptionCode(), propertyName, bean.getClass());
+            return Optional.of(GET_PROPERTY_ERROR_SIGN);
+        } catch (Throwable e) {
+            LOGGER.warn("[{}] BeanUtils Failed to get bean property! propertyName: {}", ExceptionEnum.FAILED_GET_PROPERTY.getExceptionCode(), propertyName, e);
+            return Optional.of(GET_PROPERTY_ERROR_SIGN);
+        }
+    }
+
+    public static Optional<Object> getReqPropertyNode(Object bean, String propertyName) {
+        if (bean == null || StringUtils.isBlank(propertyName)) {
+            return Optional.empty();
+        }
+        try {
+            ONode node = ONode.load(bean);
+            return Optional.ofNullable(node.select(Constant.JSON_PATH_PREFIX + propertyName));
+        } catch (Throwable e) {
+            LOGGER.warn("[{}] BeanUtils Failed to get bean property! propertyName: {}", ExceptionEnum.FAILED_GET_PROPERTY.getExceptionCode(), propertyName, e);
+            return Optional.of(GET_PROPERTY_ERROR_SIGN);
+        }
+    }
+
     public static boolean setProperty(Object target, String propertyName, Object value) {
         if (target == null || StringUtils.isBlank(propertyName)) {
             return false;
@@ -76,6 +116,14 @@ public class PropertyUtil {
             LOGGER.warn("[{}] BeanUtils Failed to set bean property! target: {}, propertyName: {}, value: {}",
                     ExceptionEnum.FAILED_SET_PROPERTY.getExceptionCode(), JSON.toJSONString(target), propertyName, value, e);
         }
+        return false;
+    }
+
+    public static boolean setPropertyJson(Object target, String propertyName, Object value) {
+        if (target == null || StringUtils.isBlank(propertyName)) {
+            return false;
+        }
+
         return false;
     }
 

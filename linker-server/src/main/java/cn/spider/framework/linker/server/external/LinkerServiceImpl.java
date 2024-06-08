@@ -1,6 +1,10 @@
 package cn.spider.framework.linker.server.external;
 
+import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.domain.sdk.data.FlowElementModel;
+import cn.spider.framework.domain.sdk.data.FlowExampleModel;
+import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.sdk.interfaces.VertxRpcTaskInterface;
@@ -16,10 +20,12 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @program: spider-node
@@ -38,12 +44,15 @@ public class LinkerServiceImpl implements LinkerService {
 
     private Vertx vertx;
 
-    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx) {
+    private FunctionInterface functionInterface;
+
+    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx,FunctionInterface functionInterface) {
         this.clientRegisterCenter = clientRegisterCenter;
         String rpcType = BrokerInfoUtil.queryRpcType(vertx);
         this.isVertxRpc = rpcType.equals("vertxRpc");
         this.rpcTaskInterfaceMap = new HashMap<>();
         this.vertx = vertx;
+        this.functionInterface = functionInterface;
     }
 
     /**
@@ -56,6 +65,37 @@ public class LinkerServiceImpl implements LinkerService {
     public Future<JsonObject> submittals(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
         LinkerServerRequest linkerServerRequest = JSON.parseObject(param.toString(), LinkerServerRequest.class);
+
+        if (linkerServerRequest.getRetryType().equals(Constant.VIRTUALLY)) {
+            JsonObject queryHistoryParam = new JsonObject();
+            queryHistoryParam.put(Constant.REQUEST_ID, linkerServerRequest.getParentRequestId());
+            functionInterface.queryRunHistoryElementData(queryHistoryParam)
+                    .onSuccess(suss -> {
+                        FlowExampleModel flowExampleModel = suss.mapTo(FlowExampleModel.class);
+                        log.info("--------执行虚拟数据ComponentName {} service {}",linkerServerRequest.getFunctionRequest().getComponentName(),linkerServerRequest.getFunctionRequest().getServiceName());
+                        if (CollectionUtils.isEmpty(flowExampleModel.getFlowElementModelList())) {
+                            promise.fail("没有找到对应的节点数据");
+                            return;
+                        }
+                        Optional<FlowElementModel> optionalFlowElementModel = flowExampleModel
+                                .getFlowElementModelList()
+                                .stream()
+                                .filter(item -> item.getFlowElementId().equals(linkerServerRequest.getNowNodeId()) && StringUtils.isNotEmpty(item.getRequestParam()))
+                                .findFirst();
+
+                        if (!optionalFlowElementModel.isPresent()) {
+                            promise.fail("没有找到需要执行的对应的节点数据");
+                        }
+                        FlowElementModel flowElementModel = optionalFlowElementModel.get();
+                        LinkerServerResponse responseNew = buildLinkerServerVirtuallyResponse(flowElementModel.getReturnParam());
+                        promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
+                    }).onFailure(fail -> {
+                        log.error(fail.getMessage());
+                        promise.fail(fail);
+                    });
+            return promise.future();
+        }
+
         // 解析请求，是走功能请求，还是事务操作的请求
         switch (linkerServerRequest.getExecutionType()) {
             case FUNCTION:
@@ -81,16 +121,16 @@ public class LinkerServiceImpl implements LinkerService {
         VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
         TransferRequest transferRequest = TransferRequest.newBuilder()
                 .setBody(param.toString())
-                .setHeader("spider-function")
+                .setHeader(Constant.SPIDER_FUNCTION)
                 .setTaskComponentName(functionRequest.getComponentName())
                 .setTaskComponentVersion(StringUtils.isEmpty(functionRequest.getVersion()) ? "v1" : functionRequest.getVersion())
                 .build();
         Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
-       // log.info("获取参数-------------立马调用远程 时间 {}",System.currentTimeMillis());
+        // log.info("获取参数-------------立马调用远程 时间 {}",System.currentTimeMillis());
         response.onSuccess(suss -> {
             TransferResponse result = suss;
             LinkerServerResponse responseNew = buildLinkerServerResponse(result);
-            promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+            promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
         }).onFailure(fail -> {
             log.error(fail.getMessage());
             promise.fail(fail);
@@ -118,27 +158,25 @@ public class LinkerServiceImpl implements LinkerService {
             Future<JsonObject> future = vertxRpcTaskInterface.run(param);
             future.onSuccess(suss -> {
                 LinkerServerResponse responseNew = suss.mapTo(LinkerServerResponse.class);
-                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+                promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
             }).onFailure(fail -> {
                 log.error(fail.getMessage());
                 promise.fail(fail);
             });
 
         } else {
-
-
             ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(request.getWorkerName());
             VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
             TransferRequest transferRequest = TransferRequest.newBuilder()
                     .setBody(param.toString())
-                    .setHeader("spider-transaction")
+                    .setHeader(Constant.SPIDER_FUNCTION)
                     .build();
             Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
             response.onSuccess(suss -> {
                 TransferResponse result = suss;
                 log.info("runTransaction-result {}", JSON.toJSONString(result));
                 LinkerServerResponse responseNew = buildLinkerServerResponse(result);
-                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+                promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
             }).onFailure(fail -> {
                 log.error(fail.getMessage());
                 promise.fail(fail);
@@ -160,4 +198,18 @@ public class LinkerServiceImpl implements LinkerService {
         response.setResultData(StringUtils.isEmpty(result.getData()) ? new JSONObject() : JSON.parseObject(result.getData()));
         return response;
     }
+
+    /**
+     * 解析客户端响应参数
+     *
+     * @param result
+     * @return
+     */
+    public LinkerServerResponse buildLinkerServerVirtuallyResponse(String result) {
+        LinkerServerResponse response = new LinkerServerResponse();
+        response.setResultCode(ResultCode.SUSS);
+        response.setResultData(StringUtils.isEmpty(result) ? new JSONObject() : JSON.parseObject(result));
+        return response;
+    }
+
 }

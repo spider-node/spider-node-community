@@ -24,7 +24,7 @@ import cn.spider.framework.flow.resource.service.ServiceNodeIdentity;
 /**
  * 权限鉴权
  *
- * @author lykan
+ * @author dds
  */
 public interface PermissionAuth extends ServiceNodeIdentity {
 

@@ -29,12 +29,15 @@ import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.LambdaUtil;
 import com.alibaba.fastjson.JSON;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class ReqBuilder<T> {
 
@@ -81,6 +84,15 @@ public class ReqBuilder<T> {
 
     public ReqBuilder<T> flowExampleRole(FlowExampleRole flowExampleRole) {
         this.storyRequest.setFlowExampleRole(flowExampleRole);
+        return this;
+    }
+
+    public ReqBuilder<T> resultClassMapping(String resultMapping) {
+        Map<String,String> resultMap = new HashMap<>();
+        if(StringUtils.isNotEmpty(resultMapping)){
+            resultMap = JSON.parseObject(resultMapping,Map.class);
+        }
+        this.storyRequest.setResultMapping(resultMap);
         return this;
     }
 

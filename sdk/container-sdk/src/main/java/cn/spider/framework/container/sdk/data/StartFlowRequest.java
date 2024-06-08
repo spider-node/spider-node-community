@@ -1,5 +1,7 @@
 package cn.spider.framework.container.sdk.data;
+
 import com.alibaba.fastjson.JSON;
+
 import java.util.Objects;
 
 /**
@@ -18,6 +20,36 @@ public class StartFlowRequest {
     private String variableKey;
 
     private String requestClassType;
+
+    private String parentRequestId;
+
+    private String retryType;
+
+    private String retryNodeId;
+
+    public String getParentRequestId() {
+        return parentRequestId;
+    }
+
+    public void setParentRequestId(String parentRequestId) {
+        this.parentRequestId = parentRequestId;
+    }
+
+    public String getRetryType() {
+        return retryType;
+    }
+
+    public void setRetryType(String retryType) {
+        this.retryType = retryType;
+    }
+
+    public String getRetryNodeId() {
+        return retryNodeId;
+    }
+
+    public void setRetryNodeId(String retryNodeId) {
+        this.retryNodeId = retryNodeId;
+    }
 
     public String getRequestClassType() {
         return requestClassType;
@@ -43,18 +75,18 @@ public class StartFlowRequest {
         this.variableKey = variableKey;
     }
 
-    public Object getRequest(){
+    public Object getRequest() {
         return this.request;
     }
 
     public Object getRequest(ClassLoader classLoader) {
         try {
-            if(Objects.isNull(classLoader)){
+            if (Objects.isNull(classLoader)) {
                 return this.request;
             }
             Class requestClass = classLoader.loadClass(this.requestClassType);
             // 获取classLoader-》通过classLoader加载该类
-            return JSON.parseObject(JSON.toJSONString(this.request),requestClass);
+            return JSON.parseObject(JSON.toJSONString(this.request), requestClass);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

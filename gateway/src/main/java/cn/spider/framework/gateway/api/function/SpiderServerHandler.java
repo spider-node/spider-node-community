@@ -1,5 +1,6 @@
 package cn.spider.framework.gateway.api.function;
 
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
@@ -12,6 +13,7 @@ import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
+import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
@@ -59,6 +61,11 @@ public class SpiderServerHandler {
 
     private VersionInterface versionInterface;
 
+    private Vertx vertx;
+
+    private Boolean isUseSpiderNewStart;
+
+    private ParamRefreshInterface paramRefreshInterface;
 
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
@@ -70,7 +77,7 @@ public class SpiderServerHandler {
                                AreaInterface areaInterface,
                                FunctionInterface functionInterface,
                                NodeInterface nodeInterface,
-                               VersionInterface versionInterface) {
+                               VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface, Vertx vertx) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -82,6 +89,8 @@ public class SpiderServerHandler {
         this.versionInterface = versionInterface;
         this.functionInterface = functionInterface;
         this.nodeInterface = nodeInterface;
+        this.isUseSpiderNewStart = BrokerInfoUtil.queryStartSpiderNode(vertx);
+        this.paramRefreshInterface = paramRefreshInterface;
     }
 
     public void init(Router router) {
@@ -131,6 +140,36 @@ public class SpiderServerHandler {
         updateArea();
 
         createArea();
+
+        stopStartVersion();
+
+        // 刷新-sdk
+        refreshMethodRunParam();
+
+        queryNodeConfig();
+
+        retryStartFlow();
+
+    }
+
+    public void refreshMethodRunParam() {
+        router.post("/refresh/method/param")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    try {
+                        JsonObject param = ctx.getBodyAsJson();
+                        log.info("请求参数为 {}", param.toString());
+                        paramRefreshInterface.refreshMethod(param).onSuccess(suss -> {
+                            response.end(ResponseData.suss());
+                        }).onFailure(fail -> {
+                            response.end(ResponseData.fail(fail));
+                        });
+                    } catch (Exception e) {
+                        log.error("查询失败", ExceptionMessage.getStackTrace(e));
+                        response.end(ResponseData.fail(e));
+                    }
+                });
     }
 
     public void selectBpmn() {
@@ -246,7 +285,23 @@ public class SpiderServerHandler {
                         return;
                     }*/
                     JsonObject param = ctx.getBodyAsJson();
-                    Future<JsonObject> flowFuture = flowService.startFlow(param);
+                    Future<JsonObject> flowFuture = this.isUseSpiderNewStart ? flowService.startFlowV2(param) : flowService.startFlow(param);
+                    flowFuture.onSuccess(suss -> {
+                        JsonObject result = suss;
+                        response.end(ResponseData.suss(result));
+                    }).onFailure(fail -> {
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void retryStartFlow() {
+        router.post("/retry/retry_business_node")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    Future<JsonObject> flowFuture = flowService.startFlowRetry(param);
                     flowFuture.onSuccess(suss -> {
                         JsonObject result = suss;
                         response.end(ResponseData.suss(result));
@@ -391,7 +446,7 @@ public class SpiderServerHandler {
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
-                    Future<JsonObject> elementResponse = logInterface.queryExampleExample(param);
+                    Future<JsonObject> elementResponse = logInterface.queryElementExample(param);
                     elementResponse.onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
@@ -682,6 +737,23 @@ public class SpiderServerHandler {
                 });
     }
 
+    /**
+     * 查询节点配置
+     */
+    private void queryNodeConfig() {
+        router.post("/query/area_node_config")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.queryParamConfig(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
 
     /**
      * 新增域节点
@@ -761,6 +833,23 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     versionInterface.refreshVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 启停-功能版本
+     */
+    private void stopStartVersion() {
+        router.post("/stop_start/version")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.startOrStopVersion(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));

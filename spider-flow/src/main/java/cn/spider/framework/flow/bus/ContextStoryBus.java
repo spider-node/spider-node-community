@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class ContextStoryBus {
 

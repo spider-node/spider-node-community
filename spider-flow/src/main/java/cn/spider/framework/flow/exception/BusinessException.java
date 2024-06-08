@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * 业务系统使用，业务逻辑发生异常时用来抛出业务异常
  *
- * @author lykan
+ * @author dds
  */
 public class BusinessException extends KstryException {
 

@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class RoleConditionExpression extends ConditionExpressionImpl implements ConditionExpression {
 

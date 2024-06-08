@@ -18,6 +18,8 @@ public class QueryAreaModel {
      */
     private String areaName;
 
+    private String id;
+
     private Integer page;
 
     private Integer size;

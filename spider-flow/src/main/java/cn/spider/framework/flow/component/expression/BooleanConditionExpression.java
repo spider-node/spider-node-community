@@ -21,7 +21,7 @@ import org.apache.commons.lang3.BooleanUtils;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class BooleanConditionExpression extends ConditionExpressionImpl implements ConditionExpression {
 

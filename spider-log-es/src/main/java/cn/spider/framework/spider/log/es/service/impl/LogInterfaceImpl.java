@@ -36,13 +36,21 @@ public class LogInterfaceImpl implements LogInterface {
     @Override
     public Future<JsonObject> queryFlowExample(JsonObject param) {
         QueryFlowExample queryFlowExample = param.mapTo(QueryFlowExample.class);
+        if(queryFlowExample.getSize() == 0){
+            queryFlowExample.setPage(1);
+            queryFlowExample.setSize(10);
+        }
         QueryFlowExampleResponse queryFlowExampleResponse = spiderFlowExampleLogService.queryFlowExampleLog(queryFlowExample);
         return Future.succeededFuture(JsonObject.mapFrom(queryFlowExampleResponse));
     }
 
     @Override
-    public Future<JsonObject> queryExampleExample(JsonObject param) {
+    public Future<JsonObject> queryElementExample(JsonObject param) {
         QueryFlowElementExample queryFlowElementExample = param.mapTo(QueryFlowElementExample.class);
+        if(queryFlowElementExample.getSize() == 0){
+            queryFlowElementExample.setPage(1);
+            queryFlowElementExample.setSize(10);
+        }
         QueryFlowElementExampleResponse response = elementExampleService.queryFlowElementExampleLog(queryFlowElementExample);
         return Future.succeededFuture(JsonObject.mapFrom(response));
     }

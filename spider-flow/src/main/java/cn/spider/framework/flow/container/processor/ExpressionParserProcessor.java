@@ -31,7 +31,7 @@ import java.util.Optional;
 /**
  * 表达式解析器
  *
- * @author lykan
+ * @author dds
  */
 public class ExpressionParserProcessor extends DiagramTraverseSupport<Object> implements StartEventPostProcessor {
 

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 /**
  * StoryEngine 组成模块
  *
- * @author lykan
+ * @author dds
  */
 public class StoryEngineModule {
 

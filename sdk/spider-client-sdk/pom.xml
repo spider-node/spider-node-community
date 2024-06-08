@@ -8,6 +8,13 @@
     <artifactId>client</artifactId>
     <version>${spider.version}</version>
 
+    <parent>
+        <groupId>cn.spider.framework</groupId>
+        <artifactId>sdk</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,7 +27,7 @@
         <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
         <dependency.slf4j.version>1.7.30</dependency.slf4j.version>
         <dependency.jcl-over-slf4j.version>1.7.30</dependency.jcl-over-slf4j.version>
-        <vertx.version>4.4.3</vertx.version>
+        <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
         <dependency.fastjson.version>1.2.75</dependency.fastjson.version>
         <dependency.spring.version>5.3.23</dependency.spring.version>
@@ -128,8 +135,4 @@
             </plugin>
         </plugins>
     </build>
-
-
-
-
 </project>

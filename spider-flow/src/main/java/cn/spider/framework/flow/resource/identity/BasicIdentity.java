@@ -26,7 +26,7 @@ import java.util.Objects;
 /**
  * BasicIdentity
  *
- * @author lykan
+ * @author dds
  */
 public abstract class BasicIdentity implements Identity {
 

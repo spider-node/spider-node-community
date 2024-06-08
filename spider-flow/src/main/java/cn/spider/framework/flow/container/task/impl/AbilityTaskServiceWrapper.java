@@ -31,7 +31,7 @@ import javax.annotation.Nonnull;
 /**
  * 服务节点包装类
  *
- * @author lykan
+ * @author dds
  */
 public class AbilityTaskServiceWrapper extends BasicIdentity implements TaskServiceWrapper {
 

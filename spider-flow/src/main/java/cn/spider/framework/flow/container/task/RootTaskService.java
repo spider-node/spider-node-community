@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * TaskService 主节点名，包括服务节点和服务能力节点
  *
- * @author lykan
+ * @author dds
  */
 public interface RootTaskService {
 

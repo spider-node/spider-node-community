@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 将节点进行标记
  *
- * @author lykan
+ * @author dds
  */
 public class MarkIndexPostProcessor implements StartEventPostProcessor {
 

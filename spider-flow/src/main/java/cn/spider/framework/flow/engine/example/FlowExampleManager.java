@@ -8,6 +8,7 @@ import cn.spider.framework.common.event.data.*;
 import cn.spider.framework.common.event.enums.ElementStatus;
 import cn.spider.framework.common.event.enums.FlowExampleStatus;
 import cn.spider.framework.common.utils.*;
+import cn.spider.framework.container.sdk.data.StartFlowRequest;
 import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.bpmn.FlowElement;
 import cn.spider.framework.flow.bpmn.ServiceTask;
@@ -31,12 +32,15 @@ import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.flow.util.*;
+import cn.spider.framework.param.sdk.data.WriteBackParam;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionRequest;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionResponse;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -78,6 +82,8 @@ public class FlowExampleManager {
 
     private SpiderTimer spiderTimer;
 
+    private ParamInterface paramInterface;
+
     public FlowExampleManager(StoryEngineModule storyEngineModule) {
         this.storyEngineModule = storyEngineModule;
         this.leaderFlowExampleMap = Maps.newHashMap();
@@ -92,6 +98,7 @@ public class FlowExampleManager {
         this.eventManager = SpiderCoreVerticle.factory.getBean(EventManager.class);
         this.classLoaderManager = SpiderCoreVerticle.factory.getBean(ClassLoaderManager.class);
         this.spiderTimer = SpiderCoreVerticle.factory.getBean(SpiderTimer.class);
+        this.paramInterface = SpiderCoreVerticle.factory.getBean(ParamInterface.class);
 
     }
 
@@ -153,6 +160,10 @@ public class FlowExampleManager {
         BasicStoryBus storyBus = getStoryBus(storyRequest, flowRegister, role);
         String exampleId = storyRequest.getRequestId();
         storyRequest.setRequestId(exampleId);
+        StartFlowRequest request = storyRequest.getRequestParam();
+        // 设置是否虚拟执行
+        String runType = StringUtils.isNotEmpty(request.getRetryType()) ? request.getRetryType().equals(Constant.RUN_SINGLE) ? Constant.VIRTUALLY : Constant.ACTUAL : Constant.ACTUAL;
+
         FlowExample example = FlowExample.builder()
                 .exampleId(exampleId)
                 .requestId(exampleId)
@@ -163,6 +174,10 @@ public class FlowExampleManager {
                 .flowExampleRole(storyRequest.getFlowExampleRole())
                 .storyEngineModule(this.storyEngineModule)
                 .storyBus(storyBus)
+                .retryNodeId(request.getRetryNodeId())
+                .parentRequestId(request.getParentRequestId())
+                .retryType(request.getRetryType())
+                .runType(runType)
                 .build();
         example.init();
         this.leaderFlowExampleMap.put(exampleId, example);
@@ -195,6 +210,7 @@ public class FlowExampleManager {
         if (isNext) {
             // 跳过进行-下一个执行节点
             try {
+                // 使用future===等待跟第三方服务获取到对应值后进行比对
                 example.nextElement();
             } catch (Exception e) {
                 // 寻址找不到，直接报错
@@ -216,14 +232,13 @@ public class FlowExampleManager {
         //log.info("当前执行的requestId {}", example.getRequestId());
 
         if (Objects.isNull(example.getFlowElement())) {
-           // log.info("当前执行的 requestId 执行节点为空", example.getRequestId());
+            // log.info("当前执行的 requestId 执行节点为空", example.getRequestId());
             return;
         }
-
         FlowElement flowElement = example.getFlowElement();
         // 说明流程结束
         if (flowElement.getElementType() == BpmnTypeEnum.END_EVENT) {
-           // log.info("当前执行的结束的requestId {} 节点信息 {}", example.getRequestId(), flowElement.getId());
+            // log.info("当前执行的结束的requestId {} 节点信息 {}", example.getRequestId(), flowElement.getId());
             Object result = ResultUtil.buildObjectMessage(example.getStoryBus());
             EndFlowExampleEventData endFlowExampleEventData = EndFlowExampleEventData.builder()
                     .status(FlowExampleStatus.SUSS)
@@ -241,7 +256,7 @@ public class FlowExampleManager {
         // 当是 service_task就继续执行
         if (flowElement.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
             //执行挂起
-           // log.info("当前执行的requestId {} taskId {}", example.getRequestId(), example.getFlowElement().getId());
+            // log.info("当前执行的requestId {} taskId {}", example.getRequestId(), example.getFlowElement().getId());
             // 通知，执行结束
             ServiceTask serviceTask = (ServiceTask) flowElement;
             //log.info("获取参数-------------开始 {} 时间 {}", serviceTask.getTaskService(), System.currentTimeMillis());
@@ -453,6 +468,7 @@ public class FlowExampleManager {
 
     /**
      * 移除执行实例
+     *
      * @param flowExampleIds
      */
     public void endFlowExample(List<String> flowExampleIds) {
@@ -543,62 +559,74 @@ public class FlowExampleManager {
      */
     private void runPlan(FlowExample example) {
         // 进行等待，需要被唤醒
-        example.runExample().onSuccess(suss -> {
-            Object result = suss;
-            // 使用变量把参数引入到该 区域内
-            FlowRegister flowRegisterAsync = example.getFlowRegister();
-            FlowElement flowElementAsync = example.getFlowElement();
-            // 执行下一个节点
-            try {
-                Boolean isNext = true;
-                if (example.getFlowElement().getElementType().equals(BpmnTypeEnum.SERVICE_TASK)) {
-                    ServiceTask serviceTask = (ServiceTask) example.getFlowElement();
-                    ServerTaskTypeEnum taskType = serviceTask.queryServiceTaskType();
-                    // poll-轮询task
-                    if (taskType.equals(ServerTaskTypeEnum.POLL)) {
-                        JsonObject param = JsonObject.mapFrom(result);
-                        String status = param.getString("status");
-                       // log.info("获取到的状态为 {}", status);
-                        if (StringUtils.equals(status, Constant.WAIT)) {
-                            if (example.getPollRunCount() > serviceTask.queryPollCount()) {
-                                param.put("status", Constant.FAIL);
-                                result = param.mapTo(Object.class);
-                            } else {
-                                // 执行当前节点
-                                isNext = false;
+        example.runExample()
+                .onSuccess(suss -> {
+                    Object result = suss;
+                    try {
+                        Boolean isNext = true;
+                        if (example.getFlowElement().getElementType().equals(BpmnTypeEnum.SERVICE_TASK)) {
+                            ServiceTask serviceTask = (ServiceTask) example.getFlowElement();
+                            ServerTaskTypeEnum taskType = serviceTask.queryServiceTaskType();
+                            // poll-轮询task
+                            if (taskType.equals(ServerTaskTypeEnum.POLL)) {
+                                JsonObject param = result instanceof JsonObject ? (JsonObject) result : JsonObject.mapFrom(result);
+                                String status = param.getString(Constant.STATUS);
+                                log.info("轮询节点 {} 返回状态 {}", serviceTask.getTaskService(), status);
+                                if (StringUtils.equals(status, Constant.WAIT)) {
+                                    if (example.getPollRunCount() > serviceTask.queryPollCount()) {
+                                        // TODO 需要设置回 param
+                                        param.put(Constant.STATUS, Constant.FAIL);
+                                    } else {
+                                        // 执行当前节点
+                                        isNext = false;
+                                    }
+                                }
                             }
                         }
-                    }
-                }
 
-                // 配合轮询使用
-                if (isNext) {
-                    noticeResult(example, flowElementAsync, result);
-                    flowElementAsync = example.queryFlowNewElement();
-                }
-                example.removeFailFlowElement(flowElementAsync.getId());
-                flowRegisterAsync.predictNextElementNew(example.getCsd(), flowElementAsync);
-                runFlowExample(example, isNext, true);
-            } catch (Exception e) {
-                // 存入es-异常信息
-                log.error("执行失败fail---- {}", ExceptionMessage.getStackTrace(e));
-                endFlowExampleFail(example, e);
-            }
-        }).onFailure(fail -> {
-            // 注册延迟队列
-            log.error("执行失败fail {}", ExceptionMessage.getStackTrace(fail));
-            FlowElement flowElementAsync = example.getFlowElement();
-            // // 后续改造重试-- 当重（）; 改造子流程
-            example.addFailFlowElement(flowElementAsync.getId());
-            ServiceTask serviceTask = (ServiceTask) flowElementAsync;
-            Integer retryCount = serviceTask.getRetryCount();
-            if (example.queryFailCount(flowElementAsync.getId()) >= retryCount) {
-                // 整体通知失败
-                endFlowExampleFail(example, fail);
-                return;
-            }
-            runFlowExample(example, false, true);
-        });
+                        // 配合轮询使用
+                        Boolean isNextNew = isNext;
+                        noticeResult(example, example.getFlowElement(), result, isNextNew).onSuccess(notifySuss -> {
+                            FlowElement flowElementAsync = example.getFlowElement();
+                            FlowRegister flowRegisterAsync = example.getFlowRegister();
+                            if (isNextNew) {
+                                flowElementAsync = example.queryFlowNewElement();
+                            }
+                            example.removeFailFlowElement(flowElementAsync.getId());
+                            // 获取下一个元素
+                            Future<Void> nextFuture = flowRegisterAsync.predictNextElementNew(example.getCsd(), flowElementAsync);
+                            // 获取完成结算金额
+                            nextFuture.onSuccess(nextSuss -> {
+                                runFlowExample(example, isNextNew, true);
+                            }).onFailure(fail -> {
+                                log.info("run-fail {}", ExceptionMessage.getStackTrace(fail));
+                                endFlowExampleFail(example, fail);
+                            });
+
+                        }).onFailure(notifySuss -> {
+                            endFlowExampleFail(example, notifySuss);
+                        });
+
+                    } catch (Exception e) {
+                        // 存入es-异常信息
+                        log.error("执行失败fail---- {}", ExceptionMessage.getStackTrace(e));
+                        endFlowExampleFail(example, e);
+                    }
+                }).onFailure(fail -> {
+                    // 注册延迟队列
+                    log.error("执行失败fail {}", ExceptionMessage.getStackTrace(fail));
+                    FlowElement flowElementAsync = example.getFlowElement();
+                    // // 后续改造重试-- 当重（）; 改造子流程
+                    example.addFailFlowElement(flowElementAsync.getId());
+                    ServiceTask serviceTask = (ServiceTask) flowElementAsync;
+                    Integer retryCount = serviceTask.getRetryCount();
+                    if (example.queryFailCount(flowElementAsync.getId()) >= retryCount) {
+                        // 整体通知失败
+                        endFlowExampleFail(example, fail);
+                        return;
+                    }
+                    runFlowExample(example, false, true);
+                });
     }
 
     public void pollRunFlowExample(FlowExample example) {
@@ -609,19 +637,34 @@ public class FlowExampleManager {
         runFlowExample(example, false, false);
     }
 
-    public void noticeResult(FlowExample example, FlowElement flowElement, Object result) {
+    public Future<Void> noticeResult(FlowExample example, FlowElement flowElement, Object result, Boolean isNotify) {
+        if (!isNotify) {
+            return Future.succeededFuture();
+        }
+        Promise<Void> promise = Promise.promise();
         if (flowElement.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
             ServiceTask serviceTask = (ServiceTask) flowElement;
             // 获取 TaskServiceDef
-            Optional<TaskServiceDef> taskServiceDefOptional = this.storyEngineModule.getTaskContainer().getTaskServiceDef(serviceTask.getTaskComponent(), serviceTask.getTaskService(), example.getRole());
-            TaskServiceDef taskServiceDef = taskServiceDefOptional.orElseThrow(() ->
-                    ExceptionUtil.buildException(null, ExceptionEnum.TASK_SERVICE_MATCH_ERROR, ExceptionEnum.TASK_SERVICE_MATCH_ERROR.getDesc()
-                            + GlobalUtil.format(" service task identity: {}", serviceTask.identity())));
-            // 校验返回结果是否属于Mono--- 当前默认不支持
-            example.getStoryBus().noticeResult(serviceTask, result, taskServiceDef);
-            // 通知监控
-            example.getFlowRegister().getMonitorTracking().finishTaskTracking(flowElement, null);
+            // 获取参数域
+            WriteBackParam writeBackParam = new WriteBackParam();
+            if (result instanceof JsonObject) {
+                writeBackParam.setResult((JsonObject) result);
+            } else {
+                writeBackParam.setResult(JsonObject.mapFrom(result));
+            }
+
+            writeBackParam.setTaskComponent(serviceTask.getTaskComponent());
+            writeBackParam.setTaskService(serviceTask.getTaskService());
+            writeBackParam.setRequestId(example.getRequestId());
+            paramInterface.writeBack(JsonObject.mapFrom(writeBackParam)).onSuccess(suss -> {
+                promise.complete();
+            }).onFailure(fail -> {
+                log.info("notify_fail_标识 {}  {}", flowElement.getId(), JSON.toJSONString(result));
+                promise.fail(fail);
+            });
+            return promise.future();
         }
+        return Future.succeededFuture();
     }
 
 

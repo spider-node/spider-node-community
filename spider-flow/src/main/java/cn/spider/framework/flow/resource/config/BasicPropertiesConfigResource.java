@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class BasicPropertiesConfigResource extends AbstractConfigResource implements PropertiesConfigResource {
 

@@ -17,6 +17,8 @@
  */
 package cn.spider.framework.flow.component.launcher;
 
+import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
+import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.flow.annotation.EnableKstry;
 import cn.spider.framework.flow.component.dynamic.ProcessDynamicComponent;
 import cn.spider.framework.flow.exception.ExceptionEnum;
@@ -49,7 +51,7 @@ import java.util.Map;
 /**
  * 配置资源加载
  *
- * @author lykan
+ * @author dds
  */
 public class ConfigResourceResolver implements ApplicationContextAware {
 
@@ -80,8 +82,8 @@ public class ConfigResourceResolver implements ApplicationContextAware {
 
     @Bean
     @DependsOn({"springUtil"})
-    public StartEventFactory getStartEventFactory(ProcessDynamicComponent processDynamicComponent, MySQLPool mySQLPool) {
-        return new StartEventFactory(applicationContext, processDynamicComponent,mySQLPool);
+    public StartEventFactory getStartEventFactory(ProcessDynamicComponent processDynamicComponent, MySQLPool mySQLPool, VersionInterface versionInterface,Vertx vertx) {
+        return new StartEventFactory(applicationContext, processDynamicComponent,mySQLPool,versionInterface,vertx);
     }
 
     @Bean

@@ -13,6 +13,9 @@ import cn.spider.framework.db.config.MysqlConfig;
 import cn.spider.framework.db.config.RedissonConfig;
 import cn.spider.framework.db.rocksdb.RocksdbKeyManager;
 import cn.spider.framework.db.util.RocksdbUtil;
+import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
+import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
+import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.flow.business.BusinessManager;
 import cn.spider.framework.flow.consumer.business.EndFlowDeleteRocksdbHandler;
 import cn.spider.framework.flow.consumer.business.FlowExampleDelayHandler;
@@ -27,6 +30,7 @@ import cn.spider.framework.flow.delayQueue.handler.FlowExampleRemoveHandler;
 import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.engine.example.ExampleDestroyManager;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
+import cn.spider.framework.flow.funtion.InitLoaderClassService;
 import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.load.loader.HotClassLoader;
 import cn.spider.framework.flow.SpiderCoreVerticle;
@@ -34,8 +38,10 @@ import cn.spider.framework.flow.resource.factory.StartEventFactory;
 import cn.spider.framework.flow.sync.Publish;
 import cn.spider.framework.flow.sync.SyncBusinessRecord;
 import cn.spider.framework.flow.timer.SpiderTimer;
+import cn.spider.framework.flow.timer.SystemTimer;
 import cn.spider.framework.flow.transcript.TranscriptManager;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
@@ -134,8 +140,13 @@ public class SpiderCoreConfig {
      * @return
      */
     @Bean
-    public BusinessManager buildBusinessManager(MySQLPool client) {
-        return new BusinessManager(client);
+    public BusinessManager buildBusinessManager(MySQLPool client, FunctionInterface functionInterface) {
+        return new BusinessManager(client,functionInterface);
+    }
+
+    @Bean
+    public FunctionInterface buildFunctionInterface(Vertx vertx){
+        return FunctionInterface.createProxy(vertx,FunctionInterface.ADDRESS);
     }
 
     /**
@@ -174,6 +185,12 @@ public class SpiderCoreConfig {
     public RoleService buildRoleService(Vertx vertx){
         String addr = BrokerInfoUtil.queryBrokerName(vertx)+ LeaderHeartService.ADDRESS;
         return new RoleServiceVertxEBProxy(vertx,addr);
+    }
+
+    @Bean
+    public ParamInterface buildParamInterface(Vertx vertx){
+        String addr = BrokerInfoUtil.queryBrokerName(vertx)+ ParamInterface.ADDRESS;
+        return ParamInterface.createProxy(vertx,addr);
     }
 
     @Bean
@@ -281,6 +298,20 @@ public class SpiderCoreConfig {
     @Bean
     public FlowExampleRemoveDelayHandler buildFlowExampleRemoveDelayHandler(EventBus eventBus, Vertx vertx,ExampleDestroyManager exampleDestroyManager){
         return new FlowExampleRemoveDelayHandler(eventBus,vertx,exampleDestroyManager);
+    }
+
+    @Bean
+    public AreaInterface buildAreaInterface(Vertx vertx){
+        return AreaInterface.createProxy(vertx,AreaInterface.ADDRESS);
+    }
+
+    @Bean
+    public VersionInterface buildVersionInterface(Vertx vertx){
+        return VersionInterface.createProxy(vertx,VersionInterface.ADDRESS);
+    }
+    @Bean
+    public SystemTimer buildSystemTimer(Vertx vertx, StartEventFactory startEventFactory, InitLoaderClassService initLoaderClassService){
+        return new SystemTimer(vertx,startEventFactory,initLoaderClassService);
     }
 
 }

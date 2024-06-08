@@ -22,7 +22,7 @@ import cn.spider.framework.flow.bpmn.FlowElement;
 /**
  * 聚合节点
  *
- * @author lykan
+ * @author dds
  */
 public interface AggregationFlowElement extends FlowElement {
 

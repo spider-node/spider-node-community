@@ -8,7 +8,11 @@ package cn.spider.framework.domain.area.node.data.enums;
  * @Description: TODO
  * @Version: 1.0
  */
+
 public enum ServiceTaskType {
     POLL,
     DELAY,
+
+    NORMAL,
+    ;
 }

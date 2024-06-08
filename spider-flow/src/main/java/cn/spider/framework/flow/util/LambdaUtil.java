@@ -22,7 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class LambdaUtil {
 

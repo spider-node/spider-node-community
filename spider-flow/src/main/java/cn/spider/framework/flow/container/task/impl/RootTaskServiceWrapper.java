@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class RootTaskServiceWrapper extends BasicIdentity implements RootTaskService {
 

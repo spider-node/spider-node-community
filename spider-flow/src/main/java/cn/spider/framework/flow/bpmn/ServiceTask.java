@@ -79,6 +79,13 @@ public interface ServiceTask extends Task {
     Map<String, Object> getTaskParams();
 
     /**
+     * 指定任务参数
+     *
+     * @return 指定参数
+     */
+    Map<String, String> getFiledMapping();
+
+    /**
      * 获取任务指令
      *
      * @return 指令名称
@@ -98,8 +105,6 @@ public interface ServiceTask extends Task {
     String queryTransactionGroup();
 
     ServerTaskTypeEnum queryServiceTaskType();
-
-    Promise<Object> getPromise();
 
     String getXid();
 
@@ -132,6 +137,8 @@ public interface ServiceTask extends Task {
     Integer queryDelayTime();
 
     String queryConfigFieldName(String fieldName);
+
+    Map<String,Object> obtainAppointParam();
 
     /**
      * 获取Service Task 构造器

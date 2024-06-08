@@ -98,12 +98,16 @@ public class RoleManager {
                     localMap.put("scheduler", "1");
                     localMap.put("transaction", "1");
                     localMap.put("controller", "1");
-                    localMap.put("log", "1");
                     localMap.put("area", "1");
+                    localMap.put("param", "1");
+                    localMap.put("refresh", "1");
                     break;
                 case "ui":
                     localMap.put("ui", "1");
-
+                    break;
+                case "log":
+                    localMap.put("log", "1");
+                    break;
             }
         }
     }
@@ -136,7 +140,7 @@ public class RoleManager {
                 // verticle模式
                 .setWorker(true)
                 // 是否高可用
-                .setHa(false)
+                .setHa(true)
                 .setInstances(instanceNum);
         log.info("start-role");
         String controllerPath = "cn.spider.framework.controller.ControllerVerticle";
@@ -147,6 +151,7 @@ public class RoleManager {
                         case "ui":
                             String ui = "com.flow.cloud.start.ui.SpiderUiVerticle";
                             startRole(ui, role, vertx, deployOptions);
+                            break;
                         case "gateway":
                             // 启动网关
                             String gateway = "cn.spider.framework.gateway.GatewayVerticle";
@@ -171,6 +176,15 @@ public class RoleManager {
                         case "area":
                             String areaPatch = "cn.spider.framework.domain.area.AreaVerticle";
                             startRole(areaPatch, role, vertx, deployOptions);
+                            break;
+                        case "param":
+                            String paramPatch = "cn.spider.framework.spider.param.ParamVerticle";
+                            startRole(paramPatch, role, vertx, deployOptions);
+                            break;
+                        case "refresh":
+                            String refresh = "cn.spider.framework.area.method.param.MainVerticle";
+                            startRole(refresh, role, vertx, deployOptions);
+                            break;
                     }
                 }
             } else {

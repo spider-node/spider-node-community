@@ -20,7 +20,7 @@ package cn.spider.framework.flow.monitor;
 /**
  * 降级信息
  *
- * @author lykan
+ * @author dds
  */
 public class DemotionInfo {
 

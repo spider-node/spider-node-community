@@ -1,5 +1,6 @@
 package cn.spider.framework.linker.server.config;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
@@ -60,7 +61,12 @@ public class SpringConfig {
      */
     @Bean
     public WorkerInterface buildWorkerInterface(Vertx vertx){
-        return WorkerInterface.createProxy(vertx, BrokerInfoUtil.queryBrokerName(vertx) + WorkerInterface.ADDRESS);
+        return WorkerInterface.createProxy(vertx, WorkerInterface.ADDRESS);
+    }
+
+    @Bean
+    public FunctionInterface buildFunctionInterface(Vertx vertx){
+        return FunctionInterface.createProxy(vertx,FunctionInterface.ADDRESS);
     }
 
 }

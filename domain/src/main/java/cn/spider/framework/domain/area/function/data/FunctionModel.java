@@ -42,4 +42,9 @@ public class FunctionModel {
      * 域id
      */
     private String areaId;
+
+    /**
+     * 服务名称
+     */
+    private String serviceName;
 }

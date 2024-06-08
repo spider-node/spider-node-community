@@ -19,7 +19,7 @@ package cn.spider.framework.flow.constant;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class GlobalProperties {
 

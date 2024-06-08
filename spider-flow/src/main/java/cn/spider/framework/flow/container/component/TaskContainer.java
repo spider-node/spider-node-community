@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * 服务节点容器
  *
- * @author lykan
+ * @author dds
  */
 public interface TaskContainer extends ComponentLifecycle {
 

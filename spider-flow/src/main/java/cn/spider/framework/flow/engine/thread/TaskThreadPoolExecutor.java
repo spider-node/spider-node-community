@@ -34,7 +34,7 @@ import java.util.concurrent.*;
 /**
  * 任务线程池
  *
- * @author lykan
+ * @author dds
  */
 public class TaskThreadPoolExecutor implements TaskExecutor, ComponentLifecycle {
 

@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * StartEvent 容器
  *
- * @author lykan
+ * @author dds
  */
 public interface StartEventContainer {
 

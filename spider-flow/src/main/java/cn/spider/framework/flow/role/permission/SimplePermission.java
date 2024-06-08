@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class SimplePermission extends BasicIdentity implements Permission {
 

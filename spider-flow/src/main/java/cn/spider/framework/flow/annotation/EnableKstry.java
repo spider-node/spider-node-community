@@ -32,7 +32,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * 开启 Kstry 框架，通过该注解开启使用 Kstry 框架
  * 一个 Spring 容器只允许被 EnableKstry 标注一次
  *
- * @author lykan
+ * @author dds
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

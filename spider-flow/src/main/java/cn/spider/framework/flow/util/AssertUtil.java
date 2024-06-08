@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 /**
  * 断言工具
  *
- * @author lykan
+ * @author dds
  */
 @SuppressWarnings("unused")
 public class AssertUtil {

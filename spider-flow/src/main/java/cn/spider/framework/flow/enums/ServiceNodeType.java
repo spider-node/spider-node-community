@@ -20,7 +20,7 @@ package cn.spider.framework.flow.enums;
 /**
  * 服务节点类型
  *
- * @author lykan
+ * @author dds
  */
 public enum ServiceNodeType {
 

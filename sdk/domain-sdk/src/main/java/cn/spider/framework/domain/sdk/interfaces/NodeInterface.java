@@ -34,4 +34,17 @@ public interface NodeInterface {
     Future<Void> updateParam(JsonObject data);
     // 查询节点
     Future<JsonObject> queryJsonObject(JsonObject data);
+
+    // 查询基础节点
+    Future<JsonObject> queryBaseNodes(JsonObject data);
+
+    /**
+     * 刷新域功能参数
+     */
+    Future<Void> refreshParam(JsonObject param);
+
+    /**
+     * 查询节点返回参数信息
+     */
+    Future<JsonObject> queryParamConfig(JsonObject param);
 }

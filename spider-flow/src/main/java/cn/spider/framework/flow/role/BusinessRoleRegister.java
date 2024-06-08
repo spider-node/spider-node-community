@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public interface BusinessRoleRegister {
 

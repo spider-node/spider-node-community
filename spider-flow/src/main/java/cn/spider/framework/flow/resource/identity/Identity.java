@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 /**
  * Identity
  *
- * @author lykan
+ * @author dds
  */
 public interface Identity {
 

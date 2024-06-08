@@ -16,15 +16,21 @@
  *
  */
 package cn.spider.framework.flow.component.strategy;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.flow.bpmn.*;
 import cn.spider.framework.flow.bus.ContextStoryBus;
 import cn.spider.framework.flow.bus.StoryBus;
+import cn.spider.framework.flow.component.expression.ConditionExpression;
+import cn.spider.framework.flow.component.expression.ConditionExpressionImpl;
 import cn.spider.framework.flow.component.expression.Expression;
 import cn.spider.framework.flow.engine.thread.EndTaskPedometer;
 import cn.spider.framework.flow.enums.ElementAllowNextEnum;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import com.google.common.collect.Lists;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +39,9 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
+@Slf4j
 public class PeekStrategyRepository {
 
     private static final List<PeekStrategy> peekStrategyList = Lists.newArrayList(new PeekStrategy() {
@@ -54,15 +61,22 @@ public class PeekStrategyRepository {
          *  3> 没有条件表达式的分支，代表 true
          */
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
             if (contextStoryBus.getPeekCount() >= 1) {
-                return false;
+                return Future.succeededFuture(new NeedResult(false,flowElement.getId()));
             }
-            boolean needPeek = PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus());
-            if (needPeek) {
-                contextStoryBus.incrPeekCount();
-            }
-            return needPeek;
+            Promise<NeedResult> promise = Promise.promise();
+            Future<Boolean> needPeek = PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus());
+            needPeek.onSuccess(suss->{
+                if (suss) {
+                    contextStoryBus.incrPeekCount();
+                }
+                promise.complete(new NeedResult(suss,flowElement.getId()));
+            }).onFailure(fail->{
+                log.info("needPeek-fail {}", ExceptionMessage.getStackTrace(fail));
+                promise.fail(fail);
+            });
+            return promise.future();
         }
     }, new PeekStrategy() {
 
@@ -83,8 +97,8 @@ public class PeekStrategyRepository {
         }
 
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
-            return true;
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+            return Future.succeededFuture(new NeedResult(true,flowElement.getId()));
         }
     }, new PeekStrategy() {
 
@@ -102,8 +116,15 @@ public class PeekStrategyRepository {
         }
 
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
-            return PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus());
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+            Promise<NeedResult> promise = Promise.promise();
+            PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus()).onSuccess(suss->{
+                promise.complete(new NeedResult(suss,flowElement.getId()));
+            }).onFailure(fail->{
+                log.info("needPeek-fail {}", ExceptionMessage.getStackTrace(fail));
+                promise.fail(fail);
+            });
+            return promise.future();
         }
     }, new PeekStrategy() {
 
@@ -116,8 +137,8 @@ public class PeekStrategyRepository {
         }
 
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
-            return true;
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+            return Future.succeededFuture(new NeedResult(true,flowElement.getId()));
         }
     }, new PeekStrategy() {
 
@@ -130,8 +151,15 @@ public class PeekStrategyRepository {
         }
 
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
-            return PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus());
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+            Promise<NeedResult> promise = Promise.promise();
+            PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus()).onSuccess(suss->{
+                promise.complete(new NeedResult(suss,flowElement.getId()));
+            }).onFailure(fail->{
+                log.info("needPeek-fail {}", ExceptionMessage.getStackTrace(fail));
+                promise.fail(fail);
+            });
+            return promise.future();
         }
     }, new PeekStrategy() {
 
@@ -152,8 +180,15 @@ public class PeekStrategyRepository {
         }
 
         @Override
-        public boolean needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
-            return PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus());
+        public Future<NeedResult> needPeek(FlowElement flowElement, ContextStoryBus contextStoryBus) {
+            Promise<NeedResult> promise = Promise.promise();
+            PeekStrategyRepository.needPeek((SequenceFlow) flowElement, contextStoryBus.getStoryBus()).onSuccess(suss->{
+                promise.complete(new NeedResult(suss,flowElement.getId()));
+            }).onFailure(fail->{
+                log.info("needPeek-fail {}", ExceptionMessage.getStackTrace(fail));
+                promise.fail(fail);
+            });
+            return promise.future();
         }
 
         @Override
@@ -193,8 +228,12 @@ public class PeekStrategyRepository {
         }
     }
 
-    private static boolean needPeek(SequenceFlow sequenceFlow, StoryBus storyBus) {
-        return Optional.of(sequenceFlow).flatMap(Expression::getConditionExpression).map(e -> e.condition(storyBus)).orElse(true);
+    private static Future<Boolean> needPeek(SequenceFlow sequenceFlow, StoryBus storyBus) {
+        if (sequenceFlow == null || !sequenceFlow.getConditionExpression().isPresent()) {
+            return Future.succeededFuture(true);
+        }
+        ConditionExpression expression = sequenceFlow.getConditionExpression().get();
+        return expression.condition(storyBus);
     }
 
     public static List<PeekStrategy> getPeekStrategy() {

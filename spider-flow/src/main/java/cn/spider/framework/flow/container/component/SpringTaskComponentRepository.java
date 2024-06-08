@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * 支持Spring上下文的服务组件仓库
  *
- * @author lykan
+ * @author dds
  */
 public class SpringTaskComponentRepository extends TaskComponentRepository implements ApplicationContextAware {
 

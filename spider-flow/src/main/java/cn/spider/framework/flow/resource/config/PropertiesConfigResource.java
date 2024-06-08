@@ -24,7 +24,7 @@ import cn.spider.framework.flow.kv.BasicKValue;
 /**
  * Properties 配置文件定义
  *
- * @author lykan
+ * @author dds
  */
 public interface PropertiesConfigResource extends ConfigResource {
 

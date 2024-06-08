@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 角色基类
  *
- * @author lykan
+ * @author dds
  */
 public class BasicRole implements Role {
 

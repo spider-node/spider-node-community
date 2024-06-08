@@ -38,7 +38,7 @@ import java.util.Optional;
 /**
  * TaskFuture 管理类
  *
- * @author lykan
+ * @author dds
  */
 public class AdminTaskFuture implements AdminFuture {
 

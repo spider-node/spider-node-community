@@ -47,7 +47,7 @@ import java.util.stream.Stream;
 /**
  * ElementParserUtil
  *
- * @author lykan
+ * @author dds
  */
 public class ElementParserUtil {
 

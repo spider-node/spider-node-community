@@ -18,7 +18,10 @@
 package cn.spider.framework.flow.resource.factory;
 
 import cn.spider.framework.common.data.enums.BpmnStatus;
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.domain.sdk.data.QueryBpmnUrlResult;
+import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.flow.bpmn.StartEvent;
 import cn.spider.framework.flow.bpmn.SubProcess;
 import cn.spider.framework.flow.bpmn.impl.SubProcessImpl;
@@ -39,6 +42,8 @@ import cn.spider.framework.flow.util.*;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.templates.SqlTemplate;
@@ -54,7 +59,7 @@ import java.util.stream.Collectors;
 /**
  * StartEvent 资源创建工厂
  *
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class StartEventFactory extends BasicResourceFactory<StartEvent> {
@@ -67,42 +72,53 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     private final ProcessDynamicComponent processDynamicComponent;
     private MySQLPool mySQLPool;
 
-    public StartEventFactory(ApplicationContext applicationContext, ProcessDynamicComponent processDynamicComponent, MySQLPool mySQLPool) {
+    /**
+     * 类加载完了，就会执行该方法-加载
+     */
+    private VersionInterface versionInterface;
+
+    private Vertx vertx;
+
+    public StartEventFactory(ApplicationContext applicationContext, ProcessDynamicComponent processDynamicComponent, MySQLPool mySQLPool, VersionInterface versionInterface, Vertx vertx) {
         super(applicationContext);
         this.processDynamicComponent = processDynamicComponent;
         this.allSubProcessMap = new HashMap<>();
         this.resourceList = new ArrayList<>();
         this.mySQLPool = mySQLPool;
+        this.versionInterface = versionInterface;
+        this.vertx = vertx;
+    }
+
+    public void initBpmn(){
+        if(BrokerInfoUtil.queryStartSpiderNode(this.vertx)){
+            initBpmnInfo();
+            return;
+        }
         initResourceList();
     }
 
-    /**
-     * 类加载完了，就会执行该方法-加载
-     */
+    public void initBpmnInfo(){
+        versionInterface.queryBpmnUrl().onSuccess(suss->{
+            QueryBpmnUrlResult queryBpmnUrlResult = suss.mapTo(QueryBpmnUrlResult.class);
+            if(CollectionUtils.isEmpty(queryBpmnUrlResult.getBpmnUrls())){
+                log.warn("没有搜索到可以部署的bpmn模型");
+                return;
+            }
+            queryBpmnUrlResult.getBpmnUrls().forEach(item->{
+                try {
+                    dynamicsLoaderBpmn(item);
+                } catch (Exception e) {
+                    log.error("加载失败的url-{} -异常信息-{}", item,ExceptionMessage.getStackTrace(e));
+                }
+            });
+        }).onFailure(fail->{
+            log.error("initBpmnInfo-fail-{}",ExceptionMessage.getStackTrace(fail));
+        });
+    }
+
+
 
     public void initResourceList() {
-        Map<String, Object> parameters = new HashMap<>();
-        log.info("加载bpmn-start");
-        SqlTemplate
-                .forQuery(mySQLPool, "select * from bpmn")
-                .mapTo(BpmnRow.ROW_BPMN)
-                .execute(parameters)
-                .onSuccess(users -> {
-                    RowSet<Bpmn> bpmns = users;
-                    bpmns.forEach(item -> {
-                        try {
-                            if(item.getStatus().equals(BpmnStatus.STOP)){
-                                return;
-                            }
-                            log.info("加载bpmn的数据为 {}",JSON.toJSONString(item));
-                            dynamicsLoaderBpmn(item.getUrl());
-                        } catch (Exception e) {
-                            log.error("加载bpmn-fail {}",ExceptionMessage.getStackTrace(e));
-                        }
-                    });
-                }).onFailure(fail -> {
-                    log.error("查询数据失败", ExceptionMessage.getStackTrace(fail));
-                });
     }
 
     /**

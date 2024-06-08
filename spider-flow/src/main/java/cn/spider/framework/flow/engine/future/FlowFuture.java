@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 主流程 FlowFuture
  *
- * @author lykan
+ * @author dds
  */
 public interface FlowFuture extends MainTaskFuture {
 

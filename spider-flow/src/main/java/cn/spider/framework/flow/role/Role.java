@@ -28,7 +28,7 @@ import cn.spider.framework.flow.role.permission.PermissionAuth;
 /**
  * 角色接口
  *
- * @author lykan
+ * @author dds
  */
 public interface Role {
 

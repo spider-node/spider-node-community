@@ -23,7 +23,7 @@ import java.util.Optional;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public interface InStack<T> {
 

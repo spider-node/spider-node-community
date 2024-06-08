@@ -21,7 +21,7 @@ import cn.spider.framework.flow.container.task.TaskComponentRegister;
 import cn.spider.framework.flow.util.AssertUtil;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class TaskComponentProxy implements TaskComponentRegister {
 

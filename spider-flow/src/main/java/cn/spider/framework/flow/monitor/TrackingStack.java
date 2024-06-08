@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class TrackingStack extends BasicInStack<FlowElement> implements InStack<FlowElement> {
 

@@ -1,10 +1,7 @@
 package cn.spider.framework.domain.area;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.area.config.DomainConfig;
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
-import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
-import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
+import cn.spider.framework.domain.sdk.interfaces.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -71,6 +68,15 @@ public class AreaVerticle extends AbstractVerticle {
 
         MessageConsumer<JsonObject> nodeConsumer = this.binder.setAddress(NodeInterface.ADDRESS)
                 .register(NodeInterface.class, nodeInterface);
+
+
+        VersionInterface versionInterface = this.factory.getBean(VersionInterface.class);
+
+        MessageConsumer<JsonObject> versionConsumer = this.binder.setAddress(VersionInterface.ADDRESS)
+                .register(VersionInterface.class, versionInterface);
+
+        this.containerConsumers.add(versionConsumer);
+
         this.containerConsumers.add(nodeConsumer);
 
         this.containerConsumers.add(workerConsumer);

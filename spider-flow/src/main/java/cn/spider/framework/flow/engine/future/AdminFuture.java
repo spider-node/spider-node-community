@@ -25,7 +25,7 @@ import java.util.Optional;
 /**
  * TaskFuture 管理类
  *
- * @author lykan
+ * @author dds
  */
 public interface AdminFuture extends CancelableFuture {
 

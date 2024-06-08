@@ -35,5 +35,20 @@ public interface FunctionInterface {
     // 启动功能
     Future<Void> startStopFunction(JsonObject model);
 
+    /**
+     * 基于requestId
+     * @param param
+     * @return
+     */
+    Future<JsonObject> queryRunHistoryData(JsonObject param);
+
+
+    /**
+     * 基于requestId
+     * @param param
+     * @return
+     */
+    Future<JsonObject> queryRunHistoryElementData(JsonObject param);
+
 
 }

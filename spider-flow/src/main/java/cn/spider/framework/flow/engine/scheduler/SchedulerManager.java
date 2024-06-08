@@ -1,12 +1,14 @@
 package cn.spider.framework.flow.engine.scheduler;
 
 import cn.spider.framework.annotation.TaskService;
+import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.enums.ElementStatus;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.flow.bpmn.ServiceTask;
+import cn.spider.framework.flow.engine.example.data.FlowExample;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.linker.sdk.data.*;
@@ -60,57 +62,42 @@ public class SchedulerManager {
     }
 
     public void invoke(Method method, Map<String, Object> paramMap, ServiceTask serviceTask) throws InstantiationException, IllegalAccessException {
-        Promise<Object> promise = serviceTask.getPromise();
-        if (!workerMap.containsKey(serviceTask.getTaskComponent())) {
-            throw new KstryException(ExceptionEnum.TASK_SERVICE_MATCH_ERROR);
-        }
 
+    }
+
+
+    public void invokeNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName, String methodName, FlowExample example,Promise<Object> promise,String requestId) {
         EndElementExampleData elementExampleData = EndElementExampleData.builder()
                 .requestParam(JSON.toJSONString(paramMap))
-                .requestId(serviceTask.getRequestId())
+                .requestId(requestId)
                 .flowElementId(serviceTask.getId())
                 .status(ElementStatus.SUSS)
-                .returnClassType(method.getReturnType().getTypeName())
                 .build();
-
         // 因为异步，直接告诉流程，可以进行下一步操作
         if (serviceTask.queryIsAsync()) {
             eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
             promise.complete();
         }
-
-        LinkerServerRequest linkerServerRequest = buildRequestEntity(paramMap, method, serviceTask, workerMap.get(serviceTask.getTaskComponent()));
+        LinkerServerRequest linkerServerRequest = buildRequestEntityNew(paramMap, serviceTask,workerName,methodName,example);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
         Future<JsonObject> result = linkerService.submittals(request);
         result.onSuccess(suss -> {
-            LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject("data").toString(), LinkerServerResponse.class);
+            LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject(Constant.DATA).toString(), LinkerServerResponse.class);
             // 校验返回的code
             if (linkerServerResponse.getResultCode().equals(ResultCode.SUSS)) {
-                Object resultObject = null;
-                Boolean resultConvert = true;
-                try {
-                    resultObject = JSON.parseObject(linkerServerResponse.getResultData().toString(), method.getReturnType());
-                    elementExampleData.setReturnParam(resultObject);
-                } catch (Exception e) {
-                    resultConvert = false;
-                    elementExampleData.setException(ExceptionMessage.getStackTrace(e));
-                }
+                JsonObject resultObject = new JsonObject(linkerServerResponse.getResultData().toString());
                 if (!serviceTask.queryIsAsync()) {
-                    if(!resultConvert){
-                        log.error("转换失败的数据为 {} return对象为 {}",linkerServerResponse.getResultData().toString(),method.getReturnType());
-                        promise.fail("转换参数失败");
-                    }else {
-                        promise.complete(resultObject);
-                    }
+                    elementExampleData.setReturnParam(resultObject);
                     eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
+                    promise.complete(resultObject);
                 }
             } else {
-                elementExampleData.setStatus(ElementStatus.FAIL);
-                elementExampleData.setException(linkerServerResponse.getExceptional());
                 if (!serviceTask.queryIsAsync()) {
                     log.error("执行失败原因为 {}",linkerServerResponse.getExceptional());
-                    promise.fail(new Exception(linkerServerResponse.getExceptional()));
+                    elementExampleData.setStatus(ElementStatus.FAIL);
+                    elementExampleData.setException(linkerServerResponse.getExceptional());
                     eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
+                    promise.fail(new Exception(linkerServerResponse.getExceptional()));
                 }
             }
 
@@ -142,6 +129,28 @@ public class SchedulerManager {
         functionRequest.setBranchId(serviceTask.getBranchId());
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
         linkerServerRequest.setFunctionRequest(functionRequest);
+        return linkerServerRequest;
+    }
+
+
+    private LinkerServerRequest buildRequestEntityNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName,String method,FlowExample example) {
+        // 参数中，移除末尾的 Promise<Object> promise
+        String componentName = serviceTask.getTaskComponent();
+        LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
+        FunctionRequest functionRequest = new FunctionRequest();
+        functionRequest.setComponentName(componentName);
+        functionRequest.setMethodName(method);
+        functionRequest.setServiceName(serviceTask.getTaskService());
+        functionRequest.setWorkerName(workerName);
+        functionRequest.setParam(paramMap);
+        functionRequest.setXid(serviceTask.getXid());
+        functionRequest.setBranchId(serviceTask.getBranchId());
+        linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
+        linkerServerRequest.setFunctionRequest(functionRequest);
+        linkerServerRequest.setParentRequestId(example.getParentRequestId());
+        linkerServerRequest.setRetryNodeId(example.getRetryNodeId());
+        linkerServerRequest.setNowNodeId(serviceTask.getId());
+        linkerServerRequest.setRetryType(example.getRunType());
         return linkerServerRequest;
     }
 

@@ -26,7 +26,7 @@ import cn.spider.framework.flow.component.bpmn.link.ProcessLink;
 /**
  * SubProcessBuilder 构建类
  *
- * @author lykan
+ * @author dds
  */
 public class SubProcessBuilder {
 

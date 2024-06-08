@@ -25,7 +25,7 @@ import cn.spider.framework.flow.enums.ResourceTypeEnum;
 /**
  * 配置信息来源接口
  *
- * @author lykan
+ * @author dds
  */
 public interface ConfigSource {
 

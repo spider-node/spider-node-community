@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * StoryBus
  *
- * @author lykan
+ * @author dds
  */
 public interface StoryBus {
 
@@ -70,6 +70,16 @@ public interface StoryBus {
      * @return value
      */
     Optional<Object> getValue(ScopeTypeEnum scopeTypeEnum, String key);
+
+
+    /**
+     * 获取 Value
+     *
+     * @param scopeTypeEnum 域
+     * @param key key
+     * @return value
+     */
+    Optional<Object> getValueNode(ScopeTypeEnum scopeTypeEnum, String key);
 
     /**
      * 获取角色
@@ -123,4 +133,6 @@ public interface StoryBus {
      * 距离最后期限的剩余时间
      */
     int remainTimeMillis();
+
+    String queryRequestId();
 }

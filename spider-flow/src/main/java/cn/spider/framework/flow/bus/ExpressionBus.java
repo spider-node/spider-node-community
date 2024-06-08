@@ -19,7 +19,7 @@ package cn.spider.framework.flow.bus;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class ExpressionBus {
 

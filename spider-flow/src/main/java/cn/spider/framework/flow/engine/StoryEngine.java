@@ -46,6 +46,7 @@ import cn.spider.framework.flow.role.BusinessRoleRepository;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.role.ServiceTaskRole;
 import cn.spider.framework.flow.util.*;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -63,7 +64,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 执行引擎
  *
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class StoryEngine {
@@ -79,6 +80,8 @@ public class StoryEngine {
     private final BusinessRoleRepository businessRoleRepository;
 
     private FlowExampleManager flowExampleManager;
+
+    private ParamInterface paramInterface;
 
     public StoryEngine(StoryEngineModule storyEngineModule, BusinessRoleRepository businessRoleRepository) {
         AssertUtil.anyNotNull(businessRoleRepository, storyEngineModule);
@@ -103,11 +106,12 @@ public class StoryEngine {
             Future<Void> future = flowExample.getFuture();
             // 最终执行完成的结果执行--
             future.onSuccess(suss -> {
-                Object result = ResultUtil.buildObject(storyBusAsync);
-                Optional.ofNullable(storyRequest.getRecallStoryHook()).ifPresent(c -> c.accept(new RecallStory(storyBusAsync)));
-                TaskResponse<Object> response = TaskResponseBox.buildSuccess(result);
-                flowRegisterAsync.getMonitorTracking().trackingLog();
-                promise.complete(response);
+                TaskServiceUtil.getResultObject(storyRequest.getResultMapping(),paramInterface,flowExample.getRequestId()).onSuccess(resultSuss->{
+                    Optional.ofNullable(storyRequest.getRecallStoryHook()).ifPresent(c -> c.accept(new RecallStory(storyBusAsync)));
+                    TaskResponse<Object> response = TaskResponseBox.buildSuccess(resultSuss);
+                    flowRegisterAsync.getMonitorTracking().trackingLog();
+                    promise.complete(response);
+                });
             }).onFailure(fail -> {
                 flowRegisterAsync.getMonitorTracking().trackingLog();
                 TaskResponse<Object> errorResponse = TaskResponseBox.buildError(ExceptionEnum.BUSINESS_INVOKE_ERROR.getCode(), fail.getMessage());

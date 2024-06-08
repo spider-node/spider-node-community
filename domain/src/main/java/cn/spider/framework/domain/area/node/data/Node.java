@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.node.data;
 
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import cn.spider.framework.domain.area.node.data.enums.ServiceTaskType;
+import io.vertx.core.json.JsonObject;
 import lombok.Data;
 
 /**
@@ -60,4 +61,28 @@ public class Node {
      */
     private String areaId;
 
+    /**
+     * 领域名称
+     */
+    private String areaName;
+
+    /**
+     * 入参
+     */
+    private JsonObject paramMapping;
+
+    /**
+     * 返回参数
+     */
+    private JsonObject resultMapping;
+
+    /**
+     * 调用远程服务的名称
+     */
+    private String taskMethod;
+
+    /**
+     * 服务标识
+     */
+    private String workerId;
 }

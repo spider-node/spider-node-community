@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public interface Hook<T> {
 

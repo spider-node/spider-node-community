@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * 表达式别名注册器
  *
- * @author lykan
+ * @author dds
  */
 public interface ExpressionAliasRegister {
 

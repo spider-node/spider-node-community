@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * 异常
  *
- * @author lykan
+ * @author dds
  */
 public class KstryException extends RuntimeException {
 

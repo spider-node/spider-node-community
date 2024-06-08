@@ -29,7 +29,7 @@ import cn.spider.framework.flow.exception.ExceptionEnum;
 /**
  * 类路径配置来源
  *
- * @author lykan
+ * @author dds
  */
 public abstract class ClassPathConfigSource implements ConfigSource {
 

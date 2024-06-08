@@ -28,7 +28,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  *
- * @author lykan
+ * @author dds
  */
 public class SpelConditionExpression extends ConditionExpressionImpl implements ConditionExpression {
 

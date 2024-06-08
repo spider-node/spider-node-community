@@ -31,6 +31,7 @@ import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.flow.exception.ResourceException;
 import cn.spider.framework.flow.kv.KvScope;
 import cn.spider.framework.flow.kv.KvThreadLocal;
+import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -50,7 +51,7 @@ import java.util.function.Supplier;
 
 
 /**
- * @author lykan
+ * @author dds
  */
 @Slf4j
 public class ProxyUtil {
@@ -109,6 +110,32 @@ public class ProxyUtil {
             throw businessException;
         } finally {
             KvThreadLocal.clear();
+        }
+    }
+
+    public static void invokeMethodNew(ServiceTask serviceTask, JsonObject param,String methodName,String workerName) {
+        try {
+            if(Objects.isNull(schedulerManager)){
+                schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
+            }
+            //schedulerManager.invokeNew(param.getMap(), serviceTask,workerName,methodName);
+            // 后续改造- 因为不需要返回数据
+        } catch (Throwable e) {
+            log.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));
+            if ((e instanceof KstryException) && !(e instanceof BusinessException)) {
+                throw (KstryException) e;
+            }
+
+            BusinessException businessException;
+            if (e instanceof BusinessException) {
+                businessException = GlobalUtil.transferNotEmpty(e, BusinessException.class);
+            } else {
+                businessException = new BusinessException(ExceptionEnum.BUSINESS_INVOKE_ERROR.getExceptionCode(), e.getMessage(), e);
+            }
+            businessException.setTaskIdentity(TaskServiceUtil.joinName(serviceTask.getTaskComponent(), serviceTask.getTaskService()));
+            // 设置方法
+            businessException.setMethodName(methodName);
+            throw businessException;
         }
     }
 

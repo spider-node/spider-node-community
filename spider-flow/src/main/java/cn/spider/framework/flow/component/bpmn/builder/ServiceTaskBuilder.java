@@ -27,7 +27,7 @@ import cn.spider.framework.flow.util.CustomRoleInfo;
 /**
  * ServiceTask 构建类
  *
- * @author lykan
+ * @author dds
  */
 public class ServiceTaskBuilder {
 

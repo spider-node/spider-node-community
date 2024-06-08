@@ -30,7 +30,7 @@ import java.util.Optional;
 /**
  * 选出需要集合迭代的子流程，将子流程下的全部 ServiceTask 都设置迭代属性
  *
- * @author lykan
+ * @author dds
  */
 public class IterablePostProcessor extends DiagramTraverseSupport<Object> implements StartEventPostProcessor {
 

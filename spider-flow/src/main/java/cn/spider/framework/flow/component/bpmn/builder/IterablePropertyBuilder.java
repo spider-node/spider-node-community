@@ -24,7 +24,7 @@ import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.ElementParserUtil;
 
 /**
- * @author lykan
+ * @author dds
  */
 public class IterablePropertyBuilder {
 

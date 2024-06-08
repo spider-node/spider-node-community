@@ -5,11 +5,13 @@ import cn.spider.framework.log.sdk.data.FlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExampleResponse;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
+import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 import cn.spider.framework.spider.log.es.esx.EsContext;
 import cn.spider.framework.spider.log.es.esx.EsQuery;
 import cn.spider.framework.spider.log.es.esx.model.EsData;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +33,8 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
     private EsContext esContext;
 
     private final String index = "bms-spider-element-v7";
+
+    private SimplePropertyPreFilter filter = new SimplePropertyPreFilter(SpiderFlowElementExampleLog.class);
 
     private final String createIndexJson = "{\"mappings\":{\"properties\":{\"id\":{\"type\":\"keyword\"},\"requestId\":{\"type\":\"keyword\"},\"flowElementName\":{\"type\":\"keyword\"},\"flowElementId\":{\"type\":\"keyword\"},\"functionId\":{\"type\":\"keyword\"},\"requestParam\":{\"type\":\"text\"},\"functionName\":{\"type\":\"keyword\"},\"returnParam\":{\"type\":\"text\"},\"exception\":{\"type\":\"keyword\"},\"status\":{\"type\":\"keyword\"},\"startTime\":{\"type\":\"long\"},\"endTime\":{\"type\":\"long\"},\"finalEndTime\":{\"type\":\"long\"},\"transactionGroupId\":{\"type\":\"keyword\"},\"branchId\":{\"type\":\"keyword\"},\"transactionStatus\":{\"type\":\"keyword\"},\"transactionOperate\":{\"type\":\"keyword\"}}}}";
 
@@ -53,18 +58,24 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
             return;
         }
         Map<String, List<SpiderFlowElementExampleLog>> flowElementMap = logs.stream().collect(Collectors.groupingBy(SpiderFlowElementExampleLog::getId));
-        List<SpiderFlowElementExampleLog> logsNew = Lists.newArrayList();
+        List<SpiderFlowElementExampleLog> insert = Lists.newArrayList();
+
+        Map<String, Object> updateMap = new HashMap<>();
 
         try {
             EsData<SpiderFlowElementExampleLog> result = esContext.indice(index)
                     .where(c -> c.useScore().terms("id", flowElementMap.keySet()))
-                    .limit(500)
+                    .limit(700)
                     .selectList(SpiderFlowElementExampleLog.class);
+
             List<SpiderFlowElementExampleLog> logsNews = result.getList();
-            Map<String, SpiderFlowElementExampleLog> flowElementsMap = logsNews.stream().collect(Collectors.toMap(SpiderFlowElementExampleLog::getId, Function.identity(), (v1, v2) -> v2));
+            if(CollectionUtils.isNotEmpty(logsNews)){
+                log.info("没有空数据-size {}",logsNews.size());
+            }
+            Map<String, SpiderFlowElementExampleLog> flowElementsMap = logsNews.stream()
+                    .collect(Collectors.toMap(SpiderFlowElementExampleLog::getId, Function.identity(), (v1, v2) -> v2));
 
             for (String key : flowElementMap.keySet()) {
-
                 Map<String, Object> spiderFlowMap = Maps.newHashMap();
                 if (flowElementsMap.containsKey(key)) {
                     SpiderFlowElementExampleLog elementExampleLog = flowElementsMap.get(key);
@@ -78,16 +89,26 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
                             JSON.parseObject(JSON.toJSONString(logNew), Map.class);
                     spiderFlowMap.putAll(ben2Map);
                 }
-
                 if(spiderFlowMap.containsKey("startTime") && spiderFlowMap.containsKey("endTime")){
                     Long startTime = (Long) spiderFlowMap.get("startTime");
                     Long endTime = (Long) spiderFlowMap.get("endTime");
                     spiderFlowMap.put("finalEndTime",endTime - startTime);
                 }
-                // 设置执行时间差
-                logsNew.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowElementExampleLog.class));
+                if (flowElementsMap.containsKey(key)) {
+                    updateMap.putAll(spiderFlowMap);
+                }else {
+                    // 设置执行时间差
+                    insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowElementExampleLog.class));
+                }
             }
-            esContext.indice(index).insertList(logsNew);
+            if(CollectionUtils.isNotEmpty(insert)){
+                esContext.indice(index).insertList(insert);
+            }
+            if(!updateMap.isEmpty()){
+                esContext.indice(index).upsertList(updateMap);
+            }
+            // 进行新增到mysql
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +121,7 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
             Integer start = (queryFlowElementExample.getPage() -1) * queryFlowElementExample.getSize();
             EsQuery query = buildQueryEsQuery(queryFlowElementExample);
             EsData<FlowElementExample> result = query
-                    .andByAsc("startTime")
+                    .andByDesc("startTime")
                     .minScore(1)
                     .limit(start, queryFlowElementExample.getSize())
                     .selectList(FlowElementExample.class);
@@ -141,6 +162,7 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
                         .termIf(StringUtils.isNotEmpty(queryFlowElementExample.getFunctionId()), "functionId", queryFlowElementExample.getFunctionId())
                         .rangeIf(Objects.nonNull(queryFlowElementExample.getGtTakeTime()), "takeTime", t -> t.gt(queryFlowElementExample.getGtTakeTime()))
                         .rangeIf(Objects.nonNull(queryFlowElementExample.getLtTakeTime()), "takeTime", t -> t.lt(queryFlowElementExample.getLtTakeTime()))
+
                 );
     }
 
