@@ -12,6 +12,8 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
 /**
  * @program: spider-node
  * @description: 下游服务注册管理
@@ -63,9 +65,13 @@ public class WorkerRegisterManager {
                 }
                 workerInterface.queryWorkerInfo(new JsonObject().put("workerName",clientInfo.getWorkerName())).onSuccess(suss->{
                     JsonObject workerInfo = suss;
+                    Integer rpcPort = 9640;
+                    if(Objects.nonNull(workerInfo) && workerInfo.containsKey("rpcPort")){
+                        rpcPort = workerInfo.getInteger("rpcPort");
+                    }
                     // 获取到该服务的-rpc端口号
                     clientInfo.setClientStatus(ClientStatus.NORMAL);
-                    clientInfo.setPort(workerInfo.getInteger("rpcPort"));
+                    clientInfo.setPort(rpcPort);
                     clientInfo.setRemoteAddress(ip);
                     log.info("接收到的数据为 {}", JSON.toJSONString(clientInfo));
                     // 按照协议响应给客户端
