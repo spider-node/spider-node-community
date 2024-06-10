@@ -11,7 +11,7 @@
     <parent>
         <groupId>cn.spider.framework</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>${spider.version}</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <name>controller</name>
@@ -48,6 +48,7 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
+            <version>${vertx.version}</version>
         </dependency>
 
         <dependency>

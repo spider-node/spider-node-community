@@ -7,7 +7,7 @@
     <parent>
         <groupId>cn.spider.framework</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>${spider.version}</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
 
