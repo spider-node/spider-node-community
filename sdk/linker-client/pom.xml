@@ -8,13 +8,11 @@
     <artifactId>linker-client</artifactId>
     <version>${spider.version}</version>
 
-   <parent>
+    <parent>
         <groupId>cn.spider.framework</groupId>
-        <artifactId>spider-parent</artifactId>
+        <artifactId>sdk</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
-
-
 
     <properties>
 
