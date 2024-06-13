@@ -124,4 +124,10 @@ public class Constant {
 
     public final static String RUN_ALL = "ALL";
 
+    public final static String f = "'";
+
+    public final static String k = " ";
+
+    public final static String kn = "";
+
 }

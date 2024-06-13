@@ -163,26 +163,26 @@ public class ParamFunctionImpl implements ParamInterface {
     }
 
     private Boolean checkIsRun(String expression, String value) {
-        if (expression.contains("'")) {
-            expression = expression.replace("'", "");
+        if (expression.contains(Constant.f)) {
+            expression = expression.replace(Constant.f, "");
         }
         Map<String, String> expressionMap = new HashMap<>();
         // 拆分
         String[] split = null;
-        if (expression.contains("==")) {
-            expressionMap.put("operator", "==");
-            split = expression.split("==");
-        } else if (expression.contains("!=")) {
-            expressionMap.put("operator", "!=");
-            split = expression.split("!=");
-        } else if (expression.contains("=")) {
-            split = expression.split("=");
-            expressionMap.put("operator", "=");
+        if (expression.contains(Constant.DOUBLE_EQUALS)) {
+            expressionMap.put(Constant.OPERATOR, Constant.DOUBLE_EQUALS);
+            split = expression.split(Constant.DOUBLE_EQUALS);
+        } else if (expression.contains(Constant.NO_EQUALS)) {
+            expressionMap.put(Constant.OPERATOR, Constant.NO_EQUALS);
+            split = expression.split(Constant.NO_EQUALS);
+        } else if (expression.contains(Constant.EQUALS)) {
+            split = expression.split(Constant.EQUALS);
+            expressionMap.put(Constant.OPERATOR, Constant.EQUALS);
         }
 
         for (int i = 0; i < split.length; i++) {
             String a = split[i];
-            split[i] = a.replace(" ", "");
+            split[i] = a.replace(Constant.k, Constant.kn);
         }
 
         expressionMap.put(Constant.KEY, split[0]);
