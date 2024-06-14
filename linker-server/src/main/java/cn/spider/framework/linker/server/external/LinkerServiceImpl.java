@@ -65,7 +65,7 @@ public class LinkerServiceImpl implements LinkerService {
     public Future<JsonObject> submittals(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
         LinkerServerRequest linkerServerRequest = JSON.parseObject(param.toString(), LinkerServerRequest.class);
-
+        // 如果为虚拟执行
         if (linkerServerRequest.getRetryType().equals(Constant.VIRTUALLY)) {
             JsonObject queryHistoryParam = new JsonObject();
             queryHistoryParam.put(Constant.REQUEST_ID, linkerServerRequest.getParentRequestId());
@@ -111,9 +111,9 @@ public class LinkerServiceImpl implements LinkerService {
     /**
      * 执行业务请求
      *
-     * @param functionRequest
+     * @param functionRequest 功能请求参数信息
      * @param promise
-     * @param param
+     * @param param 请求参数
      */
     private void runBusinessRequest(FunctionRequest functionRequest, Promise<JsonObject> promise, JsonObject param) {
         //grpc调用
@@ -125,6 +125,7 @@ public class LinkerServiceImpl implements LinkerService {
                 .setTaskComponentName(functionRequest.getComponentName())
                 .setTaskComponentVersion(StringUtils.isEmpty(functionRequest.getVersion()) ? "v1" : functionRequest.getVersion())
                 .build();
+        // 远程rpc调用
         Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
         // log.info("获取参数-------------立马调用远程 时间 {}",System.currentTimeMillis());
         response.onSuccess(suss -> {

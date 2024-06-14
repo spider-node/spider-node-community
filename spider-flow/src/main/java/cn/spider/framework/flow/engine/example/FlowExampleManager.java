@@ -194,6 +194,7 @@ public class FlowExampleManager {
                 .build();
         //发送事件
         eventManager.sendMessage(EventType.START_FLOW_EXAMPLE, eventData);
+        // 开始执行
         runFlowExample(example, true, true);
         return example;
     }
@@ -230,7 +231,6 @@ public class FlowExampleManager {
         }
 
         //log.info("当前执行的requestId {}", example.getRequestId());
-
         if (Objects.isNull(example.getFlowElement())) {
             // log.info("当前执行的 requestId 执行节点为空", example.getRequestId());
             return;
@@ -365,10 +365,10 @@ public class FlowExampleManager {
     /**
      * 正常
      *
-     * @param transactionGroupId
-     * @param serviceTask
-     * @param example
-     * @param elementExampleData
+     * @param transactionGroupId 事务组Id
+     * @param serviceTask task
+     * @param example 流程实例
+     * @param elementExampleData 实例data
      */
     private void normal(String transactionGroupId, ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {
         // 当组的事务id,不为空的情况下，需要先注册事务信息
@@ -561,6 +561,7 @@ public class FlowExampleManager {
         // 进行等待，需要被唤醒
         example.runExample()
                 .onSuccess(suss -> {
+                    // 执行成功后处理
                     Object result = suss;
                     try {
                         Boolean isNext = true;
@@ -577,7 +578,7 @@ public class FlowExampleManager {
                                         // TODO 需要设置回 param
                                         param.put(Constant.STATUS, Constant.FAIL);
                                     } else {
-                                        // 执行当前节点
+                                        // 继续执行当前节点信息
                                         isNext = false;
                                     }
                                 }
@@ -586,6 +587,7 @@ public class FlowExampleManager {
 
                         // 配合轮询使用
                         Boolean isNextNew = isNext;
+                        // 回写执行的参数到rocksdb中
                         noticeResult(example, example.getFlowElement(), result, isNextNew).onSuccess(notifySuss -> {
                             FlowElement flowElementAsync = example.getFlowElement();
                             FlowRegister flowRegisterAsync = example.getFlowRegister();
@@ -613,6 +615,7 @@ public class FlowExampleManager {
                         endFlowExampleFail(example, e);
                     }
                 }).onFailure(fail -> {
+                    // 执行失败后处理
                     // 注册延迟队列
                     log.error("执行失败fail {}", ExceptionMessage.getStackTrace(fail));
                     FlowElement flowElementAsync = example.getFlowElement();

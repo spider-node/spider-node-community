@@ -107,10 +107,16 @@ public class FlowServiceImpl implements FlowService {
         return promise.future();
     }
 
+    /**
+     * 流程实例执行类
+     * @param data
+     * @return
+     */
     @Override
     public Future<JsonObject> startFlowV2(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
         StartFlowRequest request = data.mapTo(StartFlowRequest.class);
+        // 获取配置的功能节点
         Future<BusinessFunctions> functionsFuture = businessManager.queryBusinessFunctions(request.getFunctionId());
         functionsFuture.onSuccess(querySuss -> {
             // step1: 获取功能信息
@@ -157,11 +163,19 @@ public class FlowServiceImpl implements FlowService {
         promise.fail(throwable);
     }
 
-
+    /**
+     * 执行
+     * @param request 执行参数的信息
+     * @param functions 配置的业务功能信息
+     * @param promise 业务功能执行结果
+     * @param isAsync 是否异步
+     * @param data 请求参数
+     */
     public void run(StartFlowRequest request, BusinessFunctions functions, Promise<JsonObject> promise, Boolean isAsync, JsonObject data) {
         // 获取参数
         Object requestParam = request.getRequest();
         String requestId = buildRequestId();
+        // 构造执行流程实例需要的信息
         StoryRequest<Object> req = ReqBuilder.returnType(Object.class)
                 .startId(functions.getStartId())
                 .functionName(functions.getName())
@@ -179,8 +193,11 @@ public class FlowServiceImpl implements FlowService {
         if (Objects.nonNull(requestParam)) {
             requestParams.put(REQUEST_PARAM_NAME, JsonObject.mapFrom(requestParam));
         }
+        // 请求参数写入到rocksdb中
         paramInterface.writeRequestParam(requestParams).onSuccess(requestSuss -> {
+            // 具体执行
             Future<TaskResponse<Object>> fire = storyEngine.fire(req);
+            // 执行成功的处理
             fire.onSuccess(suss -> {
                 TaskResponse<Object> result = suss;
                 if (result.isSuccess()) {
@@ -199,6 +216,7 @@ public class FlowServiceImpl implements FlowService {
                     }
                     endFail(promise, result.getResultException());
                 }
+                // 执行失败的处理
             }).onFailure(fail -> {
                 if (isAsync) {
                     log.info("异步执行失败 {}", ExceptionMessage.getStackTrace(fail));
@@ -211,6 +229,7 @@ public class FlowServiceImpl implements FlowService {
                 log.error("fail {}", ExceptionMessage.getStackTrace(fail));
                 endFail(promise, fail);
             });
+            // 执行失败的处理
         }).onFailure(fail -> {
             log.error("fail {}", ExceptionMessage.getStackTrace(fail));
             endFail(promise, fail);

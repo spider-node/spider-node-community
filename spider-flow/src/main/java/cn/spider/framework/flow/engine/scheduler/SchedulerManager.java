@@ -80,6 +80,7 @@ public class SchedulerManager {
         }
         LinkerServerRequest linkerServerRequest = buildRequestEntityNew(paramMap, serviceTask,workerName,methodName,example);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
+        // 提交执行请求
         Future<JsonObject> result = linkerService.submittals(request);
         result.onSuccess(suss -> {
             LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject(Constant.DATA).toString(), LinkerServerResponse.class);

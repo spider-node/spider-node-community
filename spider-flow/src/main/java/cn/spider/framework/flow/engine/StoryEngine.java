@@ -100,6 +100,7 @@ public class StoryEngine {
     @SuppressWarnings("unchecked")
     private Future<TaskResponse<Object>> doFire(StoryRequest<Object> storyRequest, Promise<TaskResponse<Object>> promise) {
         try {
+            // 注册流程实例
             FlowExample flowExample = flowExampleManager.registerExample(storyRequest);
             FlowRegister flowRegisterAsync = flowExample.getFlowRegister();
             BasicStoryBus storyBusAsync = flowExample.getStoryBus();

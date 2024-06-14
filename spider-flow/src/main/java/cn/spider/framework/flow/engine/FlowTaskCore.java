@@ -65,6 +65,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
             promise.complete();
             return;
         }
+        // 校验是真实执行，还是虚拟执行（虚拟执行不会真的执行，只是读取日志中执行记过）
         if (StringUtils.isNotEmpty(example.getRetryNodeId()) && example.getRetryNodeId().equals(flowElement.getId())) {
             example.setRunType(Constant.ACTUAL);
         }
@@ -123,20 +124,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
             // 后续改造- 因为不需要返回数据
         } catch (Throwable e) {
             LOGGER.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));
-            if ((e instanceof KstryException) && !(e instanceof BusinessException)) {
-                throw (KstryException) e;
-            }
-
-            BusinessException businessException;
-            if (e instanceof BusinessException) {
-                businessException = GlobalUtil.transferNotEmpty(e, BusinessException.class);
-            } else {
-                businessException = new BusinessException(ExceptionEnum.BUSINESS_INVOKE_ERROR.getExceptionCode(), e.getMessage(), e);
-            }
-            businessException.setTaskIdentity(TaskServiceUtil.joinName(serviceTask.getTaskComponent(), serviceTask.getTaskService()));
-            // 设置方法
-            businessException.setMethodName(methodName);
-            throw businessException;
+            throw e;
         }
     }
 }
