@@ -16,35 +16,22 @@
  *
  */
 package cn.spider.framework.flow.component.launcher;
-
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
-import cn.spider.framework.flow.annotation.EnableKstry;
 import cn.spider.framework.flow.component.dynamic.ProcessDynamicComponent;
-import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.resource.config.*;
 import cn.spider.framework.flow.resource.factory.KValueFactory;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
-import cn.spider.framework.flow.SpiderCoreVerticle;
-import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
-import cn.spider.framework.flow.util.ProxyUtil;
 import io.vertx.core.Vertx;
-import io.vertx.core.shareddata.LocalMap;
-import io.vertx.core.shareddata.SharedData;
 import io.vertx.mysqlclient.MySQLPool;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-
 import javax.annotation.Nonnull;
 import java.util.Map;
 
@@ -100,19 +87,6 @@ public class ConfigResourceResolver implements ApplicationContextAware {
     @Override
     public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = GlobalUtil.transferNotEmpty(applicationContext, ConfigurableApplicationContext.class);
-    }
-
-    /**
-     * 配置远程的配置数据
-     * @return
-     */
-    private static EnableKstry getEnableKstryAnn(ListableBeanFactory beanFactory) {
-        Map<String, Object> enableKstryMap = beanFactory.getBeansWithAnnotation(EnableKstry.class);
-        AssertUtil.oneSize(enableKstryMap.values(), ExceptionEnum.ENABLE_KSTRY_NUMBER_ERROR);
-
-        Object target = enableKstryMap.values().iterator().next();
-        Class<?> targetClass = ProxyUtil.noneProxyClass(target);
-        return AnnotationUtils.findAnnotation(targetClass, EnableKstry.class);
     }
 
     private static class ClassPathSourceCondition implements Condition {
