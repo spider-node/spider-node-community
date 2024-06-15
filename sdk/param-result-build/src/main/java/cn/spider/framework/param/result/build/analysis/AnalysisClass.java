@@ -22,7 +22,9 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+/**
+ * 解析动态价值的url
+ */
 public class AnalysisClass {
 
     public Object analysis(String taskComponent, String taskService, String classPath, String url) throws MalformedURLException {
@@ -33,7 +35,13 @@ public class AnalysisClass {
         return all.get(taskComponent + taskService);
     }
 
-
+    /**
+     * 获取jar中的出参,入参
+     * @param url 请求地址
+     * @param classPath 扫码的class地址
+     * @return 返回出参,入参配置
+     * @throws MalformedURLException url异常
+     */
     public Map<String, Map<String, Object>> buildParam(String url, String classPath) throws MalformedURLException {
         URL jar = new URL("jar:" + url + "!/");
         // step2: 创建 appointClassLoader
