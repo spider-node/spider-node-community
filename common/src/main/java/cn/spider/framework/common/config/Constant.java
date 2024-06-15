@@ -130,4 +130,6 @@ public class Constant {
 
     public final static String kn = "";
 
+    public final static int sussCode = 1001;
+
 }

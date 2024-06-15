@@ -194,7 +194,7 @@ public class LinkerServiceImpl implements LinkerService {
      */
     public LinkerServerResponse buildLinkerServerResponse(TransferResponse result) {
         LinkerServerResponse response = new LinkerServerResponse();
-        response.setResultCode(result.getCode() == 1001 ? ResultCode.SUSS : ResultCode.FAIL);
+        response.setResultCode(result.getCode() == Constant.sussCode ? ResultCode.SUSS : ResultCode.FAIL);
         response.setExceptional(result.getMessage());
         response.setResultData(StringUtils.isEmpty(result.getData()) ? new JSONObject() : JSON.parseObject(result.getData()));
         return response;
