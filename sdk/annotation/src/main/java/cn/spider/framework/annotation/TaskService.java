@@ -48,6 +48,12 @@ public @interface TaskService {
     String desc() default StringUtils.EMPTY;
 
     /**
+     * 功能名称
+     * @return functionName
+     */
+    String functionName() default StringUtils.EMPTY;
+
+    /**
      * 子能力
      *
      * @return ability

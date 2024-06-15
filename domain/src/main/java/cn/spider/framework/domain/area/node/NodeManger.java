@@ -74,7 +74,7 @@ public class NodeManger {
 
     // 新增节点
     public Future<Void> createNode(Node node) {
-        node.setStatus(NodeStatus.STOP);
+        node.setStatus(NodeStatus.START);
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
         node.setId(UUID.randomUUID().toString());
@@ -155,7 +155,7 @@ public class NodeManger {
                     });
                     promise.complete(nodes);
                 }).onFailure(fail -> {
-                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
+                    log.info("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -210,7 +210,7 @@ public class NodeManger {
                         nodes.add(item);
                     });
                     if (CollectionUtils.isEmpty(nodes)) {
-                        promise.fail("没有找到对应的节点");
+                        promise.complete();
                         return;
                     }
                     promise.complete(nodes.get(0));
@@ -227,47 +227,69 @@ public class NodeManger {
             return;
         }
         for (RefreshAreaModel refreshAreaModel : areaModelList) {
-            StringBuilder sql = new StringBuilder();
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put(Constant.TASK_COMPONENT, refreshAreaModel.getTaskComponent());
-            parameters.put(Constant.TASK_SERVICE, refreshAreaModel.getTaskService());
-            // 构造出入的参数结构
-            parameters.put(Constant.PARAM_MAPPING, refreshAreaModel.getParmMap().get("param"));
-            parameters.put(Constant.RESULT_MAPPING, refreshAreaModel.getParmMap().get("result"));
-            parameters.put("worker", refreshAreaModel.getParmMap().get("worker"));
-            parameters.put("taskMethod", refreshAreaModel.getParmMap().get("method"));
-            sql.append("update spider_area_function set param_mapping = #{paramMapping}, result_mapping = #{resultMapping},worker_id = #{worker},task_method = #{taskMethod}  where task_component = #{taskComponent} and task_service = #{taskService}");
-            SqlTemplate
-                    .forUpdate(client, sql.toString())
-                    .execute(parameters)
-                    .onFailure(fail -> {
-                        log.error("更新失败{}", ExceptionMessage.getStackTrace(fail));
+            queryNodeByComTaskService(refreshAreaModel.getTaskComponent(), refreshAreaModel.getTaskService())
+                    .onSuccess(suss -> {
+                        if (Objects.isNull(suss)) {
+                            // 进行新增
+                            Node node = new Node();
+                            node.setResultMapping(JsonObject.mapFrom(refreshAreaModel.getParmMap().get("result")));
+                            node.setParamMapping(JsonObject.mapFrom(refreshAreaModel.getParmMap().get("param")));
+                            node.setAreaId(refreshAreaModel.getAreaId());
+                            node.setStatus(NodeStatus.START);
+                            node.setServiceTaskType(ServiceTaskType.NORMAL);
+                            node.setTaskComponent(refreshAreaModel.getTaskComponent());
+                            node.setTaskService(refreshAreaModel.getTaskService());
+                            if (refreshAreaModel.getParmMap().containsKey("functionName")) {
+                                node.setName((String) refreshAreaModel.getParmMap().get("functionName"));
+                            }
+                            if (refreshAreaModel.getParmMap().containsKey("desc")) {
+                                node.setDesc((String) refreshAreaModel.getParmMap().get("desc"));
+                            }
+                            node.setWorkerId((String) refreshAreaModel.getParmMap().get("worker"));
+                            node.setTaskMethod((String) refreshAreaModel.getParmMap().get("method"));
+                            createNode(node);
+                            return;
+                        }
+                        updateNodeInfo(refreshAreaModel);
+                    }).onFailure(fail -> {
+                        log.error("新增失败{}", ExceptionMessage.getStackTrace(fail));
                     });
+
+
         }
     }
 
-    /*public Future<Node> queryNodeConfig(QueryParamConfigParam param) {
+    public void updateNodeInfo(RefreshAreaModel refreshAreaModel){
         Map<String, Object> parameters = new HashMap<>();
+        parameters.put(Constant.TASK_COMPONENT, refreshAreaModel.getTaskComponent());
+        parameters.put(Constant.TASK_SERVICE, refreshAreaModel.getTaskService());
+        // 构造出入的参数结构
+        parameters.put(Constant.PARAM_MAPPING, refreshAreaModel.getParmMap().get("param"));
+        parameters.put(Constant.RESULT_MAPPING, refreshAreaModel.getParmMap().get("result"));
+        parameters.put("worker", refreshAreaModel.getParmMap().get("worker"));
+        parameters.put("taskMethod", refreshAreaModel.getParmMap().get("method"));
+        parameters.put("areaId", refreshAreaModel.getAreaId());
+        parameters.put("name", refreshAreaModel.getParmMap().get("functionName"));
+        parameters.put("desc", refreshAreaModel.getParmMap().get("desc"));
+        StringBuilder sql = new StringBuilder();
 
-        Promise<Node> promise = Promise.promise();
+        sql.append("update spider_area_function set param_mapping = #{paramMapping}, result_mapping = #{resultMapping},worker_id = #{worker},task_method = #{taskMethod}");
+        if (refreshAreaModel.getParmMap().containsKey("functionName")) {
+            sql.append(", `name` = #{name}");
+        }
+        if (refreshAreaModel.getParmMap().containsKey("desc")) {
+            sql.append(", `desc` = #{desc}");
+        }
+        if (StringUtils.isNotEmpty(refreshAreaModel.getAreaId())) {
+            sql.append(", area_id = #{areaId}");
+        }
+        sql.append(" where task_component = #{taskComponent} and task_service = #{taskService}");
+        log.info("sql:{}", sql.toString());
         SqlTemplate
-                .forQuery(client, "select * from spider_area_function")
-                .mapTo(ROW_BUSINESS)
+                .forUpdate(client, sql.toString())
                 .execute(parameters)
-                .onSuccess(users -> {
-                    RowSet<Node> function = users;
-                    List<Node> nodes = Lists.newArrayList();
-                    function.forEach(item -> {
-                        if (param.getTaskComponents().contains(item.getTaskComponent()) && param.getTaskServices().contains(item.getTaskService())) {
-                            return;
-                        }
-                    });
-                    promise.complete(nodes);
-                }).onFailure(fail -> {
-                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
-                    promise.fail(fail);
+                .onFailure(fail -> {
+                    log.error("更新失败{}", ExceptionMessage.getStackTrace(fail));
                 });
-        return promise.future();
-    }*/
-
+    }
 }

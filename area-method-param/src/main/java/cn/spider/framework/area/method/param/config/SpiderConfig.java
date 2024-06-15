@@ -3,6 +3,7 @@ package cn.spider.framework.area.method.param.config;
 import cn.spider.framework.area.method.param.MainVerticle;
 import cn.spider.framework.area.method.param.analysis.ParamRefreshManager;
 import cn.spider.framework.area.method.param.impl.ParamRefreshInterfaceImpl;
+import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.param.result.build.analysis.AnalysisClass;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
@@ -31,8 +32,14 @@ public class SpiderConfig {
     }
 
     @Bean
-    public ParamRefreshManager buildParamRefreshManager(AnalysisClass analysisClass,NodeInterface nodeInterface){
-        return new ParamRefreshManager(analysisClass,nodeInterface);
+    public AreaInterface buildAreaInterface(Vertx vertx){
+        return AreaInterface.createProxy(vertx,AreaInterface.ADDRESS);
+    }
+
+
+    @Bean
+    public ParamRefreshManager buildParamRefreshManager(AnalysisClass analysisClass,NodeInterface nodeInterface,AreaInterface areaInterface){
+        return new ParamRefreshManager(analysisClass,nodeInterface,areaInterface);
     }
 
     @Bean

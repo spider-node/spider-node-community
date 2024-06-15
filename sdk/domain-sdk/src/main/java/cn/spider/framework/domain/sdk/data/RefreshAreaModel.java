@@ -28,6 +28,45 @@ public class RefreshAreaModel {
      */
     private String method;
 
+    /**
+     * 功能名称
+     */
+    private String functionName;
+
+    /**
+     * 功能描述
+     */
+    private String desc;
+
+    /**
+     * 领域id
+     */
+    private String areaId;
+
+    public String getAreaId() {
+        return areaId;
+    }
+
+    public void setAreaId(String areaId) {
+        this.areaId = areaId;
+    }
+
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public void setFunctionName(String functionName) {
+        this.functionName = functionName;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
     public String getWorker() {
         return worker;
     }

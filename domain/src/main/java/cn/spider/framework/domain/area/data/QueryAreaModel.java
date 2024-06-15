@@ -20,6 +20,10 @@ public class QueryAreaModel {
 
     private String id;
 
+    private String classPath;
+
+    private String sdkUrl;
+
     private Integer page;
 
     private Integer size;

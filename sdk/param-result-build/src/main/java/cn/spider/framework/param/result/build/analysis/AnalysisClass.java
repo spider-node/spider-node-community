@@ -3,6 +3,7 @@ package cn.spider.framework.param.result.build.analysis;
 import cn.spider.framework.annotation.TaskComponent;
 import cn.spider.framework.annotation.TaskInstruct;
 import cn.spider.framework.annotation.TaskService;;
+import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.param.result.build.*;
 import cn.spider.framework.param.result.build.scan.loader.AnalysisClassLoader;
 import com.alibaba.fastjson.JSON;
@@ -70,6 +71,8 @@ public class AnalysisClass {
         taskServiceMethodList.forEach(method -> {
             Map<String, Object> mapping = new HashMap<>();
             TaskService annotation = method.getAnnotation(TaskService.class);
+            String functionName = annotation.functionName();
+            String desc = annotation.desc();
             String taskServiceName = StringUtils.isBlank(annotation.name()) ? method.getName() : annotation.name();
             TaskInstructWrapper taskInstruct = getTaskInstructWrapper(method, taskServiceName).orElse(null);
             NoticeAnnotationWrapper noticeMethodSpecify = new NoticeAnnotationWrapper(method);
@@ -77,9 +80,17 @@ public class AnalysisClass {
             List<ParamInjectDef> paramInjectDefsList = new ArrayList<>();
             methodWrapper.getReturnTypeNoticeDef().getNoticeStaDefSet().stream().forEach(item -> {
                 String targetName = item.getTargetName();
+                List<ParamInjectDef> paramInjectDefs = new ArrayList<>();
+                // 包含. targetName说明本身已经是不需要组装域参数信息了
+                if(targetName.contains(Constant.SPOT)){
+                    ParamInjectDef parameter = new ParamInjectDef(item.getFieldName(), targetName);
+                    paramInjectDefs.add(parameter);
+                    paramInjectDefsList.addAll(paramInjectDefs);
+                    return;
+                }
                 Field[] fields = item.getFieldClass().getDeclaredFields();
                 if (fields.length > 0) {
-                    List<ParamInjectDef> paramInjectDefs = new ArrayList<>();
+
                     for (Field field : fields) {
                         ParamInjectDef parameter = new ParamInjectDef(field.getName(), targetName + "." + field.getName());
                         paramInjectDefs.add(parameter);
@@ -99,6 +110,12 @@ public class AnalysisClass {
             mapping.put("result", resultObject);
             mapping.put("worker",taskComponent.workerName());
             mapping.put("method",methodWrapper.getMethod().getName());
+            if(StringUtils.isNotEmpty(functionName)){
+                mapping.put("functionName",functionName);
+            }
+            if(StringUtils.isNotEmpty(desc)){
+                mapping.put("desc",desc);
+            }
             // 改造获取入参,请求参数
             allMapping.put(taskComponent.name() + "@" + taskServiceName, mapping);
         });

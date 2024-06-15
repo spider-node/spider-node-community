@@ -124,6 +124,15 @@ public class AreaManger {
         if(StringUtils.isNotEmpty(areaModel.getId())){
             sql.append(" and id = #{id}");
         }
+
+        if(StringUtils.isNotEmpty(areaModel.getSdkUrl())){
+            sql.append(" and sdk_url = #{sdkUrl}");
+        }
+
+        if(StringUtils.isNotEmpty(areaModel.getClassPath())){
+            sql.append(" and scan_class_path = #{classPath}");
+        }
+
         sql.append(" order by create_time limit #{page},#{size}");
         JsonObject params = JsonObject.mapFrom(areaModel);
         Map<String, Object> parameters = params.getMap();
