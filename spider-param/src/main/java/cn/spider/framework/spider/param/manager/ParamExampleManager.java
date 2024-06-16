@@ -303,7 +303,7 @@ public class ParamExampleManager {
                     NodeParamMapping nodeParamMapping = suss;
                     JsonObject resultMapping = nodeParamMapping.getResultMapping();
                     // 获取参数的值映射
-                    NodeParamConfigModel nodeParamConfigList = resultMapping.mapTo(NodeParamConfigModel.class);
+                    NodeParamConfigModel nodeParamConfigList = JSON.parseObject(resultMapping.toString(),NodeParamConfigModel.class);
                     Map<String, String> paramCache = new HashMap<>();
                     nodeParamConfigList.getNodeParamConfigs().forEach(item -> {
                         NodeParamConfig paramConfig = item;
