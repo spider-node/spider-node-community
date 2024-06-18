@@ -162,7 +162,7 @@ public class FlowExampleManager {
         storyRequest.setRequestId(exampleId);
         StartFlowRequest request = storyRequest.getRequestParam();
         // 设置是否虚拟执行
-        String runType = StringUtils.isNotEmpty(request.getRetryType()) ? request.getRetryType().equals(Constant.RUN_SINGLE) ? Constant.VIRTUALLY : Constant.ACTUAL : Constant.ACTUAL;
+        String runType = StringUtils.isNotEmpty(request.getRetryType()) ? request.getRetryType().equals(Constant.RUN_SINGLE) || request.getRetryType().equals(Constant.RUN_AFTER) ? Constant.VIRTUALLY : Constant.ACTUAL : Constant.ACTUAL;
 
         FlowExample example = FlowExample.builder()
                 .exampleId(exampleId)

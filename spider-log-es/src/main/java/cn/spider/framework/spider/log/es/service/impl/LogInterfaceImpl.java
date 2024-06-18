@@ -47,7 +47,7 @@ public class LogInterfaceImpl implements LogInterface {
     @Override
     public Future<JsonObject> queryElementExample(JsonObject param) {
         QueryFlowElementExample queryFlowElementExample = param.mapTo(QueryFlowElementExample.class);
-        if(queryFlowElementExample.getSize() == 0){
+        if(queryFlowElementExample.getPage() == 0){
             queryFlowElementExample.setPage(1);
             queryFlowElementExample.setSize(10);
         }

@@ -133,8 +133,8 @@ public class FunctionImpl implements FunctionInterface {
     public Future<JsonObject> queryRunHistoryElementData(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
         QueryFlowElementExample queryFlowElementExample = new QueryFlowElementExample();
+        queryFlowElementExample.setSize(100);
         queryFlowElementExample.setPage(1);
-        queryFlowElementExample.setPage(100);
         queryFlowElementExample.setRequestId(param.getString(Constant.REQUEST_ID));
         logInterface.queryElementExample(JsonObject.mapFrom(queryFlowElementExample))
                 .onSuccess(elementExample -> {

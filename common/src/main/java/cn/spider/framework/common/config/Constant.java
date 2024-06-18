@@ -137,6 +137,8 @@ public class Constant {
 
     public final static String RUN_SINGLE = "SINGLE";
 
+    public final static String RUN_AFTER= "AFTER";
+
     public final static String RUN_ALL = "ALL";
 
     public final static String f = "'";

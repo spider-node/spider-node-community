@@ -85,6 +85,7 @@ public class LinkerServiceImpl implements LinkerService {
 
                         if (!optionalFlowElementModel.isPresent()) {
                             promise.fail("没有找到需要执行的对应的节点数据");
+                            return;
                         }
                         FlowElementModel flowElementModel = optionalFlowElementModel.get();
                         LinkerServerResponse responseNew = buildLinkerServerVirtuallyResponse(flowElementModel.getReturnParam());
