@@ -13,9 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -60,7 +62,7 @@ public class ParamFunctionImpl implements ParamInterface {
         executor.execute(() -> {
             WriteBackParam writeBackParam = JSON.parseObject(param.toString(), WriteBackParam.class);
             writeBackParam.setResult(param.getJsonObject("result"));
-            if(Objects.isNull(writeBackParam.getResult())){
+            if (Objects.isNull(writeBackParam.getResult())) {
                 promise.complete();
                 return;
             }
@@ -96,11 +98,12 @@ public class ParamFunctionImpl implements ParamInterface {
                 ONode result = paramExampleManager.queryValueByExpression(queryAreaParam(expressionQueryValueParam.getTargetName()), expressionQueryValueParam.getRequestId());
                 // 获取到校验的结果
                 String checkResultString = Objects.isNull(result) ? null : result.toString().replace("\"", "");
+                log.info("checkResultString {},finalExpression {} result {}", checkResultString, finalExpression, result);
                 Boolean checkResult = checkIsRun(finalExpression, checkResultString);
                 result1.setResult(checkResult);
                 promise.complete(JsonObject.mapFrom(result1));
             } catch (Exception e) {
-                log.info("异常信息为-{} finalExpression {}", ExceptionMessage.getStackTrace(e),finalExpression);
+                log.info("异常信息为-{} finalExpression {}", ExceptionMessage.getStackTrace(e), finalExpression);
                 promise.fail(e);
             }
         });
@@ -125,6 +128,7 @@ public class ParamFunctionImpl implements ParamInterface {
 
     /**
      * 根据表达式去域中获取对应的值
+     *
      * @param param
      * @return
      */
@@ -133,13 +137,13 @@ public class ParamFunctionImpl implements ParamInterface {
         Promise<JsonObject> promise = Promise.promise();
         QueryFunctionParam queryFunctionParam = JSON.parseObject(param.toString(), QueryFunctionParam.class);
         executor.execute(() -> {
-            Map<String,Object> resultMap = new HashMap<>(queryFunctionParam.getParams().size());
-            queryFunctionParam.getParams().forEach((key,value)->{
+            Map<String, Object> resultMap = new HashMap<>(queryFunctionParam.getParams().size());
+            queryFunctionParam.getParams().forEach((key, value) -> {
                 try {
                     ONode result = paramExampleManager.queryValueByExpression(value, queryFunctionParam.getRequestId());
-                    resultMap.put(key,result.toObject());
+                    resultMap.put(key, result.toObject());
                 } catch (Exception e) {
-                    log.error("查询参数失败 {}",ExceptionMessage.getStackTrace(e));
+                    log.error("查询参数失败 {}", ExceptionMessage.getStackTrace(e));
                     promise.fail(e);
                     throw new RuntimeException(e);
                 }
@@ -178,6 +182,22 @@ public class ParamFunctionImpl implements ParamInterface {
         } else if (expression.contains(Constant.EQUALS)) {
             split = expression.split(Constant.EQUALS);
             expressionMap.put(Constant.OPERATOR, Constant.EQUALS);
+        } else if (expression.contains(Constant.GREATER_THAN)) {
+            split = expression.split(Constant.GREATER_THAN);
+            expressionMap.put(Constant.OPERATOR, Constant.GREATER_THAN);
+        } else if (expression.contains(Constant.GREATER_THAN_EQUAL)) {
+            split = expression.split(Constant.GREATER_THAN_EQUAL);
+            expressionMap.put(Constant.OPERATOR, Constant.GREATER_THAN_EQUAL);
+        } else if (expression.contains(Constant.LESS_THAN)) {
+            split = expression.split(Constant.LESS_THAN);
+            expressionMap.put(Constant.OPERATOR, Constant.LESS_THAN);
+        } else if (expression.contains(Constant.LESS_THAN_EQUAL)) {
+            split = expression.split(Constant.LESS_THAN_EQUAL);
+            expressionMap.put(Constant.OPERATOR, Constant.LESS_THAN_EQUAL);
+        } else if (expression.contains(Constant.CONTAIN)) {
+            expressionMap.put(Constant.OPERATOR, Constant.CONTAIN);
+        } else if (expression.contains(Constant.CONTAIN_SET)) {
+            expressionMap.put(Constant.OPERATOR, Constant.CONTAIN_SET);
         }
 
         for (int i = 0; i < split.length; i++) {
@@ -199,20 +219,45 @@ public class ParamFunctionImpl implements ParamInterface {
                 if (valueOne.equals(Constant.NULL)) {
                     return StringUtils.isEmpty(value);
                 }
+                // 校验是否为数字
+                if (isNumeric(valueOne)) {
+                    return compareSizes(valueOne, value, Constant.DOUBLE_EQUALS);
+                }
                 return valueOne.equals(value);
             case Constant.NO_EQUALS:
                 if (valueOne.equals(Constant.NULL)) {
                     return !StringUtils.isEmpty(value);
+                }
+                if (isNumeric(valueOne)) {
+                    return compareSizes(valueOne, value, Constant.NO_EQUALS);
                 }
                 return !valueOne.equals(value);
             case Constant.EQUALS:
                 if (valueOne.equals(Constant.NULL)) {
                     return StringUtils.isEmpty(value);
                 }
+                if (isNumeric(valueOne)) {
+                    return compareSizes(valueOne, value, Constant.EQUALS);
+                }
                 return valueOne.equals(value);
+            case Constant.GREATER_THAN:
+                return compareSizes(valueOne, value, Constant.GREATER_THAN);
+            case Constant.GREATER_THAN_EQUAL:
+                return compareSizes(valueOne, value, Constant.GREATER_THAN_EQUAL);
+            case Constant.LESS_THAN:
+                return compareSizes(valueOne, value, Constant.LESS_THAN);
+            case Constant.LESS_THAN_EQUAL:
+                return compareSizes(valueOne, value, Constant.LESS_THAN_EQUAL);
+            case Constant.CONTAIN:
+                return value.contains(valueOne);
+            case Constant.CONTAIN_SET:
+                Set<String> data = JSON.parseObject(valueOne,Set.class);
+                return data.contains(value);
         }
         return false;
     }
+
+
 
     private String queryAreaParam(String expression) {
         if (expression.contains(Constant.DOUBLE_EQUALS)) {
@@ -221,6 +266,18 @@ public class ParamFunctionImpl implements ParamInterface {
             return queryAreaParamSymbol(expression, Constant.NO_EQUALS);
         } else if (expression.contains(Constant.EQUALS)) {
             return queryAreaParamSymbol(expression, Constant.EQUALS);
+        } else if (expression.contains(Constant.GREATER_THAN)) {
+            return queryAreaParamSymbol(expression, Constant.GREATER_THAN);
+        } else if (expression.contains(Constant.GREATER_THAN_EQUAL)) {
+            return queryAreaParamSymbol(expression, Constant.GREATER_THAN_EQUAL);
+        } else if (expression.contains(Constant.LESS_THAN)) {
+            return queryAreaParamSymbol(expression, Constant.LESS_THAN);
+        } else if (expression.contains(Constant.LESS_THAN_EQUAL)) {
+            return queryAreaParamSymbol(expression, Constant.LESS_THAN_EQUAL);
+        } else if (expression.contains(Constant.CONTAIN)) {
+            return queryAreaParamSymbol(expression, Constant.CONTAIN);
+        } else if (expression.contains(Constant.CONTAIN_SET)) {
+            return queryAreaParamSymbol(expression, Constant.CONTAIN_SET);
         }
         return expression;
     }
@@ -235,4 +292,31 @@ public class ParamFunctionImpl implements ParamInterface {
         return expression;
     }
 
+    private boolean isNumeric(String str) {
+        return str.matches("^[0-9]+$");
+    }
+
+    private Boolean compareSizes(String source, String target, String operator) {
+        BigDecimal sourceValue = new BigDecimal(source);
+        BigDecimal targetValue = new BigDecimal(target);
+        // 校验是否为数字
+        switch (operator) {
+            case Constant.DOUBLE_EQUALS:
+                return sourceValue.compareTo(targetValue) == 0;
+            case Constant.NO_EQUALS:
+                return !(sourceValue.compareTo(targetValue) == 0);
+            case Constant.EQUALS:
+                return sourceValue.compareTo(targetValue) == 0;
+            case Constant.GREATER_THAN:
+                return targetValue.compareTo(sourceValue) == 1;
+            case Constant.GREATER_THAN_EQUAL:
+                return targetValue.compareTo(sourceValue) > -1;
+            case Constant.LESS_THAN:
+                return targetValue.compareTo(sourceValue) == -1;
+            case Constant.LESS_THAN_EQUAL:
+                return targetValue.compareTo(sourceValue) < 1;
+            default:
+                return false;
+        }
+    }
 }

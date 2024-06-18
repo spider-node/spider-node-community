@@ -120,6 +120,21 @@ public class Constant {
 
     public final static String EQUALS  = "=";
 
+    //greater than
+    public final static String GREATER_THAN  = ">";
+
+    //less than equal
+    public final static String GREATER_THAN_EQUAL  = "=>";
+
+    public final static String LESS_THAN  = "<";
+
+    public final static String LESS_THAN_EQUAL  = "<=";
+
+    // 用于包含
+    public final static String CONTAIN  = "@contain";
+    // 用于数组包含
+    public final static String CONTAIN_SET  = "@set_contain";
+
     public final static String RUN_SINGLE = "SINGLE";
 
     public final static String RUN_ALL = "ALL";
