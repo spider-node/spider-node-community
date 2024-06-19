@@ -96,8 +96,6 @@ public class RoleManager {
                 case "broker":
                     localMap.put("flow-node", "1");
                     localMap.put("scheduler", "1");
-                    localMap.put("transaction", "1");
-                    localMap.put("controller", "1");
                     localMap.put("area", "1");
                     localMap.put("param", "1");
                     localMap.put("refresh", "1");

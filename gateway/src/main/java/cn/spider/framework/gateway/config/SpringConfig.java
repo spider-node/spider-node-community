@@ -1,12 +1,9 @@
 package cn.spider.framework.gateway.config;
-
-import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.BrokerInfoService;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
-import cn.spider.framework.db.config.*;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
@@ -20,14 +17,9 @@ import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
-import org.redisson.api.RRateLimiter;
-import org.redisson.api.RateIntervalUnit;
-import org.redisson.api.RateType;
-import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 /**
  * @BelongsProject: spider-node
@@ -39,7 +31,6 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.framework.gateway.api.*"})
-@Import({RedissonConfig.class})
 public class SpringConfig {
 
     @Bean
@@ -98,17 +89,6 @@ public class SpringConfig {
     }
 
     @Bean
-    public RRateLimiter buildRRateLimiter(RedissonClient redissonClient, Vertx vertx) {
-        RRateLimiter rateLimiter = redissonClient.getRateLimiter("spider-rrateLimiter");
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
-        // 配置
-        rateLimiter.trySetRate(RateType.OVERALL, Integer.parseInt(localMap.get("limitation-number")),
-                Integer.parseInt(localMap.get("limitation-interval")), RateIntervalUnit.SECONDS);
-        return rateLimiter;
-    }
-
-    @Bean
     public BrokerInfoService buildBrokerInfoService(Vertx vertx) {
         return BrokerInfoService.createProxy(vertx, BrokerInfoService.ADDRESS);
     }
@@ -121,7 +101,6 @@ public class SpringConfig {
                                                         LeaderHeartService leaderHeartService,
                                                         BrokerInfoService brokerInfoService,
                                                         AreaInterface areaInterface,
-                                                        RRateLimiter rateLimiter,
                                                         FunctionInterface functionInterface,
                                                         NodeInterface nodeInterface,
                                                         VersionInterface versionInterface,ParamRefreshInterface paramRefreshInterface,Vertx vertx) {
@@ -131,7 +110,6 @@ public class SpringConfig {
                 logInterface,
                 leaderHeartService,
                 brokerInfoService,
-                rateLimiter,
                 areaInterface,
                 functionInterface,
                 nodeInterface,

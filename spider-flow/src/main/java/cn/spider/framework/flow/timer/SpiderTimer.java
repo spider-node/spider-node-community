@@ -4,7 +4,7 @@ import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.delayQueue.DelayQueueManager;
-import cn.spider.framework.flow.delayQueue.enums.RedisDelayQueueEnum;
+import cn.spider.framework.flow.delayQueue.enums.DelayQueueEnum;
 import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.engine.example.data.FlowExample;
 import cn.spider.framework.flow.timer.data.FlowDelayExample;
@@ -86,12 +86,12 @@ public class SpiderTimer {
      */
     public void registerDelay(FlowExample example, Integer timer) {
         FlowDelayExample flowDelayExample = FlowDelayExample.builder().exampleId(example.getExampleId()).brokerName(brokerName).build();
-        delayQueueManager.addDelayQueue(flowDelayExample,timer * 1000, TimeUnit.MILLISECONDS, RedisDelayQueueEnum.FLOW_DELAY.getCode());
+        delayQueueManager.addDelayQueue(flowDelayExample,timer * 1000, TimeUnit.MILLISECONDS, DelayQueueEnum.FLOW_DELAY.getCode());
     }
 
     public void registerFinalDelay(FlowExample example, Integer timer) {
         FlowDelayExample flowDelayExample = FlowDelayExample.builder().exampleId(example.getExampleId()).brokerName(brokerName).build();
-        delayQueueManager.addDelayQueue(flowDelayExample,timer * 1000, TimeUnit.MILLISECONDS, RedisDelayQueueEnum.FLOW_DELAY.getCode());
+        delayQueueManager.addDelayQueue(flowDelayExample,timer * 1000, TimeUnit.MILLISECONDS, DelayQueueEnum.FLOW_DELAY.getCode());
     }
 
     public void registerApprove(String flowExampleId, Integer time) {
@@ -104,6 +104,6 @@ public class SpiderTimer {
 
     public void registerExampleMonitor(String flowExampleId) {
         FlowDelayExample flowDelayExample = FlowDelayExample.builder().exampleId(flowExampleId).brokerName(brokerName).build();
-        delayQueueManager.addDelayQueue(flowDelayExample,120 * 1000, TimeUnit.MILLISECONDS, RedisDelayQueueEnum.FLOW_REMOVE_DELAY.getCode());
+        delayQueueManager.addDelayQueue(flowDelayExample,120 * 1000, TimeUnit.MILLISECONDS, DelayQueueEnum.FLOW_REMOVE_DELAY.getCode());
     }
 }

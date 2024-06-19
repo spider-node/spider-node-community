@@ -1,11 +1,13 @@
 package cn.spider.framework.flow;
 
+import cn.spider.framework.flow.config.SpiderConfigV2;
 import cn.spider.framework.flow.config.SpiderCoreConfig;
 import cn.spider.framework.flow.init.SpiderCoreStart;
 import cn.spider.framework.flow.timer.SystemTimer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.shareddata.LocalMap;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 
@@ -32,7 +34,13 @@ public class SpiderCoreVerticle extends AbstractVerticle {
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
         this.clusterVertx = vertx;
-        this.factory = new AnnotationConfigApplicationContext(SpiderCoreConfig.class);
+        LocalMap<String, String> localMap = vertx.sharedData().getLocalMap("config");
+        // 队列模式的使用
+        if(localMap.get("queue_mode").equals("java")){
+            this.factory = new AnnotationConfigApplicationContext(SpiderConfigV2.class);
+        }else {
+            this.factory = new AnnotationConfigApplicationContext(SpiderCoreConfig.class);
+        }
         SpiderCoreStart spiderCoreStart = this.factory.getBean(SpiderCoreStart.class);
         spiderCoreStart.noCenterInit();
         SystemTimer systemTimer = this.factory.getBean(SystemTimer.class);

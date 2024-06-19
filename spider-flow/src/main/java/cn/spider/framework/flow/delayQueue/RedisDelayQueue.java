@@ -3,13 +3,11 @@ package cn.spider.framework.flow.delayQueue;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.C;
 import org.redisson.api.RBlockingDeque;
 import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RedissonClient;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -22,10 +20,10 @@ import java.util.concurrent.TimeUnit;
  * @Version: 1.0
  */
 @Slf4j
-public class RedisDelayQueueUtil {
+public class RedisDelayQueue implements SpiderDelayQueue {
     private RedissonClient redissonClient;
 
-    public RedisDelayQueueUtil(RedissonClient redissonClient) {
+    public RedisDelayQueue(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;
     }
 

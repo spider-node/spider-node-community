@@ -51,8 +51,6 @@ public class SpiderServerHandler {
 
     private String clusterMode;
 
-    private RRateLimiter rateLimiter;
-
     private AreaInterface areaInterface;
 
     private FunctionInterface functionInterface;
@@ -73,7 +71,6 @@ public class SpiderServerHandler {
                                LogInterface logInterface,
                                LeaderHeartService leaderHeartService,
                                BrokerInfoService brokerInfoService,
-                               RRateLimiter rateLimiter,
                                AreaInterface areaInterface,
                                FunctionInterface functionInterface,
                                NodeInterface nodeInterface,
@@ -84,7 +81,6 @@ public class SpiderServerHandler {
         this.logInterface = logInterface;
         this.leaderHeartService = leaderHeartService;
         this.brokerInfoService = brokerInfoService;
-        this.rateLimiter = rateLimiter;
         this.areaInterface = areaInterface;
         this.versionInterface = versionInterface;
         this.functionInterface = functionInterface;

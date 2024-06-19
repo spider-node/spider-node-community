@@ -3,9 +3,6 @@ package cn.spider.framework.flow.funtion;
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.common.utils.IdWorker;
-import cn.spider.framework.common.utils.SnowFlake;
-import cn.spider.framework.common.utils.SnowIdDto;
 import cn.spider.framework.container.sdk.data.StartFlowRequest;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -21,17 +18,14 @@ import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.engine.facade.ReqBuilder;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
-import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.timer.SpiderTimer;
+import cn.spider.framework.flow.util.SnowflakeIdGenerator;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
-import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
-
 import javax.annotation.Resource;
 import java.util.Objects;
 
@@ -53,16 +47,10 @@ public class FlowServiceImpl implements FlowService {
     @Resource
     private BusinessManager businessManager;
 
-    @Resource
-    private ClassLoaderManager classLoaderManager;
-
     private final String REQUEST_PREFIX = "REQUEST_PREFIX";
 
     @Resource
     private SpiderTimer spiderTimer;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Resource
     private ParamInterface paramInterface;
@@ -73,6 +61,8 @@ public class FlowServiceImpl implements FlowService {
     private final String REQUEST_PARAM_NAME = "param";
 
     private final String REQUEST_ID = "requestId";
+
+    private SnowflakeIdGenerator snowflakeIdGenerator = new SnowflakeIdGenerator(1, 1);
 
     /**
      * 执行实例核心类
@@ -265,9 +255,7 @@ public class FlowServiceImpl implements FlowService {
     }
 
     private String buildRequestId() {
-        SnowIdDto snowIdDto = IdWorker.calculateDataIdAndWorkId2(this.redissonClient, REQUEST_PREFIX);
-        SnowFlake snowFlake = new SnowFlake(snowIdDto.getWorkerId(), snowIdDto.getDataCenterId(), snowIdDto.getTimestamp());
-        return snowFlake.nextId() + "";
+        return snowflakeIdGenerator.nextId() + "";
     }
 
 

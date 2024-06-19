@@ -10,12 +10,12 @@ import cn.spider.framework.controller.sdk.interfaces.RoleService;
 import cn.spider.framework.controller.sdk.interfaces.RoleServiceVertxEBProxy;
 import cn.spider.framework.db.config.DbRocksConfig;
 import cn.spider.framework.db.config.MysqlConfig;
-import cn.spider.framework.db.config.RedissonConfig;
 import cn.spider.framework.db.rocksdb.RocksdbKeyManager;
 import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.business.BusinessManager;
 import cn.spider.framework.flow.consumer.business.EndFlowDeleteRocksdbHandler;
 import cn.spider.framework.flow.consumer.business.FlowExampleDelayHandler;
@@ -24,7 +24,8 @@ import cn.spider.framework.flow.consumer.system.*;
 import cn.spider.framework.flow.container.component.TaskComponentManager;
 import cn.spider.framework.flow.container.component.TaskContainer;
 import cn.spider.framework.flow.delayQueue.DelayQueueManager;
-import cn.spider.framework.flow.delayQueue.RedisDelayQueue;
+import cn.spider.framework.flow.delayQueue.JavaDelayQueue;
+import cn.spider.framework.flow.delayQueue.SpiderDelayQueue;
 import cn.spider.framework.flow.delayQueue.handler.FlowExampleNodeDelayHandler;
 import cn.spider.framework.flow.delayQueue.handler.FlowExampleRemoveHandler;
 import cn.spider.framework.flow.engine.StoryEngine;
@@ -33,7 +34,6 @@ import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
 import cn.spider.framework.flow.funtion.InitLoaderClassService;
 import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.load.loader.HotClassLoader;
-import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
 import cn.spider.framework.flow.sync.Publish;
 import cn.spider.framework.flow.sync.SyncBusinessRecord;
@@ -47,31 +47,21 @@ import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.mysqlclient.MySQLPool;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.flow.config
- * @Author: dengdongsheng
- * @CreateTime: 2023-03-15  13:01
- * @Description: spring-配置类
- * @Version: 1.0
- */
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.framework.flow.*"})
-@Import({DbRocksConfig.class, EventConfig.class, MysqlConfig.class, RedissonConfig.class})
+@Import({DbRocksConfig.class, EventConfig.class, MysqlConfig.class})
 @Order(-1)
-public class SpiderCoreConfig {
+public class SpiderConfigV2 {
     @Bean
     public Vertx buildVertx() {
         return SpiderCoreVerticle.clusterVertx;
@@ -240,7 +230,7 @@ public class SpiderCoreConfig {
     }
 
     @Bean
-    public ExampleDestroyManager buildExampleDestroyManager(Vertx vertx, Executor spiderDeleterRocksdbPool, StoryEngine storyEngine,RocksdbKeyManager rocksdbKeyManager){
+    public ExampleDestroyManager buildExampleDestroyManager(Vertx vertx, Executor spiderDeleterRocksdbPool, StoryEngine storyEngine, RocksdbKeyManager rocksdbKeyManager){
         return new ExampleDestroyManager(vertx,spiderDeleterRocksdbPool,storyEngine,rocksdbKeyManager);
     }
 
@@ -259,21 +249,22 @@ public class SpiderCoreConfig {
         return new FlowExampleNodeDelayHandler(eventManager);
     }
 
-    @Bean
-    public RedisDelayQueue buildRedisDelayQueueUtil(RedissonClient redissonClient){
-        return new RedisDelayQueue(redissonClient);
-    }
 
     /**
      * 需要延迟进的数据
      * @param vertx
-     * @param redisDelayQueueUtil
+     * @param delayQueueUtil
      * @param businessExecute
      * @return
      */
     @Bean
-    public DelayQueueManager buildDelayQueueManager(Vertx vertx, RedisDelayQueue redisDelayQueueUtil, WorkerExecutor businessExecute){
-        return new DelayQueueManager(vertx,redisDelayQueueUtil,businessExecute);
+    public DelayQueueManager buildDelayQueueManager(Vertx vertx, SpiderDelayQueue delayQueueUtil, WorkerExecutor businessExecute){
+        return new DelayQueueManager(vertx,delayQueueUtil,businessExecute);
+    }
+
+    @Bean("delayQueueUtil")
+    public SpiderDelayQueue buildSpiderDelayQueue(){
+        return new JavaDelayQueue();
     }
 
     /**
@@ -284,7 +275,7 @@ public class SpiderCoreConfig {
      * @return
      */
     @Bean
-    public FlowExampleDelayHandler buildFlowExampleDelayHandler(EventBus eventBus, Vertx vertx,StoryEngine storyEngine){
+    public FlowExampleDelayHandler buildFlowExampleDelayHandler(EventBus eventBus, Vertx vertx, StoryEngine storyEngine){
         return new FlowExampleDelayHandler(eventBus,vertx,storyEngine);
     }
 
@@ -296,7 +287,7 @@ public class SpiderCoreConfig {
      * @return
      */
     @Bean
-    public FlowExampleRemoveDelayHandler buildFlowExampleRemoveDelayHandler(EventBus eventBus, Vertx vertx,ExampleDestroyManager exampleDestroyManager){
+    public FlowExampleRemoveDelayHandler buildFlowExampleRemoveDelayHandler(EventBus eventBus, Vertx vertx, ExampleDestroyManager exampleDestroyManager){
         return new FlowExampleRemoveDelayHandler(eventBus,vertx,exampleDestroyManager);
     }
 
@@ -313,5 +304,4 @@ public class SpiderCoreConfig {
     public SystemTimer buildSystemTimer(Vertx vertx, StartEventFactory startEventFactory, InitLoaderClassService initLoaderClassService){
         return new SystemTimer(vertx,startEventFactory,initLoaderClassService);
     }
-
 }

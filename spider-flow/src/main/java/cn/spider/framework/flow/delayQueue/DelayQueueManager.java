@@ -2,7 +2,7 @@ package cn.spider.framework.flow.delayQueue;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.flow.SpiderCoreVerticle;
-import cn.spider.framework.flow.delayQueue.enums.RedisDelayQueueEnum;
+import cn.spider.framework.flow.delayQueue.enums.DelayQueueEnum;
 import cn.spider.framework.flow.timer.data.FlowDelayExample;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
@@ -26,37 +26,36 @@ public class DelayQueueManager {
 
     private Vertx vertx;
 
-    private RedisDelayQueueUtil redisDelayQueueUtil;
+    private SpiderDelayQueue delayQueue;
 
     private WorkerExecutor businessExecute;
 
 
-    public DelayQueueManager(Vertx vertx, RedisDelayQueueUtil redisDelayQueueUtil, WorkerExecutor businessExecute) {
+    public DelayQueueManager(Vertx vertx, SpiderDelayQueue redisDelayQueueUtil, WorkerExecutor businessExecute) {
         this.vertx = vertx;
-        this.redisDelayQueueUtil = redisDelayQueueUtil;
+        this.delayQueue = redisDelayQueueUtil;
         this.businessExecute = businessExecute;
         run();
-
     }
 
     public <T> boolean addDelayQueue(T value, long delay, TimeUnit timeUnit, String queueCode) {
-        return redisDelayQueueUtil.addDelayQueue(value, delay, timeUnit, queueCode);
+        return delayQueue.addDelayQueue(value, delay, timeUnit, queueCode);
     }
 
     public void run() {
         vertx.setPeriodic(2000, id -> {
             businessExecute.executeBlocking(promise -> {
-                for (RedisDelayQueueEnum delayQueueEnum : RedisDelayQueueEnum.values()) {
+                for (DelayQueueEnum delayQueueEnum : DelayQueueEnum.values()) {
                     consumption(delayQueueEnum);
                 }
             });
         });
     }
 
-    public void consumption(RedisDelayQueueEnum delayQueueEnum){
+    public void consumption(DelayQueueEnum delayQueueEnum){
         try {
             DelayHandler delayHandler = SpiderCoreVerticle.factory.getBean(delayQueueEnum.getBeanId(), DelayHandler.class);
-            List<Object> example = redisDelayQueueUtil.getDelayQueueList(delayQueueEnum.getCode());
+            List<Object> example = delayQueue.getDelayQueueList(delayQueueEnum.getCode());
             if (CollectionUtils.isEmpty(example)) {
                 return;
             }

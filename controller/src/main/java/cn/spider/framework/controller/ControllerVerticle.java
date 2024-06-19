@@ -32,7 +32,7 @@ public class ControllerVerticle extends AbstractVerticle {
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
 
-        this.clusterVertx = vertx;
+       /* this.clusterVertx = vertx;
         this.factory = new AnnotationConfigApplicationContext(ControllerConfig.class);
 
         SharedData sharedData = vertx.sharedData();
@@ -51,33 +51,9 @@ public class ControllerVerticle extends AbstractVerticle {
         BrokerInfoService brokerInfoService = this.factory.getBean(BrokerInfoService.class);
         String brokerInfoAddr = BrokerInfoService.ADDRESS;
         binder.setAddress(brokerInfoAddr)
-                .register(BrokerInfoService.class, brokerInfoService);
+                .register(BrokerInfoService.class, brokerInfoService);*/
         //log.info("启动的模式为 {}",localMap.get("cluster_mode"));
         startPromise.complete();
-
-        // 去中心化模式
-        /*if (localMap.get("cluster_mode").equals(Constant.N0_CENTER_MODE)) {
-
-        } else {
-            ElectionLeader electionLeader = this.factory.getBean(ElectionLeader.class);
-            RoleService roleService = this.factory.getBean(RoleService.class);
-
-
-            String roleAddr = BrokerInfoUtil.queryBrokerName(vertx) + LeaderHeartService.ADDRESS;
-
-            // 发布具体的信息
-            binder.setAddress(roleAddr)
-                    .register(RoleService.class, roleService);
-            // 进行选举
-            Future<Void> future = electionLeader.election();
-            future.onSuccess(suss -> {
-                BrokerRoleManager brokerRoleManager = this.factory.getBean(BrokerRoleManager.class);
-                log.info("选举的角色为 {}", brokerRoleManager.queryBrokerRole());
-                startPromise.complete();
-            }).onFailure(fail -> {
-                startPromise.fail(ExceptionMessage.getStackTrace(fail));
-            });
-        }*/
     }
 
     /**
@@ -88,6 +64,5 @@ public class ControllerVerticle extends AbstractVerticle {
     @Override
     public void stop(Promise<Void> stopPromise) {
         stopPromise.complete();
-        factory.close();
     }
 }

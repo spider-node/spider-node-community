@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public enum RedisDelayQueueEnum {
+public enum DelayQueueEnum {
     FLOW_DELAY("FLOW_DELAY","flow任务延迟队列", "flow_delay_example"),
 
     FLOW_REMOVE_DELAY("FLOW_REMOVE_DELAY","实例移除", "flow_delete");

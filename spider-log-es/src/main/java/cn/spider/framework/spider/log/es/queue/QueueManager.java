@@ -2,7 +2,6 @@ package cn.spider.framework.spider.log.es.queue;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.log.sdk.enums.ExampleType;
-import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.domain.ElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;

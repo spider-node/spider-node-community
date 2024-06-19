@@ -2,10 +2,8 @@ package cn.spider.framework.domain.area.config;
 
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
-import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.db.config.MysqlConfig;
-import cn.spider.framework.db.config.RedissonConfig;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.AreaVerticle;
 import cn.spider.framework.domain.area.function.FunctionManger;
@@ -38,7 +36,7 @@ import org.springframework.context.annotation.Import;
  * @Version: 1.0
  */
 @Configuration
-@Import({EventConfig.class, MysqlConfig.class, RedissonConfig.class})
+@Import({EventConfig.class, MysqlConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.domain.area.*"})
 public class DomainConfig {
 
