@@ -57,8 +57,10 @@ public class DelayQueueManager {
             DelayHandler delayHandler = SpiderCoreVerticle.factory.getBean(delayQueueEnum.getBeanId(), DelayHandler.class);
             List<Object> example = delayQueue.getDelayQueueList(delayQueueEnum.getCode());
             if (CollectionUtils.isEmpty(example)) {
+                log.info("获取延迟队列数据--没有数据");
                 return;
             }
+            log.info("获取延迟队列数据");
             example.forEach(item -> {
                 FlowDelayExample flowDelayExample = FlowDelayExample.builder().build();
                 BeanUtils.copyProperties(item, flowDelayExample);

@@ -38,49 +38,24 @@ public class ElectionLeader {
 
     private BrokerRoleManager brokerRoleManager;
 
-    private RedissonClient redissonClient;
-
 
     public ElectionLeader(Vertx vertx,
                           //LeaderManager leaderManager,
                           //FollowerManager followerManager,
                           //LeaderHeartService leaderHeartService,
-                          BrokerRoleManager brokerRoleManager,
-                          RedissonClient redissonClient) {
+                          BrokerRoleManager brokerRoleManager) {
 
         this.vertx = vertx;
        // this.leaderManager = leaderManager;
        // this.followerManager = followerManager;
        // this.leaderHeartService = leaderHeartService;
         this.brokerRoleManager = brokerRoleManager;
-        this.redissonClient = redissonClient;
     }
 
     /**
      * 精选leader
      */
     public Future<Void> election() {
-        Promise<Void> promise = Promise.promise();
-        RLock lock = redissonClient.getLock(ELECTION_LEADER);
-
-        try {
-            lock.tryLock(11, 6, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-       /* Future<Void> heartFuture = leaderHeartService.detection();
-        heartFuture.onSuccess(heartSuss -> {
-            followerManager.init();
-            brokerRoleManager.setUp(BrokerRole.FOLLOWER);
-            promise.complete();
-        }).onFailure(heartFail -> {
-            log.info("run-election-suss");
-            leaderManager.init();
-            brokerRoleManager.setUp(BrokerRole.LEADER);
-            log.info("解锁线程id {}",Thread.currentThread().getId());
-            log.info("run-election-锁释放完成123");
-            promise.complete();
-        });*/
-        return promise.future();
+        return null;
     }
 }

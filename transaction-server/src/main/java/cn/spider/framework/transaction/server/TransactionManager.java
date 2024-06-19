@@ -43,18 +43,13 @@ public class TransactionManager {
 
     private EventManager eventManager;
 
-    private RedissonClient redissonClient;
-
 
 
     public TransactionManager(WorkerExecutor workerExecutor, LinkerService linkerService,
-                              RocksdbUtil rocksdbUtil,
-                              EventManager eventManager,RedissonClient redissonClient) {
+                              EventManager eventManager) {
         this.workerExecutor = workerExecutor;
         this.linkerService = linkerService;
-        this.rocksdbUtil = rocksdbUtil;
         this.eventManager = eventManager;
-        this.redissonClient = redissonClient;
     }
 
     public void registerSyncTransaction(String requestId, String groupId, String taskId, String workerName) {
@@ -126,9 +121,8 @@ public class TransactionManager {
 
 
     private String buildGroupId() {
-        SnowIdDto snowIdDto = IdWorker.calculateDataIdAndWorkId2(this.redissonClient, GROUP_PREFIX);
-        SnowFlake snowFlake = new SnowFlake(snowIdDto.getWorkerId(), snowIdDto.getDataCenterId(), snowIdDto.getTimestamp());
-        return snowFlake.nextId() + "";
+
+        return "";
     }
 
     private TransactionExample buildTransactionExample(String requestId, String groupId, String workerName, String taskId) {

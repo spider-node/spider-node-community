@@ -1,5 +1,4 @@
 package cn.spider.framework.spider.log.es.config;
-
 import cn.spider.framework.spider.log.es.esx.EsContext;
 import cn.spider.framework.spider.log.es.service.impl.SpiderFlowElementExampleServiceEsXImpl;
 import cn.spider.framework.spider.log.es.service.impl.SpiderFlowExampleLogServiceEsXImpl;

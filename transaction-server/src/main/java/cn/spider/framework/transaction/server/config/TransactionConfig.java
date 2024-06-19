@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @Description: TODO
  * @Version: 1.0
  */
-@Import({RedissonConfig.class, DbRocksConfig.class})
+@Import({DbRocksConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.transaction.server.*"})
 @Configuration
 public class TransactionConfig {
@@ -40,10 +40,8 @@ public class TransactionConfig {
     @Bean
     public TransactionManager buildTransactionTransactionManager(LinkerService linkerService,
                                                                  WorkerExecutor workerExecutor,
-                                                                 RocksdbUtil rocksdbUtil,
-                                                                 EventManager eventManager,
-                                                                 RedissonClient redissonClient) {
-        return new TransactionManager(workerExecutor, linkerService, rocksdbUtil,eventManager,redissonClient);
+                                                                 EventManager eventManager) {
+        return new TransactionManager(workerExecutor, linkerService,eventManager);
     }
 
     @Bean

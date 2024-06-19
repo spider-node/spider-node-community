@@ -73,8 +73,6 @@ public class FollowerManager {
 
     private BrokerRoleManager brokerRoleManager;
 
-    private RedissonClient redissonClient;
-
     private ControllerTimer timer;
 
     private EventManager eventManager;
@@ -83,7 +81,6 @@ public class FollowerManager {
     public FollowerManager(Vertx vertx,
                            LeaderHeartService leaderHeartService,
                            BrokerRoleManager brokerRoleManager,
-                           RedissonClient redissonClient,
                            ControllerTimer timer,
                            EventBus eventBus,
                            EventManager eventManager) {
@@ -102,7 +99,6 @@ public class FollowerManager {
         this.binder = new ServiceBinder(vertx);
         this.leaderHeartService = leaderHeartService;
         this.brokerRoleManager = brokerRoleManager;
-        this.redissonClient = redissonClient;
     }
 
     public void init() {
@@ -206,23 +202,7 @@ public class FollowerManager {
      * 重新选举leader
      */
     public void campaignLeader() {
-        RLock lock = redissonClient.getLock(Constant.CAMPAIGN_LEADER);
-        try {
-            lock.tryLock(15, 4, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            // 重新获取锁
-            campaignLeader();
-        }
-        log.info("竞选leader-start {}", this.followerName);
-        // 跟leader进行通信
-        Future<Void> heartFuture = leaderHeartService.detection();
-        // 如果心跳成功，说明leader已经产生
-        heartFuture.onSuccess(heartSuss -> {
-            log.info("竞争leader-fail {}", followerIp);
-            log.info("leader-already-generated competition-fail-brokerName {}", this.followerName);
-        }).onFailure(heartFail -> {
-            upgradeLeader();
-        });
+
     }
 
     public void upgradeLeader() {

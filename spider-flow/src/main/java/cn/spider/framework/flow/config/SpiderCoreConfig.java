@@ -67,7 +67,6 @@ import java.util.concurrent.TimeUnit;
  * @Description: spring-配置类
  * @Version: 1.0
  */
-@Configuration
 @ComponentScan(basePackages = {"cn.spider.framework.flow.*"})
 @Import({DbRocksConfig.class, EventConfig.class, MysqlConfig.class, RedissonConfig.class})
 @Order(-1)

@@ -32,20 +32,16 @@ public class AcceptLeaderInfoHandler {
 
     private Vertx vertx;
 
-    private RedissonClient redissonClient;
-
 
     public AcceptLeaderInfoHandler(EventBus eventBus,
                                    EventManager eventManager,
                                    BrokerRoleManager brokerRoleManager,
-                                   Vertx vertx,
-                                   RedissonClient redissonClient) {
+                                   Vertx vertx) {
         this.eventBus = eventBus;
         this.eventManager = eventManager;
         this.brokerRoleManager = brokerRoleManager;
         this.vertx = vertx;
        // this.followerManager = followerManager;
-        this.redissonClient = redissonClient;
         registerConsumer();
     }
 
@@ -59,15 +55,6 @@ public class AcceptLeaderInfoHandler {
     }
 
     public void sendEvent(){
-        // 加锁
-        RLock rlock = redissonClient.getLock(Constant.NOTIFY_CEREBRAL_FISSURE);
-        try {
-            if(!rlock.tryLock()){
-                return;
-            }
-            eventManager.sendMessage(EventType.LEADER_CEREBRAL_FISSURE, new EventData());
-        } finally {
-            rlock.unlock();
-        }
+
     }
 }

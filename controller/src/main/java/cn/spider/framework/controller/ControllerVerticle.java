@@ -32,7 +32,7 @@ public class ControllerVerticle extends AbstractVerticle {
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
 
-       /* this.clusterVertx = vertx;
+        this.clusterVertx = vertx;
         this.factory = new AnnotationConfigApplicationContext(ControllerConfig.class);
 
         SharedData sharedData = vertx.sharedData();
@@ -51,7 +51,7 @@ public class ControllerVerticle extends AbstractVerticle {
         BrokerInfoService brokerInfoService = this.factory.getBean(BrokerInfoService.class);
         String brokerInfoAddr = BrokerInfoService.ADDRESS;
         binder.setAddress(brokerInfoAddr)
-                .register(BrokerInfoService.class, brokerInfoService);*/
+                .register(BrokerInfoService.class, brokerInfoService);
         //log.info("启动的模式为 {}",localMap.get("cluster_mode"));
         startPromise.complete();
     }

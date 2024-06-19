@@ -20,11 +20,9 @@ import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.controller.sdk.interfaces.RoleService;
 import cn.spider.framework.controller.timer.ControllerTimer;
 import cn.spider.framework.db.config.DbRocksConfig;
-import cn.spider.framework.db.config.RedissonConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.net.NetServer;
-import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -37,7 +35,7 @@ import org.springframework.context.annotation.Import;
  * @Description:
  * @Version: 1.0
  */
-@Import({EventConfig.class, DbRocksConfig.class, RedissonConfig.class})
+@Import({EventConfig.class, DbRocksConfig.class})
 @Configuration
 public class ControllerConfig {
     @Bean
@@ -48,11 +46,10 @@ public class ControllerConfig {
     public FollowerManager buildFollowerManager(Vertx vertx,
                                                 LeaderHeartService leaderHeartService,
                                                 BrokerRoleManager brokerRoleManager,
-                                                RedissonClient redissonClient,
                                                 ControllerTimer timer,
                                                 EventBus eventBus,
                                                 EventManager eventManager) {
-        return new FollowerManager(vertx, leaderHeartService, brokerRoleManager, redissonClient, timer, eventBus, eventManager);
+        return new FollowerManager(vertx, leaderHeartService, brokerRoleManager, timer, eventBus, eventManager);
     }
 
     public LeaderManager buildLeaderManager(EventManager eventManager, Vertx vertx, ControllerTimer timer, BrokerRoleManager brokerRoleManager) {
@@ -71,10 +68,9 @@ public class ControllerConfig {
                                              // FollowerManager followerManager,
                                               //LeaderManager leaderManager,
                                               // LeaderHeartService leaderHeartService,
-                                              BrokerRoleManager brokerRoleManager,
-                                              RedissonClient redissonClient
+                                              BrokerRoleManager brokerRoleManager
     ) {
-        return new ElectionLeader(vertx, brokerRoleManager, redissonClient);
+        return new ElectionLeader(vertx, brokerRoleManager);
     }
 
     @Bean
@@ -113,8 +109,8 @@ public class ControllerConfig {
     public AcceptLeaderInfoHandler buildAcceptLeaderInfoHandler(EventBus eventBus,
                                                                 EventManager eventManager,
                                                                 BrokerRoleManager brokerRoleManager,
-                                                                Vertx vertx,RedissonClient redissonClient) {
-        return new AcceptLeaderInfoHandler(eventBus, eventManager, brokerRoleManager, vertx,redissonClient);
+                                                                Vertx vertx) {
+        return new AcceptLeaderInfoHandler(eventBus, eventManager, brokerRoleManager, vertx);
 
     }
 

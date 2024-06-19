@@ -2,12 +2,15 @@ package cn.spider.framework.flow.delayQueue;
 
 import cn.spider.framework.flow.delayQueue.enums.DelayQueueEnum;
 import cn.spider.framework.flow.delayQueue.task.TimedTask;
+import com.alibaba.fastjson.JSON;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class JavaDelayQueue implements SpiderDelayQueue {
     private Map<String,DelayQueue<TimedTask>> taskMap;
 
@@ -19,6 +22,7 @@ public class JavaDelayQueue implements SpiderDelayQueue {
 
     @Override
     public <T> boolean addDelayQueue(@NonNull T value, @NonNull long delay, @NonNull TimeUnit timeUnit, @NonNull String queueCode) {
+        log.info("添加到延迟java延迟队列");
         return taskMap.get(queueCode).add(new TimedTask(delay,timeUnit,value));
     }
 
@@ -30,12 +34,13 @@ public class JavaDelayQueue implements SpiderDelayQueue {
     @Override
     public List<Object> getDelayQueueList(@NonNull String queueCode) throws InterruptedException {
         List<Object> result = new ArrayList<>();
-        for(int i = 0;i< 100;i++){
-            Object o = taskMap.get(queueCode).poll().get();
+        DelayQueue<TimedTask> queue = taskMap.get(queueCode);
+        for(int i = 0;i< queue.size();i++){
+            TimedTask o = taskMap.get(queueCode).poll();
             if(Objects.isNull(o)){
-                return result;
+                break;
             }
-            result.add(o);
+            result.add(o.get());
         }
         return result;
     }
