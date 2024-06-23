@@ -20,10 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -62,15 +59,11 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
                     .limit(700)
                     .selectList(SpiderFlowExampleLog.class);
             if(result.getTotal() > 0){
-                log.info("执行节点信息--------------------------{}", JSON.toJSONString(result.getList()));
+                log.info("----------------------------update----------------------------");
             }
-
             Map<String, SpiderFlowExampleLog> spiderFlowExampleLogMap = result.getList().stream().collect(Collectors.toMap(SpiderFlowExampleLog::getId, Function.identity(), (v1, v2) -> v2));
-
-            List<SpiderFlowExampleLog> insert = Lists.newArrayList();
-
-            Map<String, SpiderFlowExampleLog> updateMap = new HashMap<>();
-
+            List<Object> insert = Lists.newArrayList();
+            List<Object> updateList = new ArrayList<>();
             for (String key : flowExampleLogMap.keySet()) {
                 Map<String, Object> spiderFlowMap = Maps.newHashMap();
                 if (spiderFlowExampleLogMap.containsKey(key)) {
@@ -92,16 +85,27 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
                     spiderFlowMap.put("takeTime", endTime - startTime);
                 }
                 if(spiderFlowExampleLogMap.containsKey(key)){
-                    updateMap.put(key,JSON.parseObject(JSON.toJSONString(spiderFlowMap),SpiderFlowExampleLog.class));
+                    updateList.add(spiderFlowMap);
                 }else {
-                    insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowExampleLog.class));
+                    insert.add(spiderFlowMap);
                 }
             }
-            if(!updateMap.isEmpty()){
-                esContext.indice(index).upsertList(updateMap);
+            if(CollectionUtils.isNotEmpty(updateList)){
+                List<SpiderFlowExampleLog> spiderFlowExampleLogs = JSON.parseArray(JSON.toJSONString(updateList), SpiderFlowExampleLog.class);
+                Map<String,SpiderFlowExampleLog> spiderFlowExampleLogMaps = new HashMap<>(spiderFlowExampleLogs.size());
+                for (SpiderFlowExampleLog spiderFlowExampleLog : spiderFlowExampleLogs) {
+                    spiderFlowExampleLogMaps.put(spiderFlowExampleLog.getId(),spiderFlowExampleLog);
+                }
+                esContext.indice(index).upsertList(spiderFlowExampleLogMaps);
             }
             if(CollectionUtils.isNotEmpty(insert)){
-                esContext.indice(index).insertList(insert);
+                List<SpiderFlowExampleLog> spiderFlowExampleLogs = JSON.parseArray(JSON.toJSONString(insert), SpiderFlowExampleLog.class);
+                Map<String,SpiderFlowExampleLog> spiderFlowExampleLogMaps = new HashMap<>(insert.size());
+
+                for (SpiderFlowExampleLog spiderFlowExampleLog : spiderFlowExampleLogs) {
+                    spiderFlowExampleLogMaps.put(spiderFlowExampleLog.getId(),spiderFlowExampleLog);
+                }
+                esContext.indice(index).upsertList(spiderFlowExampleLogMaps);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

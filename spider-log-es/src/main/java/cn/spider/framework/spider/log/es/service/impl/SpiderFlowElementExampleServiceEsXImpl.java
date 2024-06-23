@@ -62,6 +62,8 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
 
         Map<String, SpiderFlowElementExampleLog> updateMap = new HashMap<>();
 
+        List<Object> updates = Lists.newArrayList();
+
         try {
             EsData<SpiderFlowElementExampleLog> result = esContext.indice(index)
                     .where(c -> c.useScore().terms("id", flowElementMap.keySet()))
@@ -92,17 +94,27 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
                     spiderFlowMap.put("finalEndTime",endTime - startTime);
                 }
                 if (flowElementsMap.containsKey(key)) {
-                    updateMap.put(key,JSON.parseObject(JSON.toJSONString(spiderFlowMap),SpiderFlowElementExampleLog.class));
+                    updates.add(spiderFlowMap);
                 }else {
                     // 设置执行时间差
                     insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowElementExampleLog.class));
                 }
             }
             if(CollectionUtils.isNotEmpty(insert)){
-                esContext.indice(index).insertList(insert);
+                Map<String,SpiderFlowElementExampleLog> stringSpiderFlowElementExampleLogMap = new HashMap<>(insert.size());
+                for(SpiderFlowElementExampleLog spiderFlowElementExampleLog : insert){
+                    stringSpiderFlowElementExampleLogMap.put(spiderFlowElementExampleLog.getId(),spiderFlowElementExampleLog);
+                }
+                esContext.indice(index).upsertList(stringSpiderFlowElementExampleLogMap);
             }
-            if(!updateMap.isEmpty()){
-                esContext.indice(index).upsertList(updateMap);
+
+            if(CollectionUtils.isNotEmpty(updates)){
+                List<SpiderFlowElementExampleLog> spiderFlowElementExampleLogs = JSON.parseArray(JSON.toJSONString(updates), SpiderFlowElementExampleLog.class);
+                Map<String,SpiderFlowElementExampleLog> stringSpiderFlowElementExampleLogMap = new HashMap<>(spiderFlowElementExampleLogs.size());
+                for(SpiderFlowElementExampleLog spiderFlowElementExampleLog : spiderFlowElementExampleLogs){
+                    stringSpiderFlowElementExampleLogMap.put(spiderFlowElementExampleLog.getId(),spiderFlowElementExampleLog);
+                }
+                esContext.indice(index).upsertList(stringSpiderFlowElementExampleLogMap);
             }
             // 进行新增到mysql
 
