@@ -60,7 +60,7 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
         Map<String, List<SpiderFlowElementExampleLog>> flowElementMap = logs.stream().collect(Collectors.groupingBy(SpiderFlowElementExampleLog::getId));
         List<SpiderFlowElementExampleLog> insert = Lists.newArrayList();
 
-        Map<String, Object> updateMap = new HashMap<>();
+        Map<String, SpiderFlowElementExampleLog> updateMap = new HashMap<>();
 
         try {
             EsData<SpiderFlowElementExampleLog> result = esContext.indice(index)
@@ -92,7 +92,7 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
                     spiderFlowMap.put("finalEndTime",endTime - startTime);
                 }
                 if (flowElementsMap.containsKey(key)) {
-                    updateMap.putAll(spiderFlowMap);
+                    updateMap.put(key,JSON.parseObject(JSON.toJSONString(spiderFlowMap),SpiderFlowElementExampleLog.class));
                 }else {
                     // 设置执行时间差
                     insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowElementExampleLog.class));
