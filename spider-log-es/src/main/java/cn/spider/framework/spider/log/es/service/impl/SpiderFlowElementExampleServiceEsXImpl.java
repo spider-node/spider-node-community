@@ -69,9 +69,6 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
                     .selectList(SpiderFlowElementExampleLog.class);
 
             List<SpiderFlowElementExampleLog> logsNews = result.getList();
-            if(CollectionUtils.isNotEmpty(logsNews)){
-                log.info("没有空数据-size {}",logsNews.size());
-            }
             Map<String, SpiderFlowElementExampleLog> flowElementsMap = logsNews.stream()
                     .collect(Collectors.toMap(SpiderFlowElementExampleLog::getId, Function.identity(), (v1, v2) -> v2));
 

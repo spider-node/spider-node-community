@@ -65,7 +65,6 @@ public class LogConsumer {
                 }
                 ElementExampleLog elementExampleLog = ElementExampleLog.builder().build();
                 String data = message.body();
-                LocalDateTime now = LocalDateTime.now();
                 //log.info("获取到写入日志的参数 {}",data);
                 switch (eventName) {
                     case "start_flow_example":

@@ -61,12 +61,15 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
                     .where(c -> c.useScore().terms("id", flowExampleLogMap.keySet()))
                     .limit(700)
                     .selectList(SpiderFlowExampleLog.class);
+            if(result.getTotal() > 0){
+                log.info("执行节点信息--------------------------{}", JSON.toJSONString(result.getList()));
+            }
 
             Map<String, SpiderFlowExampleLog> spiderFlowExampleLogMap = result.getList().stream().collect(Collectors.toMap(SpiderFlowExampleLog::getId, Function.identity(), (v1, v2) -> v2));
 
             List<SpiderFlowExampleLog> insert = Lists.newArrayList();
 
-            Map<String, Object> updateMap = new HashMap<>();
+            Map<String, SpiderFlowExampleLog> updateMap = new HashMap<>();
 
             for (String key : flowExampleLogMap.keySet()) {
                 Map<String, Object> spiderFlowMap = Maps.newHashMap();
@@ -89,7 +92,7 @@ public class SpiderFlowExampleLogServiceEsXImpl implements SpiderFlowExampleLogS
                     spiderFlowMap.put("takeTime", endTime - startTime);
                 }
                 if(spiderFlowExampleLogMap.containsKey(key)){
-                    updateMap.putAll(spiderFlowMap);
+                    updateMap.put(key,JSON.parseObject(JSON.toJSONString(spiderFlowMap),SpiderFlowExampleLog.class));
                 }else {
                     insert.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowExampleLog.class));
                 }
