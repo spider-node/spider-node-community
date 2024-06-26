@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.spider.framework</groupId>
+    <groupId>cn.spider-node.framework</groupId>
     <artifactId>linker-client</artifactId>
     <version>${spider.version}</version>
 
     <parent>
-        <groupId>cn.spider.framework</groupId>
+        <groupId>cn.spider-node.framework</groupId>
         <artifactId>sdk</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
@@ -49,20 +49,20 @@
         </dependency>
         <!-- 对外请求的sdk -->
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>proto</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- server-sdk -->
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>linker-server-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>

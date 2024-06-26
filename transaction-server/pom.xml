@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.spider.framework</groupId>
+    <groupId>cn.spider-node.framework</groupId>
     <artifactId>transaction-server</artifactId>
     <version>${spider.version}</version>
 
     <parent>
-        <groupId>cn.spider.framework</groupId>
+        <groupId>cn.spider-node.framework</groupId>
         <artifactId>spider-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
@@ -51,25 +51,25 @@
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>db</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>linker-server-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>transaction-server-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>

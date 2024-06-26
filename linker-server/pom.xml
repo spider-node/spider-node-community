@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.spider.framework</groupId>
+    <groupId>cn.spider-node.framework</groupId>
     <artifactId>linker-server</artifactId>
     <version>${spider.version}</version>
 
     <parent>
-        <groupId>cn.spider.framework</groupId>
+        <groupId>cn.spider-node.framework</groupId>
         <artifactId>spider-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
@@ -50,25 +50,25 @@
 
         <!-- proto相关自动生成的数据 -->
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>proto</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- 对外请求的sdk -->
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>linker-server-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>domain-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>

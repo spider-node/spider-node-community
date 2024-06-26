@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>cn.spider.framework</groupId>
+        <groupId>cn.spider-node.framework</groupId>
         <artifactId>spider-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>cn.spider.framework</groupId>
+    <groupId>cn.spider-node.framework</groupId>
     <artifactId>spider-log-es</artifactId>
     <version>${spider.version}</version>
 
@@ -144,13 +144,13 @@
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider.framework</groupId>
+            <groupId>cn.spider-node.framework</groupId>
             <artifactId>log-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
