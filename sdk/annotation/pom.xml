@@ -5,12 +5,12 @@
   <modelVersion>4.0.0</modelVersion>
 
 
-  <groupId>cn.spider-node.framework</groupId>
+ <groupId>cn.spider-node</groupId>
   <artifactId>annotation</artifactId>
   <version>${spider.version}</version>
 
   <parent>
-    <groupId>cn.spider-node.framework</groupId>
+   <groupId>cn.spider-node</groupId>
     <artifactId>sdk</artifactId>
     <version>1.0.2-SNAPSHOT</version>
   </parent>
@@ -54,7 +54,7 @@
     </dependency>
 
     <dependency>
-      <groupId>cn.spider-node.framework</groupId>
+     <groupId>cn.spider-node</groupId>
       <artifactId>common</artifactId>
       <version>${spider.version}</version>
     </dependency>

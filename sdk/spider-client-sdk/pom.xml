@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.spider-node.framework</groupId>
+   <groupId>cn.spider-node</groupId>
     <artifactId>client</artifactId>
     <version>${spider.version}</version>
 
     <parent>
-        <groupId>cn.spider-node.framework</groupId>
+       <groupId>cn.spider-node</groupId>
         <artifactId>sdk</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
@@ -80,39 +80,39 @@
 
         <!-- spider-maven -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>linker-client</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- mybatis-插件（配合） transaction 一起使用-->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-mybatis-plugin</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- 分布事务 client包 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-transaction</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- 注解包 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>annotation</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>linker-client</artifactId>
             <version>${spider.version}</version>
         </dependency>

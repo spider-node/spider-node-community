@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>cn.spider-node.framework</groupId>
+       <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>cn.spider-node.framework</groupId>
+   <groupId>cn.spider-node</groupId>
     <artifactId>start</artifactId>
     <version>${spider.version}</version>
 
@@ -81,57 +81,57 @@
 
         <!-- 网关依赖 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>gateway</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <!-- 核心组件-流程的管控与监控 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-flow</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <!-- 核心组件-跟worker通信 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>linker-server</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- 核心组件-事务组件 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>transaction-server</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <!-- 核心组件-controller -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>controller</artifactId>
             <version>${spider.version}</version>
         </dependency>
         <!-- 核心组件-领域功能 -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>domain</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-param</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>area-method-param</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <!-- 核心组件-log -->
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-log-es</artifactId>
             <version>${spider.version}</version>
             <!--<exclusions>

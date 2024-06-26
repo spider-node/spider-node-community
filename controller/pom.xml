@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.spider-node.framework</groupId>
+   <groupId>cn.spider-node</groupId>
     <artifactId>controller</artifactId>
     <version>${spider.version}</version>
 
     <parent>
-        <groupId>cn.spider-node.framework</groupId>
+       <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
         <version>1.0.2-SNAPSHOT</version>
     </parent>
@@ -52,25 +52,25 @@
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>common</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>db</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>container-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node.framework</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>controller-sdk</artifactId>
             <version>${spider.version}</version>
         </dependency>
