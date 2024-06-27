@@ -7,14 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.transaction.TransactionStatus;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.event.data
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-25  18:40
- * @Description: TODO
- * @Version: 1.0
- */
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

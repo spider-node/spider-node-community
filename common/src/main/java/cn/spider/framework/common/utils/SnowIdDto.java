@@ -6,14 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.utils
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-07  12:57
- * @Description: TODO
- * @Version: 1.0
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -13,14 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.event
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-19  13:14
- * @Description: 事件管理
- * @Version: 1.0
- */
 @Slf4j
 public class EventManager {
     private EventBus eventBus;
@@ -33,12 +25,6 @@ public class EventManager {
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
     }
 
-    /**
-     * 发送消息-- 消费者
-     *
-     * @param eventType
-     * @param eventData
-     */
     public void sendMessage(EventType eventType, EventData eventData) {
         DeliveryOptions options = new DeliveryOptions();
         options.addHeader(Constant.BROKER_NAME, brokerName);

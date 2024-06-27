@@ -7,13 +7,13 @@
     <parent>
        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
     </parent>
 
 
    <groupId>cn.spider-node</groupId>
     <artifactId>gateway</artifactId>
-    <version>${spider.version}</version>
+    <version>1.0.2</version>
 
     <name>spider-gateway</name>
     <description>spider-gateway</description>
@@ -63,44 +63,44 @@
 
         <dependency>
            <groupId>cn.spider-node</groupId>
-            <artifactId>common</artifactId>
-            <version>${spider.version}</version>
+            <artifactId>spider-commons</artifactId>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>container-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>db</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>log-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>controller-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>domain-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>param-result-build</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
             <scope>compile</scope>
         </dependency>
 

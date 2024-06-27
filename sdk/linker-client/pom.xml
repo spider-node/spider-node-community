@@ -6,13 +6,11 @@
 
    <groupId>cn.spider-node</groupId>
     <artifactId>linker-client</artifactId>
-    <version>${spider.version}</version>
+    <version>1.0.2</version>
 
-    <parent>
-       <groupId>cn.spider-node</groupId>
-        <artifactId>sdk</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
-    </parent>
+    <description>linker-clicent</description>
+
+    <url>https://github.com/spider-node/spider-node-community/tree/main/sdk/linker-client</url>
 
     <properties>
 
@@ -47,24 +45,30 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+        </dependency>
+
         <!-- 对外请求的sdk -->
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>proto</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <!-- server-sdk -->
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>linker-server-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
-            <artifactId>common</artifactId>
-            <version>${spider.version}</version>
+            <artifactId>spider-commons</artifactId>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
@@ -94,54 +98,109 @@
 
     </dependencies>
 
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/spider-node/spider-node-community/issues</url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:https://github.com/spider-node/spider-node-community.git</connection>
+        <developerConnection>scm:git:git@github.com:spider-node/spider-node-community.git</developerConnection>
+        <url>https://github.com/spider-node/spider-node-community</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>spider-node-community</id>
+            <name>spider-node</name>
+            <email>m15828115523@163.com</email>
+            <organizationUrl>https://github.com/spider-node</organizationUrl>
+            <roles>
+                <role>owner</role>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
+                        <id>attach-sources</id>
                         <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>testCompile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
-                    </compilerArgs>
-                </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--maven插件-->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <distributionManagement>
-        <repository>
-            <id>rdc-releases</id>
-            <name>ReleaseRepository</name>
-            <url>https://packages.aliyun.com/maven/repository/2356532-release-dBceYF/</url>
-        </repository>
         <snapshotRepository>
-            <id>rdc-snapshots</id>
-            <name>SnapshotRepository</name>
-            <url>https://packages.aliyun.com/maven/repository/2356532-snapshot-meNjPn/</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
     </distributionManagement>
+
 </project>

@@ -24,11 +24,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * 只能标注在方法上，被标注的方法被视作服务节点，服务节点只有在服务组件类中才会生效。定义在普通类中不会被容器解析执行
- *
- * @author DDS
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.PARAMETER})
 public @interface TaskService {

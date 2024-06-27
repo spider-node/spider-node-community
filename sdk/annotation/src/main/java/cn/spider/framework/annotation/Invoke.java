@@ -24,12 +24,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * 指定调用服务节点时的调用属性
- * 服务节点执行出现异常时先重试，失败后再降级，再次失败后将参考严格模式策略决定是抛出异常结束流程还是继续向下执行
- *
- * @author DDS
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.PARAMETER})
 public @interface Invoke {

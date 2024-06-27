@@ -3,14 +3,6 @@ package cn.spider.framework.common.utils;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.utils
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-11  22:56
- * @Description: 权重算法-》根据权重选择
- * @Version: 1.0
- */
 public class WeightAlgorithm {
     public static String getServerByWeight(Map<String, Integer> map) {
         if (map.isEmpty()) {

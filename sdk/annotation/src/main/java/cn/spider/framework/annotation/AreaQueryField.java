@@ -7,13 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * 标注在字段上面
- *
- * 用来指定查询域对象
- *
- * @author DDS
- */
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface AreaQueryField {

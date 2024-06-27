@@ -6,14 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.event.data
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-19  12:17
- * @Description: 事务开始的事件
- * @Version: 1.0
- */
 @Builder
 @Data
 @AllArgsConstructor

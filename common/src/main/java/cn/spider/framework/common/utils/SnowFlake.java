@@ -1,13 +1,5 @@
 package cn.spider.framework.common.utils;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.utils
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-07  13:16
- * @Description: TODO
- * @Version: 1.0
- */
 public class SnowFlake {
     // 因为二进制里第一个 bit 为如果是 1，那么都是负数，但是我们生成的 id 都是正数，所以第一个 bit 统一都是 0。
 
@@ -81,13 +73,7 @@ public class SnowFlake {
      */
     private long lastTimestamp = -1L;
 
-    /**
-     * 构造函数
-     *
-     * @param workerId
-     * @param datacenterId
-     * @param sequence
-     */
+
     public SnowFlake(long workerId, long datacenterId, long sequence) {
 
         // 检查机房id和机器id是否超过最大值，不能小于0
@@ -104,11 +90,6 @@ public class SnowFlake {
         this.sequence = sequence;
     }
 
-    /**
-     * 这个是核心方法，通过调用nextId()方法，让当前这台机器上的snowflake算法程序生成一个全局唯一的id
-     *
-     * @return
-     */
     public long nextId() {
         // 获取当前的时间戳，单位是毫秒
         long timestamp = timeGen();
@@ -145,12 +126,7 @@ public class SnowFlake {
                 (workerId << workerIdShift) | sequence;
     }
 
-    /**
-     * 当某一毫秒的时间，产生的id数 超过4095，系统会进入等待，直到下一毫秒，系统继续产生ID
-     *
-     * @param lastTimestamp 上次生成ID的时间截
-     * @return 当前时间戳
-     */
+
     private long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
         while (timestamp <= lastTimestamp) {
@@ -159,11 +135,7 @@ public class SnowFlake {
         return timestamp;
     }
 
-    /**
-     * 获取当前时间戳
-     *
-     * @return 当前时间(毫秒)
-     */
+
     private long timeGen() {
         return System.currentTimeMillis();
     }

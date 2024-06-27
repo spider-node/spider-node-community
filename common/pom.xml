@@ -5,17 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.spider-node</groupId>
-    <artifactId>common</artifactId>
-    <version>${spider.version}</version>
+    <artifactId>spider-commons</artifactId>
+    <version>1.0.2</version>
 
-    <parent>
-        <groupId>cn.spider-node</groupId>
-        <artifactId>spider-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
-    </parent>
+    <description>spider-common</description>
+
+    <url>https://github.com/spider-node/spider-node-community/tree/main/common</url>
 
     <properties>
-
         <dependency.fastjson.version>1.2.83</dependency.fastjson.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>
         <dependency.guava.version>31.1-jre</dependency.guava.version>
@@ -32,6 +29,11 @@
         <dependency.collections.version>3.2.2</dependency.collections.version>
         <dependency.spring.version>5.3.23</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gpg.executable>gpg2</gpg.executable>
+        <gpg.passphrase>aB.967426</gpg.passphrase>
+        <vertx.version>4.3.7</vertx.version>
     </properties>
 
     <dependencies>
@@ -257,7 +259,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -271,6 +273,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.9.1</version>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -280,8 +289,43 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--maven插件-->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
-
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>

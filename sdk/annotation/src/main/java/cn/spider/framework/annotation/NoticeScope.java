@@ -24,14 +24,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- *
- * 可以标注在服务节点的返回值类上或类字段上，也可与 cn.kstry.framework.core.bpmn.ServiceTask 联用标注在服务节点上
- *
- * 默认情况下指定服务节点返回值或字段变量被通知到 bus 中的 stable 和 variable 两个变量集中，如果指定 scope 以指定域为准
- *
- * @author DDS
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
 public @interface NoticeScope {

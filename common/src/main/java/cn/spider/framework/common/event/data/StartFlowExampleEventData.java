@@ -1,19 +1,9 @@
 package cn.spider.framework.common.event.data;
-
-import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.event.data
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-19  01:44
- * @Description: TODO
- * @Version: 1.0
- */
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

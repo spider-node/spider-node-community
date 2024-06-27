@@ -22,11 +22,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- *  标注到服务节点入参类上，代表该入参对象需要从 Spring 容器中创建
- *
- * @author DDS
- */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SpringInitialization {

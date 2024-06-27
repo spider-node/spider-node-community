@@ -8,14 +8,6 @@ import io.vertx.core.shareddata.SharedData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.utils
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-07  19:57
- * @Description: TODO
- * @Version: 1.0
- */
 public class BrokerInfoUtil {
     public static String queryBrokerName(Vertx vertx){
         SharedData sharedData = vertx.sharedData();

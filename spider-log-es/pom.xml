@@ -7,12 +7,12 @@
     <parent>
        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
     </parent>
 
    <groupId>cn.spider-node</groupId>
     <artifactId>spider-log-es</artifactId>
-    <version>${spider.version}</version>
+    <version>1.0.2</version>
 
     <properties>
 
@@ -145,14 +145,14 @@
 
         <dependency>
            <groupId>cn.spider-node</groupId>
-            <artifactId>common</artifactId>
-            <version>${spider.version}</version>
+            <artifactId>spider-commons</artifactId>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>log-sdk</artifactId>
-            <version>${spider.version}</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>

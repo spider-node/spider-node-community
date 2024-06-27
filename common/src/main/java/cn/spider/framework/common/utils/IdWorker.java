@@ -5,14 +5,7 @@ import org.redisson.api.RedissonClient;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.common.utils
- * @Author: dengdongsheng
- * @CreateTime: 2023-04-07  12:53
- * @Description: TODO
- * @Version: 1.0
- */
+
 public class IdWorker {
     private static final Integer DATA_SIZE = 32;
     private static final String[] RADIX_STR = new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v"};
@@ -26,13 +19,6 @@ public class IdWorker {
         }
     }
 
-    /**
-     * 计算雪花算法参数的新算法
-     *
-     * @param
-     * @param appName
-     * @return
-     */
     public static SnowIdDto calculateDataIdAndWorkId2(RedissonClient redissonClient, String appName) {
         String key = SNOW + appName;
         RAtomicLong atomicLong = redissonClient.getAtomicLong(key);

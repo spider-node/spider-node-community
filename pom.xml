@@ -6,7 +6,7 @@
 
    <groupId>cn.spider-node</groupId>
     <artifactId>spider-parent</artifactId>
-    <version>${spider.version}</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
     <name>spider-node</name>
     <description>spider-node</description>
@@ -29,7 +29,7 @@
 
 
     <properties>
-        <spider.version>1.0.2-SNAPSHOT</spider.version>
+        <spider.version>1.0.2</spider.version>
         <java.version>8</java.version>
         <dependency.spring.version>5.3.23</dependency.spring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

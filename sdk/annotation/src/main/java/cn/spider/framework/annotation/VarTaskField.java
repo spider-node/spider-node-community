@@ -24,11 +24,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * 标注在服务节点入参类的字段上，用来在 StoryBus 中获取 var 域的变量值，容器会以此值初始化被标注的字段变量
- *
- * @author DDS
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface VarTaskField {
