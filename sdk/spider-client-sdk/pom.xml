@@ -8,6 +8,10 @@
     <artifactId>client</artifactId>
     <version>1.0.2</version>
 
+    <description>client</description>
+
+    <url>https://github.com/spider-node/spider-node-community/tree/main/sdk/spider-client-sdk</url>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -208,4 +212,15 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>
