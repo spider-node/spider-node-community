@@ -247,7 +247,7 @@
             </plugin>
 
         </plugins>
-        <finalName>spider-node-1.0.2.RELEASE</finalName>
+        <finalName>spider-node-1.0.2</finalName>
     </build>
 
 

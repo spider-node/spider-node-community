@@ -2,6 +2,7 @@ package cn.spider.framework.linker.server.external;
 
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.data.FlowElementModel;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -134,7 +135,7 @@ public class LinkerServiceImpl implements LinkerService {
             LinkerServerResponse responseNew = buildLinkerServerResponse(result);
             promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
         }).onFailure(fail -> {
-            log.error(fail.getMessage());
+            log.error(ExceptionMessage.getStackTrace(fail));
             promise.fail(fail);
         });
 

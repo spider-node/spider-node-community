@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <artifactId>spider-parent</artifactId>
-    <groupId>cn.spider-node.framework</groupId>
+    <groupId>cn.spider-node</groupId>
     <version>1.0.2</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>cn.spider-node.framework</groupId>
+  <groupId>cn.spider-node</groupId>
   <artifactId>start</artifactId>
   <version>1.0.2</version>
   <build>
@@ -21,7 +21,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>spider-node-1.0.2.RELEASE</finalName>
+    <finalName>spider-node-1.0.2</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>

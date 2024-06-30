@@ -25,20 +25,20 @@ public class RocksdbUtil {
 
     private static RocksDB rocksDB;
 
-    private static final String COLUMN_FAMILY_HANDLE = "COLUMN_FAMILY_HANDLE";
+    private static String COLUMN_FAMILY_HANDLE = "COLUMN_FAMILY_HANDLE";
 
     private static RocksdbUtil rocksdbUtil;
-
     private static ColumnFamilyHandle columnFamilyHandle;
 
-    public static synchronized RocksdbUtil getInstance() {
+    public static synchronized RocksdbUtil getInstance(String path) {
         if (Objects.isNull(rocksdbUtil)) {
-            rocksdbUtil = new RocksdbUtil();
+            COLUMN_FAMILY_HANDLE = COLUMN_FAMILY_HANDLE+UUID.randomUUID().toString();
+            rocksdbUtil = new RocksdbUtil(path);
         }
         return rocksdbUtil;
     }
 
-    private RocksdbUtil() {
+    private RocksdbUtil(String path) {
         try {
             String osName = System.getProperty("os.name");
             log.info("osName:{}", osName);
@@ -47,7 +47,7 @@ public class RocksdbUtil {
                 rocksDBPath = "D:\\RocksDB-spider\\"; // 指定windows系统下RocksDB文件目录
             } else {
                 // linux下的路径
-                rocksDBPath = "/usr/local/rocksdb/";
+                rocksDBPath = path;
             }
             RocksDB.loadLibrary();
             Options options = new Options();

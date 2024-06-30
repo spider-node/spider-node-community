@@ -1,16 +1,13 @@
 
 #!/bin/bash
 
-SERVER_NAME='start-1.0.2-SNAPSHOT'
+SERVER_NAME='start-1.0.2'
 JAR_NAME="$SERVER_NAME.jar"
 cd `dirname $0`
 BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 CONF_DIR=$DEPLOY_DIR/conf
-
-### 删除rocksdb目录
-rm -r /usr/local/rocksdb
 
 #SERVER_PORT=`sed -nr '/port: [0-9]+/ s/.*port: +([0-9]+).*/\1/p' conf/application.yml`
 
@@ -65,5 +62,5 @@ PIDS=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
 
-tail -f /usr/local/spider-node/logs/stdout.log
+tail -f $DEPLOY_DIR/logs/stdout.log
 

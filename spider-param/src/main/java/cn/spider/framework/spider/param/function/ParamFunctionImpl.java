@@ -120,8 +120,12 @@ public class ParamFunctionImpl implements ParamInterface {
                 promise.complete();
                 return;
             }
-            paramExampleManager.insertRequestParam(param.getString(REQUEST_ID), param.getJsonObject(REQUEST_PARAM_NAME));
-            promise.complete();
+            try {
+                paramExampleManager.insertRequestParam(param.getString(REQUEST_ID), param.getJsonObject(REQUEST_PARAM_NAME));
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
         });
         return promise.future();
     }
