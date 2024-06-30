@@ -62,5 +62,6 @@ PIDS=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
 
+
 tail -f $DEPLOY_DIR/logs/stdout.log
 
