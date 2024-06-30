@@ -26,6 +26,7 @@
         <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <vertx.version>4.3.7</vertx.version>
+
     </properties>
 
 
