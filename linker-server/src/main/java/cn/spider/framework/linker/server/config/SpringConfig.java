@@ -44,8 +44,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx,WorkerInterface workerInterface){
-        return new WorkerRegisterManager(server,clientRegisterCenter,vertx,workerInterface);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx){
+        return new WorkerRegisterManager(server,clientRegisterCenter,vertx);
     }
 
     @Bean

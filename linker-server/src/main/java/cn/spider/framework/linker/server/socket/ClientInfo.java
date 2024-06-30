@@ -56,14 +56,6 @@ public class ClientInfo {
 
     private VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub;
 
-    public ClientInfo(String ip, String domain, ClientStatus clientStatus, String workerName,Boolean isHeart) {
-        this.ip = ip;
-        this.domain = domain;
-        this.clientStatus = clientStatus;
-        this.workerName = workerName;
-        this.isHeart = isHeart;
-    }
-
     public String getRemoteAddress() {
         return remoteAddress;
     }

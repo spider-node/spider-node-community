@@ -44,9 +44,10 @@ public class GrpcConfig {
     public SocketManager buildSocketManager(Vertx vertx, @Value("${spider.worker.name}") String workerName,
                                             BusinessTimer businessTimer,
                                             WebClient webClient,
+                                            @Value("${spider.worker.rpc-port}") String rpcPort,
                                             @Value("${spider.server.ip}") String spiderServerIp,
                                             @Value("${spider.server.port}") String spiderServerPort){
-        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,spiderServerPort,false);
+        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,Integer.parseInt(rpcPort),spiderServerPort,false);
     }
 
     @Bean

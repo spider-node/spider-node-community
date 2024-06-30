@@ -33,14 +33,10 @@ public class WorkerRegisterManager {
     private ClientRegisterCenter clientRegisterCenter;
 
     private Vertx vertx;
-
-    private WorkerInterface workerInterface;
-
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter,Vertx vertx,WorkerInterface workerInterface) {
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter,Vertx vertx) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
-        this.workerInterface = workerInterface;
         init();
     }
 
@@ -63,26 +59,16 @@ public class WorkerRegisterManager {
                     log.info("心跳数据 {}",JSON.toJSONString(clientInfo));
                     return;
                 }
-                workerInterface.queryWorkerInfo(new JsonObject().put("workerName",clientInfo.getWorkerName())).onSuccess(suss->{
-                    JsonObject workerInfo = suss;
-                    Integer rpcPort = 9640;
-                    if(Objects.nonNull(workerInfo) && workerInfo.containsKey("rpcPort")){
-                        rpcPort = workerInfo.getInteger("rpcPort");
-                    }
-                    // 获取到该服务的-rpc端口号
-                    clientInfo.setClientStatus(ClientStatus.NORMAL);
-                    clientInfo.setPort(rpcPort);
-                    clientInfo.setRemoteAddress(ip);
-                    log.info("接收到的数据为 {}", JSON.toJSONString(clientInfo));
-                    // 按照协议响应给客户端
-                    clientRegisterCenter.registerClient(clientInfo);
-                    // 上报给leader-controller
-                    socket.write(Buffer.buffer("spider-server"));
-                    // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
-                    monitorSocketClose(socket,clientInfo);
-                }).onFailure(fail->{
-                    log.error("获取worker-port.fail {}", ExceptionMessage.getStackTrace(fail));
-                });
+                // 获取到该服务的-rpc端口号
+                clientInfo.setClientStatus(ClientStatus.NORMAL);
+                clientInfo.setRemoteAddress(ip);
+                log.info("接收到的数据为 {}", JSON.toJSONString(clientInfo));
+                // 按照协议响应给客户端
+                clientRegisterCenter.registerClient(clientInfo);
+                // 上报给leader-controller
+                socket.write(Buffer.buffer("spider-server"));
+                // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
+                monitorSocketClose(socket,clientInfo);
 
             });
         });

@@ -32,9 +32,6 @@ public class BusinessTimer {
      * @param serverIp
      */
     public void delayConnectServer(String serverIp, SocketManager socketManager) {
-        vertx.setTimer(2000, id -> {
-            socketManager.connectSpiderServer(serverIp);
-        });
     }
 
     /**
@@ -68,9 +65,9 @@ public class BusinessTimer {
      * 获取spider-service信息
      * @param socketManager
      */
-    public void updateSpiderServer(SocketManager socketManager) {
+    public void updateSpiderServer(SocketManager socketManager,Integer rpcPort) {
         vertx.setPeriodic(20 * 1000, id -> {
-            socketManager.connect();
+            socketManager.connect(rpcPort);
         });
     }
 

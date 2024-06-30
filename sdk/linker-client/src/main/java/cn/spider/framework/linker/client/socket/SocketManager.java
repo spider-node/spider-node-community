@@ -54,6 +54,7 @@ public class SocketManager {
                          BusinessTimer businessTimer,
                          WebClient webClient,
                          String spiderServerIp,
+                         Integer rpcPort,
                          String spiderServerPort,Boolean isLocal) {
         NetClientOptions options = new NetClientOptions()
                 .setLogActivity(true)
@@ -75,12 +76,12 @@ public class SocketManager {
         this.spiderServerIp = spiderServerIp;
         this.spiderServerPort = Integer.parseInt(spiderServerPort);
         // 跟spider-server进行建立链接
-        connect();
-        businessTimer.updateSpiderServer(this);
+        connect(rpcPort);
+        businessTimer.updateSpiderServer(this,rpcPort);
     }
 
     // 请求spider-controller获取spider-server地址
-    public void connect() {
+    public void connect(Integer rpcPort) {
         this.webClient.post(this.spiderServerPort, this.spiderServerIp, "/query/spider/server/info")
                 .sendJsonObject(new JsonObject())
                 .onSuccess(res -> {
@@ -88,7 +89,7 @@ public class SocketManager {
                     log.info("获取到的spider-server-info {}", body.toString());
                     QuerySpiderServerResult result = body.getJsonObject("data").mapTo(QuerySpiderServerResult.class);
                     result.getServerInfoList().forEach(item -> {
-                        connectSpiderServer(item.getBrokerIp());
+                        connectSpiderServer(item.getBrokerIp(),rpcPort);
                     });
                 })
                 .onFailure(fail -> {
@@ -108,7 +109,7 @@ public class SocketManager {
         });
     }
 
-    public void connectSpiderServer(String serverIp) {
+    public void connectSpiderServer(String serverIp,Integer rpcPort) {
         if (this.serverMap.containsKey(serverIp)) {
             return;
         }
@@ -120,6 +121,7 @@ public class SocketManager {
                 JsonObject clientInfo = new JsonObject();
                 clientInfo.put("ip", workerIp);
                 clientInfo.put("workerName", this.workerName);
+                clientInfo.put("port",rpcPort);
                 clientInfo.put("isHeart", false);
                 socket.write(Buffer.buffer(clientInfo.toString()));
                 monitorSocket(res.result(), serverIp);

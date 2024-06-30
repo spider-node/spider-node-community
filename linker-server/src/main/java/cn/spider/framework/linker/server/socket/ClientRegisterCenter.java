@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class ClientRegisterCenter {
     // client的map便于调用
     private Map<String, RoundRobinLoadBalancer<ClientInfo>> roundRobinLoadBalancerMap;
+
     private Vertx vertx;
 
     public ClientRegisterCenter(Vertx vertx) {
