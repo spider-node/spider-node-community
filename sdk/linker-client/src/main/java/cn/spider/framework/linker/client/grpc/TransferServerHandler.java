@@ -1,6 +1,5 @@
 package cn.spider.framework.linker.client.grpc;
 
-import cn.spider.framework.linker.client.config.RpcConst;
 import cn.spider.framework.linker.client.task.TaskManager;
 import cn.spider.framework.linker.client.util.IpUtil;
 import cn.spider.framework.linker.sdk.data.LinkerServerRequest;
@@ -13,11 +12,9 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxServer;
 import io.vertx.grpc.VertxServerBuilder;
-import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import java.net.SocketException;
-import java.util.concurrent.Executor;
+import java.net.InetAddress;
 
 /**
  * @program: spider-node
@@ -42,14 +39,18 @@ public class TransferServerHandler {
     private Integer rpcPort;
 
 
-    public void init(Vertx vertx, PlatformTransactionManager platformTransactionManager, TransactionDefinition transactionDefinition,TaskManager taskManager,Integer rpcPort) {
+    public void init(Vertx vertx, PlatformTransactionManager platformTransactionManager, TransactionDefinition transactionDefinition, TaskManager taskManager, Integer rpcPort, Boolean isLocal) {
         this.vertx = vertx;
         this.rpcPort = rpcPort;
         this.platformTransactionManager = platformTransactionManager;
         this.transactionDefinition = transactionDefinition;
         try {
-            this.localhost = IpUtil.buildLocalHost();
-        } catch (SocketException e) {
+            if (isLocal) {
+                this.localhost = IpUtil.buildLocalHost();
+            } else {
+                this.localhost = InetAddress.getLocalHost().getHostAddress();
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         this.taskManager = taskManager;
@@ -58,9 +59,9 @@ public class TransferServerHandler {
 
     // 跟客户端功能交互
     public void run() {
-        log.info("rpc-端口号 {}",this.rpcPort);
+        log.info("rpc-端口号 {}", this.rpcPort);
         VertxServer server = VertxServerBuilder
-                .forAddress(vertx, this.localhost,this.rpcPort)
+                .forAddress(vertx, this.localhost, this.rpcPort)
                 // 添加服务的实现
                 .addService(new VertxTransferServerGrpc.TransferServerVertxImplBase() {
                     @Override
@@ -70,7 +71,7 @@ public class TransferServerHandler {
                         // 获取请求中的body
                         String body = transferRequest.getBody();
                         LinkerServerRequest request = JSON.parseObject(body, LinkerServerRequest.class);
-                        taskManager.runGrpc(request,transferResponsePromise);
+                        taskManager.runGrpc(request, transferResponsePromise);
                         return transferResponsePromise.future();
                     }
                 })

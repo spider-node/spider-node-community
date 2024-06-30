@@ -6,7 +6,7 @@
 
    <groupId>cn.spider-node</groupId>
     <artifactId>linker-client</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.2.1</version>
 
     <description>linker-clicent</description>
 

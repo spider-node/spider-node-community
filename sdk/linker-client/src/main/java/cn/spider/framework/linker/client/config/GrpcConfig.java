@@ -36,7 +36,7 @@ public class GrpcConfig {
                                                             TransactionDefinition transactionDefinition,
                                                             TaskManager taskManager){
         TransferServerHandler transferServerHandler = new TransferServerHandler();
-        transferServerHandler.init(vertx,platformTransactionManager,transactionDefinition,taskManager,Integer.parseInt(rpcPort));
+        transferServerHandler.init(vertx,platformTransactionManager,transactionDefinition,taskManager,Integer.parseInt(rpcPort),false);
         return transferServerHandler;
     }
 
