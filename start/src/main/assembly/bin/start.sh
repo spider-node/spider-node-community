@@ -19,6 +19,7 @@ if [ "$1" = "status" ]; then
         exit 0
     else
         echo "The $SERVER_NAME is stopped"
+        kill -9 $PIDS
         exit 0
     fi
 fi
@@ -61,7 +62,6 @@ echo "OK!"
 PIDS=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
-
 
 tail -f $DEPLOY_DIR/logs/stdout.log
 

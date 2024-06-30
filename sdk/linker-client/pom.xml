@@ -6,11 +6,11 @@
 
    <groupId>cn.spider-node</groupId>
     <artifactId>linker-client</artifactId>
-    <version>1.0.2.1</version>
+    <version>1.0.2.2</version>
 
     <description>linker-clicent</description>
 
-    <url>https://github.com/spider-node/spider-node-community/tree/main/sdk/linker-client</url>
+    <url>https://github.com/spider-node/spider-node-ccommunity/tree/main/sdk/linker-client</url>
 
     <properties>
 
