@@ -11,7 +11,7 @@
     </parent>
 
    <groupId>cn.spider-node</groupId>
-    <artifactId>start</artifactId>
+    <artifactId>spider-start</artifactId>
     <version>1.0.2</version>
 
     <properties>

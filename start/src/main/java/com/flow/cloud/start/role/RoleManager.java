@@ -101,12 +101,10 @@ public class RoleManager {
                     localMap.put("area", "1");
                     localMap.put("param", "1");
                     localMap.put("refresh", "1");
+                    localMap.put("log", "1");
                     break;
                 case "ui":
                     localMap.put("ui", "1");
-                    break;
-                case "log":
-                    localMap.put("log", "1");
                     break;
             }
         }
