@@ -116,4 +116,6 @@ public interface BpmnElementProperties {
 
     // appoint
     String APPOINT = "appoint_param";
+
+    String CONVERSION_PARAM = "conversion_param";
 }

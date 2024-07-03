@@ -126,10 +126,16 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
 
     private Map<String,Object> appointParam;
 
+    private Map<String, Object> conversionParam;
+
     /**
      * 延迟时间
      */
     private Integer delayTime;
+
+    public void setConversionParam(String conversionParam) {
+        this.conversionParam = StringUtils.isEmpty(conversionParam) ? new HashMap<>() :JSON.parseObject(conversionParam).getInnerMap();
+    }
 
     public String getBackId() {
         return backId;
@@ -166,6 +172,10 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     @Override
     public Map<String,Object> obtainAppointParam() {
         return this.appointParam;
+    }
+
+    public Map<String, Object> getConversionParam() {
+        return conversionParam;
     }
 
     public Integer getPollCount() {

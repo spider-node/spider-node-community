@@ -61,7 +61,7 @@ public class ParamExampleManager {
             .build();
 
 
-    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam) {
+    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam,Map<String, Object> conversionParam) {
         Promise<JsonObject> promise = Promise.promise();
         // 基于taskComponent+taskService 获取到参数列表
         queryNodeParamMapping(taskComponent, taskService)
@@ -116,7 +116,13 @@ public class ParamExampleManager {
                             return;
                         }
                         ONode oNode = buildConvertParam(propertyName, nodes);
-                        param.put(paramConfig.getFieldName(), oNode.toObject());
+
+                        Object value = oNode.toObject();
+
+                        if(Objects.nonNull(conversionParam) && !conversionParam.isEmpty() && Objects.nonNull(value) && conversionParam.containsKey(value.toString())){
+                            value = conversionParam.get(value.toString());
+                        }
+                        param.put(paramConfig.getFieldName(), value);
                     });
                     // 设置返回的值
                     result.put(Constant.RUN_PARAM, param);

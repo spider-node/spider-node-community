@@ -242,6 +242,9 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
         // 设置轮询次数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.POLL_COUNT).ifPresent(serviceTaskImpl::setPollCount);
 
+        // 设置转换参数
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.CONVERSION_PARAM).ifPresent(serviceTaskImpl::setConversionParam);
+
         // 设置指定参数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.APPOINT).ifPresent(serviceTaskImpl::setAppointParam);
 

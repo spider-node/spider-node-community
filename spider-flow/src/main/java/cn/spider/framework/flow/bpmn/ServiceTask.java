@@ -140,6 +140,8 @@ public interface ServiceTask extends Task {
 
     Map<String,Object> obtainAppointParam();
 
+    Map<String, Object> getConversionParam();
+
     /**
      * 获取Service Task 构造器
      *

@@ -97,6 +97,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
         queryRequestParam.setRequestId(serviceTask.getRequestId());
         queryRequestParam.setTaskComponent(serviceTask.getTaskComponent());
         queryRequestParam.setTaskService(serviceTask.getTaskService());
+        queryRequestParam.setConversionParam(serviceTask.getConversionParam());
         // 查询调用该方法需要的参数
         paramInterface.queryRunParam(JsonObject.mapFrom(queryRequestParam))
                 .onSuccess(suss -> {

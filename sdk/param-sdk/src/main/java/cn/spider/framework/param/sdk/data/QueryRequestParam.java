@@ -29,6 +29,19 @@ public class QueryRequestParam {
      */
     private Map<String, Object> appointParam;
 
+    /**
+     * 转换参数
+     */
+    private Map<String, Object> conversionParam;
+
+    public Map<String, Object> getConversionParam() {
+        return conversionParam;
+    }
+
+    public void setConversionParam(Map<String, Object> conversionParam) {
+        this.conversionParam = conversionParam;
+    }
+
     public String getTaskComponent() {
         return taskComponent;
     }

@@ -47,7 +47,7 @@ public class ParamFunctionImpl implements ParamInterface {
             QueryRequestParam queryRequestParam = param.mapTo(QueryRequestParam.class);
             paramExampleManager.get(queryRequestParam.getTaskComponent(), queryRequestParam.getTaskService(),
                     queryRequestParam.getRequestId(),
-                    queryRequestParam.getParamsMapping(), queryRequestParam.getAppointParam()).onSuccess(suss -> {
+                    queryRequestParam.getParamsMapping(), queryRequestParam.getAppointParam(),queryRequestParam.getConversionParam()).onSuccess(suss -> {
                 promise.complete(suss);
             }).onFailure(fail -> {
                 promise.fail(fail);
