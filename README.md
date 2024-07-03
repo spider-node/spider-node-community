@@ -45,4 +45,4 @@
   
 - 【功能灰度】目前实现灰度都是从服务的部署版本来实现的灰度（一定层度上让硬件成本变高），spider提供功能版本在一个服务实例中进行灰度。
 ## spider-node架构
-![VuePress Logo]([/images/spider-framework.png](https://spider-node.oss-cn-beijing.aliyuncs.com/img/spider-framework.png))
+![VuePress Logo]([[/images/spider-framework.png](https://spider-node.oss-cn-beijing.aliyuncs.com/img/spider-framework.png))])
