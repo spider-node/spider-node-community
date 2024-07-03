@@ -44,5 +44,9 @@
 - 【中台】利用领域的属性，来搭建中台能力，（需要根据spider-提供的研发方式来理解）
   
 - 【功能灰度】目前实现灰度都是从服务的部署版本来实现的灰度（一定层度上让硬件成本变高），spider提供功能版本在一个服务实例中进行灰度。
-## spider-node架构
-![VuePress Logo]([[/images/spider-framework.png](https://spider-node.oss-cn-beijing.aliyuncs.com/img/spider-framework.png))])
+
+## spider-node 架构图
+![在这里插入图片描述](/spider-framework.png)
+
+## spider-node 官网
+[http://www.spider-node.cn](http://www.spider-node.cn/)
