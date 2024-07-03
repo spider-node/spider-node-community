@@ -18,20 +18,14 @@
     </parent>
 
     <modules>
-        <module>annotation</module>
         <module>container-sdk</module>
         <module>linker-server-sdk</module>
-        <module>proto</module>
         <module>log-sdk</module>
-        <module>spider-mybatis-plugin</module>
-        <module>spider-transaction</module>
         <module>transaction-server-sdk</module>
         <module>controller-sdk</module>
         <module>domain-sdk</module>
         <module>param-sdk</module>
         <module>param-result-build</module>
-        <module>linker-client</module>
-        <module>spider-client-sdk</module>
     </modules>
 
     <properties>
