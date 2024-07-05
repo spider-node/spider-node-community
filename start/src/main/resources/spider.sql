@@ -1,4 +1,3 @@
-
 -- 领域表,对领域进行控制-核心（sdk_url-sdk的http地址, scan_class_path扫描class信息的路径）
 drop table if exists spider_area;
 CREATE TABLE `spider_area`
@@ -6,7 +5,7 @@ CREATE TABLE `spider_area`
     `id`              varchar(64) NOT NULL COMMENT 'id',
     `area_name`       varchar(64) NOT NULL DEFAULT '' COMMENT '领域名称',
     `desc`            varchar(64) NOT NULL DEFAULT '' COMMENT '领域描述',
-    `sdk_url`         varchar(256)         DEFAULT '' COMMENT '领域sdk',
+    `sdk_url`         varchar(1024)         DEFAULT '' COMMENT '领域sdk',
     `scan_class_path` varchar(128)         DEFAULT '' COMMENT '扫描类路径',
     `sdk_name`        varchar(128)         DEFAULT '' COMMENT 'sdk的名称',
     `sdk_status`      varchar(20)          DEFAULT 'INIT' COMMENT 'sdk状态',
@@ -65,7 +64,7 @@ CREATE TABLE `spider_business_function_version`
     `desc`           varchar(64)          DEFAULT '' COMMENT '领域描述',
     `version`        varchar(64) NOT NULL DEFAULT '' COMMENT '功能版本',
     `function_id`    varchar(64) NOT NULL DEFAULT '' COMMENT '功能id',
-    `bpmn_url`       varchar(256)         DEFAULT '' COMMENT '模型地址',
+    `bpmn_url`       varchar(1024)         DEFAULT '' COMMENT '模型地址',
     `start_event_id` varchar(128)         DEFAULT '' COMMENT '功能启动id',
     `bpmn_name`      varchar(128)         DEFAULT '' COMMENT '模型名称',
     `bpmn_status`    varchar(20)          DEFAULT '' COMMENT 'bpmn_状态',
@@ -75,7 +74,3 @@ CREATE TABLE `spider_business_function_version`
     PRIMARY KEY (`id`),
     UNIQUE KEY `version_function_name` (`version`,`function_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin ROW_FORMAT=DYNAMIC COMMENT='spider领域功能版本';
-
-
-
-
