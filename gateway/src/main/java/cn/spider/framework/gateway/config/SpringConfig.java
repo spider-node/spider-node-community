@@ -11,10 +11,8 @@ import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.gateway.GatewayVerticle;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
-import cn.spider.framework.gateway.oss.OssConfigClient;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
-import io.minio.MinioClient;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -115,33 +113,6 @@ public class SpringConfig {
                 functionInterface,
                 nodeInterface,
                 versionInterface,paramRefreshInterface,vertx);
-    }
-
-    @Bean
-    public OssConfigClient buildOssConfigClient(Vertx vertx) {
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
-        String endpoint = localMap.get("oss_endpoint");
-
-        String keyId = localMap.get("oss_keyId");
-
-        String keySecret = localMap.get("oss_keySecret");
-
-        String bucketName = localMap.get("oss_bucketName");
-        return new OssConfigClient(endpoint,keyId,keySecret,bucketName);
-    }
-
-    @Bean
-    public MinioClient minioClient(Vertx vertx) {
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
-        String endpoint = localMap.get("oss_endpoint");
-        String accessKey = localMap.get("access_key");
-        String secretKey = localMap.get("secret_key");
-        return MinioClient.builder()
-                .endpoint(endpoint)
-                .credentials(accessKey, secretKey)
-                .build();
     }
 
     @Bean
