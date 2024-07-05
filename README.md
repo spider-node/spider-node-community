@@ -48,3 +48,9 @@
 
 ## spider-node 官网
 [http://www.spider-node.cn](http://www.spider-node.cn/)
+
+## spider-node在线体验
+[http://47.109.67.130:6140/](http://47.109.67.130:6140/)
+
+## spider-node 在线体验需要做的配置
+![在这里插入图片描述](/server-config.jpg)
