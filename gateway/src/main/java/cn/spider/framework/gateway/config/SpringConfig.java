@@ -14,6 +14,7 @@ import cn.spider.framework.gateway.api.function.SpiderServerHandler;
 import cn.spider.framework.gateway.oss.OssConfigClient;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
+import io.minio.MinioClient;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -131,12 +132,25 @@ public class SpringConfig {
     }
 
     @Bean
-    public FileHandler buildFileHandler(OssConfigClient ossConfigClient,Vertx vertx){
+    public MinioClient minioClient(Vertx vertx) {
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        String endpoint = localMap.get("oss_endpoint");
+        String accessKey = localMap.get("access_key");
+        String secretKey = localMap.get("secret_key");
+        return MinioClient.builder()
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .build();
+    }
+
+    @Bean
+    public FileHandler buildFileHandler(Vertx vertx){
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         String bpmnPatch = localMap.get("bpmn_path");
         String sdkPatch = localMap.get("sdk_path");
-        return new FileHandler(ossConfigClient,bpmnPatch,sdkPatch,vertx);
+        return new FileHandler(bpmnPatch,sdkPatch,vertx);
     }
 
     @Bean
