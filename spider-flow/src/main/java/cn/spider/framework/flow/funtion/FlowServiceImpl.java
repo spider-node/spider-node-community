@@ -46,9 +46,6 @@ public class FlowServiceImpl implements FlowService {
 
     @Resource
     private BusinessManager businessManager;
-
-    private final String REQUEST_PREFIX = "REQUEST_PREFIX";
-
     @Resource
     private SpiderTimer spiderTimer;
 
@@ -62,7 +59,7 @@ public class FlowServiceImpl implements FlowService {
 
     private final String REQUEST_ID = "requestId";
 
-    private SnowflakeIdGenerator snowflakeIdGenerator = new SnowflakeIdGenerator(1, 1);
+    private final SnowflakeIdGenerator snowflakeIdGenerator = new SnowflakeIdGenerator();
 
     /**
      * 执行实例核心类
