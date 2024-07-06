@@ -1,5 +1,7 @@
 package cn.spider.framework.flow.util;
 
+import java.util.Random;
+
 public class SnowflakeIdGenerator {
     private final long startTimestamp = 1640995200000L; // 设定算法开始时间
     private final long workerIdBits = 5L; // 设置机器ID所占的位数
@@ -16,15 +18,19 @@ public class SnowflakeIdGenerator {
     private long sequence = 0L; // 初始序列值
     private long lastTimestamp = -1L; // 上一次生成ID的时间戳
 
-    public SnowflakeIdGenerator(long workerId, long datacenterId) {
+    public SnowflakeIdGenerator() {
+        Random random = new Random();
+        this.workerId = random.nextInt(1000000);
+
+        this.datacenterId = random.nextInt(1000000);
+
         if (workerId > ( -1L ^ (-1L << (int) workerIdBits))) {
             throw new IllegalArgumentException("workerId can't be greater than %d or less than 0");
         }
         if (datacenterId > ( -1L ^ (-1L << (int) datacenterIdBits))) {
             throw new IllegalArgumentException("datacenterId can't be greater than %d or less than 0");
         }
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
+
     }
 
     public synchronized long nextId() {
