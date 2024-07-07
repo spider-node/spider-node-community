@@ -1,0 +1,26 @@
+/**/rebel.xml
+
+#target/
+target/
+
+# IDEA #
+.idea/
+*.iml
+
+# Eclipse #
+.settings/
+.classpath
+.project
+
+# Log #
+logs/
+*.log%
+
+#mac
+.DS_Store
+
+#svn
+.svn
+/.reviewboardrc
+**/rest-client.private.env.json
+/**/src/main/resources/godel-test.properties
