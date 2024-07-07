@@ -43,7 +43,7 @@ public abstract class ClassPathConfigSource implements ConfigSource {
     }
 
     protected List<Resource> getResourceList(String url) {
-        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolvers();
         List<Resource> resourceList = new ArrayList<>();
         try {
             Resource[] resources = resolver.getResources(url);

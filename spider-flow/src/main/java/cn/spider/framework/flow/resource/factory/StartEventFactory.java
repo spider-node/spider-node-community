@@ -129,6 +129,7 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     public void dynamicsLoaderBpmn(String url) {
         List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, url);
         if (CollectionUtils.isEmpty(configResourceList)) {
+            log.info("--没有获取到-bpmn的url {}",url);
             return;
         }
 
