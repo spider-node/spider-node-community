@@ -4,8 +4,8 @@ import java.util.Random;
 
 public class SnowflakeIdGenerator {
     private final long startTimestamp = 1640995200000L; // 设定算法开始时间
-    private final long workerIdBits = 5L; // 设置机器ID所占的位数
-    private final long datacenterIdBits = 5L; // 设置数据中心ID所占的位数
+    private final long workerIdBits = 1000L; // 设置机器ID所占的位数
+    private final long datacenterIdBits = 1000L; // 设置数据中心ID所占的位数
     private final long sequenceBits = 12L; // 设置序列所占的位数
 
     private final long workerIdShift = sequenceBits; // 机器ID左移位数
@@ -20,9 +20,9 @@ public class SnowflakeIdGenerator {
 
     public SnowflakeIdGenerator() {
         Random random = new Random();
-        this.workerId = random.nextInt(1000000);
+        this.workerId = random.nextInt(1000);
 
-        this.datacenterId = random.nextInt(1000000);
+        this.datacenterId = random.nextInt(1000);
 
         if (workerId > ( -1L ^ (-1L << (int) workerIdBits))) {
             throw new IllegalArgumentException("workerId can't be greater than %d or less than 0");
