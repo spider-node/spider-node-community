@@ -4,6 +4,7 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.linker.client.data.QuerySpiderServerResult;
 import cn.spider.framework.linker.client.timer.BusinessTimer;
 import cn.spider.framework.linker.client.util.IpUtil;
+import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
 import com.google.common.collect.Maps;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -122,7 +123,8 @@ public class SocketManager {
                 clientInfo.put("ip", workerIp);
                 clientInfo.put("workerName", this.workerName);
                 clientInfo.put("port",rpcPort);
-                clientInfo.put("isHeart", false);
+                clientInfo.put("escalationType", EscalationType.REGISTER);
+
                 socket.write(Buffer.buffer(clientInfo.toString()));
                 monitorSocket(res.result(), serverIp);
                 this.businessTimer.registerSocketHeart(serverIp, this);
@@ -138,7 +140,14 @@ public class SocketManager {
         JsonObject clientInfo = new JsonObject();
         clientInfo.put("ip", workerIp);
         clientInfo.put("workerName", this.workerName);
-        clientInfo.put("isHeart", true);
+        clientInfo.put("escalationType", EscalationType.HEART);
         socket.write(Buffer.buffer(clientInfo.toString()));
+    }
+
+    /**
+     * 宿主机上报领域功能信息
+     */
+    public void escalationAreaFunctionInfo(){
+
     }
 }
