@@ -26,6 +26,9 @@
         <module>domain-sdk</module>
         <module>param-sdk</module>
         <module>param-result-build</module>
+        <module>linker-client</module>
+        <module>spider-client-sdk</module>
+        <module>spider-transaction</module>
     </modules>
 
     <properties>

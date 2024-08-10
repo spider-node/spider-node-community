@@ -40,6 +40,28 @@ public class FunctionRequest {
 
     private String version;
 
+    // 应用类型
+    private ApplicationProviderType providerType;
+
+    // 宿主机判断如何调用插件
+    private String uniqueId;
+
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
+    public ApplicationProviderType getProviderType() {
+        return providerType;
+    }
+
+    public void setProviderType(ApplicationProviderType providerType) {
+        this.providerType = providerType;
+    }
+
     public String getVersion() {
         return version;
     }

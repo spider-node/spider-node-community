@@ -1,10 +1,8 @@
 package cn.spider.framework.linker.client.task;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.linker.sdk.data.LinkerServerRequest;
-import cn.spider.framework.linker.sdk.data.LinkerServerResponse;
-import cn.spider.framework.linker.sdk.data.ResultCode;
-import cn.spider.framework.linker.sdk.data.TransactionalType;
+import cn.spider.framework.linker.client.host.HostApplicationService;
+import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.proto.grpc.TransferResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -19,6 +17,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.util.ReflectionUtils;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -48,10 +47,12 @@ public class TaskManager {
 
     private TransactionDefinition transactionDefinition;
 
+    private HostApplicationService hostApplicationService;
+
     public TaskManager(ApplicationContext applicationContext,
                        Executor taskPool,
                        PlatformTransactionManager platformTransactionManager,
-                       TransactionDefinition transactionDefinition){
+                       TransactionDefinition transactionDefinition) {
         this.applicationContext = applicationContext;
         this.taskPool = taskPool;
         this.platformTransactionManager = platformTransactionManager;
@@ -62,7 +63,7 @@ public class TaskManager {
     private static final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
 
-    public void runVertxRpc(LinkerServerRequest request, Promise<JsonObject> transferResponsePromise){
+    public void runVertxRpc(LinkerServerRequest request, Promise<JsonObject> transferResponsePromise) {
         taskPool.execute(() -> {
             // 返回的具体对象给
             Object resultObject = null;
@@ -95,10 +96,11 @@ public class TaskManager {
 
     /**
      * Grpc的执行方法
+     *
      * @param request
      * @return
      */
-    public void runGrpc(LinkerServerRequest request,Promise<TransferResponse> transferResponsePromise){
+    public void runGrpc(LinkerServerRequest request, Promise<TransferResponse> transferResponsePromise) {
         taskPool.execute(() -> {
             // 返回的具体对象给
             Object resultObject = null;
@@ -144,6 +146,25 @@ public class TaskManager {
      */
     public Object runFunction(LinkerServerRequest request) {
 
+        FunctionRequest functionRequest = request.getFunctionRequest();
+        switch (functionRequest.getProviderType()) {
+            case SERVICE_APPLICATION:
+                return runServiceApplication(request);
+            case SPIDER_HOST_APPLICATION:
+                return runHostApplication(request);
+            default:
+                return runServiceApplication(request);
+        }
+    }
+    // 宿主机-执行功能
+    public Object runHostApplication(LinkerServerRequest request) {
+        if (Objects.isNull(hostApplicationService)) {
+            hostApplicationService = applicationContext.getBean(HostApplicationService.class);
+        }
+        return hostApplicationService.runFunction(request);
+    }
+
+    public Object runServiceApplication(LinkerServerRequest request) {
         Object target = applicationContext.getBean(request.getFunctionRequest().getComponentName());
 
         // 获取参数
@@ -185,10 +206,9 @@ public class TaskManager {
                 throw new RuntimeException(e);
             }
         }
-        log.warn("执行得参数为 {}",JSON.toJSONString(params));
+        log.warn("执行得参数为 {}", JSON.toJSONString(params));
         // 具体执行
         return ReflectionUtils.invokeMethod(methodNew, target, params);
-
     }
 
     /**
@@ -229,7 +249,7 @@ public class TaskManager {
         Parameter[] parameters = method.getParameters();
         String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
         Object[] params = new Object[parameterNames.length];
-        if(parameterNames.length == 1){
+        if (parameterNames.length == 1) {
             Class paramType = parameters[0].getType();
             params[0] = JSON.parseObject(JSON.toJSONString(paramMap), paramType);
             return params;
@@ -237,12 +257,12 @@ public class TaskManager {
         for (int i = 0; i < parameterNames.length; i++) {
             Parameter parameter = parameters[i];
             String parameterName = parameterNames[i];
-            if(!paramMap.containsKey(parameterName)){
+            if (!paramMap.containsKey(parameterName)) {
                 params[i] = null;
                 continue;
             }
             Object requestParam = paramMap.get(parameterName);
-            if(Objects.isNull(requestParam)){
+            if (Objects.isNull(requestParam)) {
                 params[i] = null;
                 continue;
             }

@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-   <groupId>cn.spider-node</groupId>
+    <groupId>cn.spider-node</groupId>
     <artifactId>client</artifactId>
-    <version>1.0.2.2</version>
+    <version>2.0.0</version>
 
     <description>client</description>
 
@@ -78,34 +78,34 @@
 
         <!-- spider-maven -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>linker-client</artifactId>
-            <version>1.0.2.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <!-- mybatis-插件（配合） transaction 一起使用-->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-mybatis-plugin</artifactId>
             <version>1.0.2</version>
         </dependency>
 
         <!-- 分布事务 client包 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-transaction</artifactId>
             <version>1.0.2</version>
         </dependency>
 
         <!-- 注解包 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>annotation</artifactId>
             <version>1.0.2</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
             <version>1.0.2</version>
         </dependency>
