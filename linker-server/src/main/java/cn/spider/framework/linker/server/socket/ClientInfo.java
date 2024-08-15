@@ -1,10 +1,9 @@
 package cn.spider.framework.linker.server.socket;
-
+import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
-import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
+
 
 /**
  * @program: spider-node
@@ -40,7 +39,23 @@ public class ClientInfo {
 
     private Integer port;
 
+    /**
+     * 交互类型
+     */
     private EscalationType escalationType;
+
+    /**
+     * 上报的领域信息
+     */
+    private RefreshAreaParam refreshAreaParam;
+
+    public RefreshAreaParam getRefreshAreaParam() {
+        return refreshAreaParam;
+    }
+
+    public void setRefreshAreaParam(RefreshAreaParam refreshAreaParam) {
+        this.refreshAreaParam = refreshAreaParam;
+    }
 
     public EscalationType getEscalationType() {
         return escalationType;

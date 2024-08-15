@@ -1,6 +1,7 @@
 package cn.spider.framework.linker.server.config;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
+import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
@@ -44,8 +45,13 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx){
-        return new WorkerRegisterManager(server,clientRegisterCenter,vertx);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx,NodeInterface nodeInterface){
+        return new WorkerRegisterManager(server,clientRegisterCenter,vertx,nodeInterface);
+    }
+
+    @Bean
+    public NodeInterface buildNodeInterface(Vertx vertx) {
+        return NodeInterface.createProxy(vertx,NodeInterface.ADDRESS);
     }
 
     @Bean

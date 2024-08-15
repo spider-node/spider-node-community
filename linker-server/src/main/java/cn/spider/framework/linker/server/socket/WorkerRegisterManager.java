@@ -1,8 +1,9 @@
 package cn.spider.framework.linker.server.socket;
 
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
+import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
+import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
+import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Vertx;
@@ -12,10 +13,8 @@ import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * @program: spider-node
@@ -35,17 +34,15 @@ public class WorkerRegisterManager {
      */
     private ClientRegisterCenter clientRegisterCenter;
 
-    /**
-     *
-     */
-    private Map<String, Map<String, String>> areaHostMap;
+    private NodeInterface nodeInterface;
 
     private Vertx vertx;
 
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx) {
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, NodeInterface nodeInterface) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
+        this.nodeInterface = nodeInterface;
         init();
     }
 
@@ -64,7 +61,7 @@ public class WorkerRegisterManager {
                 ClientInfo clientInfo = JSON.parseObject(buffer.toString(), ClientInfo.class);
                 switch (clientInfo.getEscalationType()) {
                     case HEART:
-                        log.info("心跳数据 {}",JSON.toJSONString(clientInfo));
+                        log.info("心跳数据 {}", JSON.toJSONString(clientInfo));
                         break;
                     case REGISTER:
                         register(clientInfo, socket);
@@ -77,6 +74,12 @@ public class WorkerRegisterManager {
         });
     }
 
+    /**
+     * 监听 宿主机 是否断开
+     *
+     * @param socket     跟宿主机的通道
+     * @param clientInfo 宿主机客户端信息
+     */
     private void monitorSocketClose(NetSocket socket, ClientInfo clientInfo) {
         socket.closeHandler(close -> {
             // 移除ip对应的数据,防止下次被选中
@@ -84,6 +87,9 @@ public class WorkerRegisterManager {
         });
     }
 
+    /**
+     * 监听端口
+     */
     public void startNetServer() {
         String brokerIp = BrokerInfoUtil.queryBrokerIp(this.vertx);
         netServer.listen(9064, brokerIp, res -> {
@@ -93,10 +99,12 @@ public class WorkerRegisterManager {
         });
     }
 
-    private void heart(ClientInfo clientInfo) {
-
-    }
-
+    /**
+     * 注册 宿主机信息
+     *
+     * @param clientInfo
+     * @param socket
+     */
     private void register(ClientInfo clientInfo, NetSocket socket) {
         SocketAddress socketAddress = socket.remoteAddress();
         String ip = socketAddress.host();
@@ -112,8 +120,18 @@ public class WorkerRegisterManager {
         monitorSocketClose(socket, clientInfo);
     }
 
+    /**
+     * 通知 这台宿主机拥有该能力
+     *
+     * @param clientInfo
+     */
     private void escalationAreaInfo(ClientInfo clientInfo) {
-
+        RefreshAreaParam refreshAreaParam = clientInfo.getRefreshAreaParam();
+        List<RefreshAreaModel> areaModels = refreshAreaParam.getAreaModelList();
+        for (RefreshAreaModel areaModel : areaModels) {
+            clientRegisterCenter.functionRegister(areaModel.getTaskComponent(), areaModel.getTaskService(), clientInfo.getIp());
+        }
+        // 刷新-spider中的数据信息
+        nodeInterface.refreshParam(JsonObject.mapFrom(refreshAreaParam));
     }
-
 }
