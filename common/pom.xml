@@ -6,7 +6,7 @@
 
     <groupId>cn.spider-node</groupId>
     <artifactId>spider-commons</artifactId>
-    <version>1.0.2</version>
+    <version>2.0.0</version>
 
     <description>spider-common</description>
 

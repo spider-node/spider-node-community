@@ -87,27 +87,27 @@
         <dependency>
             <groupId>cn.spider-node</groupId>
             <artifactId>spider-mybatis-plugin</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <!-- 分布事务 client包 -->
         <dependency>
             <groupId>cn.spider-node</groupId>
             <artifactId>spider-transaction</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <!-- 注解包 -->
         <dependency>
             <groupId>cn.spider-node</groupId>
             <artifactId>annotation</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
 

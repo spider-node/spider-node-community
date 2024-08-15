@@ -1,4 +1,5 @@
 package cn.spider.framework.linker.server.socket;
+
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
@@ -12,7 +13,9 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @program: spider-node
@@ -32,8 +35,14 @@ public class WorkerRegisterManager {
      */
     private ClientRegisterCenter clientRegisterCenter;
 
+    /**
+     *
+     */
+    private Map<String, Map<String, String>> areaHostMap;
+
     private Vertx vertx;
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter,Vertx vertx) {
+
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
@@ -52,42 +61,59 @@ public class WorkerRegisterManager {
         netServer.connectHandler(socket -> {
             socket.handler(buffer -> {
                 // 在这里应该解析报文，封装为协议对象，并找到响应的处理类，得到处理结果，并响应
-                SocketAddress socketAddress = socket.remoteAddress();
-                String ip = socketAddress.host();
                 ClientInfo clientInfo = JSON.parseObject(buffer.toString(), ClientInfo.class);
-                if(clientInfo.getHeart()){
-                    log.info("心跳数据 {}",JSON.toJSONString(clientInfo));
-                    return;
+                switch (clientInfo.getEscalationType()) {
+                    case HEART:
+                        log.info("心跳数据 {}",JSON.toJSONString(clientInfo));
+                        break;
+                    case REGISTER:
+                        register(clientInfo, socket);
+                        break;
+                    case ESCALATION_AREA_INFO:
+                        escalationAreaInfo(clientInfo);
+                        break;
                 }
-                // 获取到该服务的-rpc端口号
-                clientInfo.setClientStatus(ClientStatus.NORMAL);
-                clientInfo.setRemoteAddress(ip);
-                log.info("接收到的数据为 {}", JSON.toJSONString(clientInfo));
-                // 按照协议响应给客户端
-                clientRegisterCenter.registerClient(clientInfo);
-                // 上报给leader-controller
-                socket.write(Buffer.buffer("spider-server"));
-                // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
-                monitorSocketClose(socket,clientInfo);
-
             });
         });
     }
 
-    private void monitorSocketClose(NetSocket socket,ClientInfo clientInfo){
+    private void monitorSocketClose(NetSocket socket, ClientInfo clientInfo) {
         socket.closeHandler(close -> {
             // 移除ip对应的数据,防止下次被选中
-            clientRegisterCenter.destroy(clientInfo.getIp(),clientInfo.getWorkerName());
+            clientRegisterCenter.removeClient(clientInfo.getIp(), clientInfo.getWorkerName());
         });
     }
 
-    public void startNetServer(){
+    public void startNetServer() {
         String brokerIp = BrokerInfoUtil.queryBrokerIp(this.vertx);
         netServer.listen(9064, brokerIp, res -> {
             if (res.succeeded()) {
                 log.info("服务器启动成功");
             }
         });
+    }
+
+    private void heart(ClientInfo clientInfo) {
+
+    }
+
+    private void register(ClientInfo clientInfo, NetSocket socket) {
+        SocketAddress socketAddress = socket.remoteAddress();
+        String ip = socketAddress.host();
+        // 获取到该服务的-rpc端口号
+        clientInfo.setClientStatus(ClientStatus.NORMAL);
+        clientInfo.setRemoteAddress(ip);
+        log.info("接收到的数据为 {}", JSON.toJSONString(clientInfo));
+        // 按照协议响应给客户端
+        clientRegisterCenter.registerClient(clientInfo);
+        // 上报给leader-controller
+        socket.write(Buffer.buffer("spider-server"));
+        // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
+        monitorSocketClose(socket, clientInfo);
+    }
+
+    private void escalationAreaInfo(ClientInfo clientInfo) {
+
     }
 
 }

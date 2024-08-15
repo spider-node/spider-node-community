@@ -1,10 +1,9 @@
 package cn.spider.framework.domain.area.impl;
-
-import cn.spider.framework.domain.area.data.QueryParamConfigParam;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.data.CreateNodeModel;
 import cn.spider.framework.domain.area.node.data.Node;
 import cn.spider.framework.domain.area.node.data.QueryNodeParam;
+import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
 import cn.spider.framework.domain.sdk.data.NodeParamConfigModel;
 import cn.spider.framework.domain.sdk.data.NodeParamConfigResult;
 import cn.spider.framework.domain.sdk.data.QueryBaseNodeParam;
@@ -16,10 +15,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +30,8 @@ import java.util.Objects;
 public class NodeInterfaceImpl implements NodeInterface {
 
     private NodeManger nodeManger;
+
+    private ApplicationPluginManager pluginManager;
 
     public NodeInterfaceImpl(NodeManger nodeManger) {
         this.nodeManger = nodeManger;
@@ -163,5 +160,15 @@ public class NodeInterfaceImpl implements NodeInterface {
                 });
 
         return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> areaNodeBase(JsonObject param) {
+        return pluginManager.querySonArea(param);
+    }
+
+    @Override
+    public Future<JsonObject> deployCode(JsonObject param) {
+        return pluginManager.deployCode(param);
     }
 }

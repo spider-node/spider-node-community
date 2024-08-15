@@ -6,6 +6,8 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.db.config.MysqlConfig;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.AreaVerticle;
+import cn.spider.framework.domain.area.agent.AgentOkhttpClient;
+import cn.spider.framework.domain.area.agent.AgentVertxClient;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.impl.AreaImpl;
@@ -13,6 +15,7 @@ import cn.spider.framework.domain.area.impl.FunctionImpl;
 import cn.spider.framework.domain.area.impl.NodeInterfaceImpl;
 import cn.spider.framework.domain.area.impl.VersionImpl;
 import cn.spider.framework.domain.area.node.NodeManger;
+import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -21,11 +24,19 @@ import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Vertx;
+import io.vertx.core.shareddata.LocalMap;
+import io.vertx.core.shareddata.SharedData;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.mysqlclient.MySQLPool;
+import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @BelongsProject: spider-node
@@ -51,23 +62,23 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client,ContainerService containerService) {
-        return new VersionManager(client,containerService);
+    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService) {
+        return new VersionManager(client, containerService);
     }
 
     @Bean
     public AreaManger buildAreaManger(MySQLPool client, ContainerService containerService, ParamRefreshInterface paramRefreshInterface) {
-        return new AreaManger(client, containerService,paramRefreshInterface);
+        return new AreaManger(client, containerService, paramRefreshInterface);
     }
 
     @Bean
-    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx){
-        return ParamRefreshInterface.createProxy(vertx,ParamRefreshInterface.ADDRESS);
+    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx) {
+        return ParamRefreshInterface.createProxy(vertx, ParamRefreshInterface.ADDRESS);
     }
 
     @Bean
-    public NodeManger buildNodeManger(MySQLPool client,AreaManger areaManger) {
-        return new NodeManger(client,areaManger);
+    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger) {
+        return new NodeManger(client, areaManger);
     }
 
     @Bean
@@ -86,22 +97,53 @@ public class DomainConfig {
     }
 
     @Bean
-    public FunctionInterface buildFunctionImpl(FunctionManger functionManger,LogInterface logInterface) {
-        return new FunctionImpl(functionManger,logInterface);
+    public FunctionInterface buildFunctionImpl(FunctionManger functionManger, LogInterface logInterface) {
+        return new FunctionImpl(functionManger, logInterface);
     }
 
     @Bean
-    public LogInterface buildLogInterface(Vertx vertx){
-        return LogInterface.createProxy(vertx,LogInterface.ADDRESS);
+    public LogInterface buildLogInterface(Vertx vertx) {
+        return LogInterface.createProxy(vertx, LogInterface.ADDRESS);
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger){
+    public NodeInterface buildNodeInterface(NodeManger nodeManger) {
         return new NodeInterfaceImpl(nodeManger);
     }
 
     @Bean
-    public VersionInterface buildVersionImpl(VersionManager versionManager){
+    public VersionInterface buildVersionImpl(VersionManager versionManager) {
         return new VersionImpl(versionManager);
+    }
+
+    @Bean
+    public OkHttpClient buildHttp() throws NoSuchAlgorithmException, KeyManagementException {
+        return new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .sslSocketFactory(OkHttpUtil.getIgnoreInitedSslContext().getSocketFactory(), OkHttpUtil.IGNORE_SSL_TRUST_MANAGER_X509)
+                .hostnameVerifier(OkHttpUtil.getIgnoreSslHostnameVerifier())
+                .build();
+    }
+
+    @Bean
+    public AgentOkhttpClient buildAgentClient(OkHttpClient http, Vertx vertx){
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
+        String agentPrefix = localMap.get("spider_agent_url_host");
+        return new AgentOkhttpClient(http,agentPrefix);
+    }
+
+    @Bean
+    public WebClient buildWebClient(Vertx vertx){
+        return WebClient.create(vertx);
+    }
+
+    @Bean
+    public AgentVertxClient buildAgentVertxClient(WebClient webClient,Vertx vertx){
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
+        String agentPrefix = localMap.get("spider_agent_url_host");
+        return new AgentVertxClient(webClient,agentPrefix);
     }
 }

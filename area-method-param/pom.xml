@@ -7,12 +7,12 @@
     <parent>
        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.2</version>
+        <version>2.0.0</version>
     </parent>
 
    <groupId>cn.spider-node</groupId>
     <artifactId>area-method-param</artifactId>
-    <version>1.0.2</version>
+    <version>2.0.0</version>
 
     <name>spider-area-method-param</name>
     <description>spider-area-method-param</description>
@@ -53,19 +53,19 @@
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>param-result-build</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>domain-sdk</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
             <scope>compile</scope>
         </dependency>
 

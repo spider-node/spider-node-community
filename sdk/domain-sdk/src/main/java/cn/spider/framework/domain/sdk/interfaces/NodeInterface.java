@@ -47,4 +47,9 @@ public interface NodeInterface {
      * 查询节点返回参数信息
      */
     Future<JsonObject> queryParamConfig(JsonObject param);
+
+    // 查询领域信息
+    Future<JsonObject> areaNodeBase(JsonObject param);
+    // 部署代码
+    Future<JsonObject> deployCode(JsonObject param);
 }

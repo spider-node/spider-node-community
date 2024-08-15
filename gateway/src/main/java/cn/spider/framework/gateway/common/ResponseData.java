@@ -67,8 +67,6 @@ public class ResponseData {
         return JSON.toJSONString(new ResponseData("suss",0));
     }
 
-
-
     public static String fail(Throwable throwable){
         return JSON.toJSONString(new ResponseData(ExceptionMessage.getStackTrace(throwable),null,400));
     }

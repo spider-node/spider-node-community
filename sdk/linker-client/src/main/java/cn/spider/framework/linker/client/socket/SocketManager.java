@@ -2,9 +2,11 @@ package cn.spider.framework.linker.client.socket;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.linker.client.data.QuerySpiderServerResult;
+import cn.spider.framework.linker.client.escalation.AreaInfoService;
 import cn.spider.framework.linker.client.timer.BusinessTimer;
 import cn.spider.framework.linker.client.util.IpUtil;
 import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -16,11 +18,7 @@ import io.vertx.ext.web.client.WebClient;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @program: spider-node
@@ -49,6 +47,8 @@ public class SocketManager {
 
     private int spiderServerPort;
 
+    private AreaInfoService areaInfoService;
+
 
     public SocketManager(Vertx vertx,
                          String workerName,
@@ -56,7 +56,7 @@ public class SocketManager {
                          WebClient webClient,
                          String spiderServerIp,
                          Integer rpcPort,
-                         String spiderServerPort,Boolean isLocal) {
+                         String spiderServerPort, Boolean isLocal) {
         NetClientOptions options = new NetClientOptions()
                 .setLogActivity(true)
                 .setConnectTimeout(10000);
@@ -64,9 +64,9 @@ public class SocketManager {
         this.workerName = workerName;
         this.businessTimer = businessTimer;
         try {
-            if(isLocal){
+            if (isLocal) {
                 this.workerIp = IpUtil.buildLocalHost();
-            }else {
+            } else {
                 this.workerIp = InetAddress.getLocalHost().getHostAddress();
             }
         } catch (Exception e) {
@@ -78,7 +78,7 @@ public class SocketManager {
         this.spiderServerPort = Integer.parseInt(spiderServerPort);
         // 跟spider-server进行建立链接
         connect(rpcPort);
-        businessTimer.updateSpiderServer(this,rpcPort);
+        businessTimer.updateSpiderServer(this, rpcPort);
     }
 
     // 请求spider-controller获取spider-server地址
@@ -90,11 +90,11 @@ public class SocketManager {
                     log.info("获取到的spider-server-info {}", body.toString());
                     QuerySpiderServerResult result = body.getJsonObject("data").mapTo(QuerySpiderServerResult.class);
                     result.getServerInfoList().forEach(item -> {
-                        connectSpiderServer(item.getBrokerIp(),rpcPort);
+                        connectSpiderServer(item.getBrokerIp(), rpcPort);
                     });
                 })
                 .onFailure(fail -> {
-                    log.warn("请求-spiderServer失败 ip{} port {} 错误信息 {}", this.spiderServerPort, this.spiderServerIp,ExceptionMessage.getStackTrace(fail));
+                    log.warn("请求-spiderServer失败 ip{} port {} 错误信息 {}", this.spiderServerPort, this.spiderServerIp, ExceptionMessage.getStackTrace(fail));
                 });
 
     }
@@ -110,7 +110,7 @@ public class SocketManager {
         });
     }
 
-    public void connectSpiderServer(String serverIp,Integer rpcPort) {
+    public void connectSpiderServer(String serverIp, Integer rpcPort) {
         if (this.serverMap.containsKey(serverIp)) {
             return;
         }
@@ -122,12 +122,12 @@ public class SocketManager {
                 JsonObject clientInfo = new JsonObject();
                 clientInfo.put("ip", workerIp);
                 clientInfo.put("workerName", this.workerName);
-                clientInfo.put("port",rpcPort);
+                clientInfo.put("port", rpcPort);
                 clientInfo.put("escalationType", EscalationType.REGISTER);
-
                 socket.write(Buffer.buffer(clientInfo.toString()));
                 monitorSocket(res.result(), serverIp);
                 this.businessTimer.registerSocketHeart(serverIp, this);
+                this.businessTimer.senAreaInfo(this,serverIp);
                 // 注册 heart
             } else {
                 log.error("跟spider-server通信进行链接失败 serverIp {} 错误信息为 {}", serverIp, ExceptionMessage.getStackTrace(res.cause()));
@@ -144,10 +144,31 @@ public class SocketManager {
         socket.write(Buffer.buffer(clientInfo.toString()));
     }
 
+    public void escalationAreaFunctionInfo(String serverIp){
+        NetSocket socket = this.serverMap.get(serverIp);
+        JsonObject clientInfo = new JsonObject();
+        clientInfo.put("ip", workerIp);
+        clientInfo.put("workerName", this.workerName);
+        clientInfo.put("escalationType", EscalationType.ESCALATION_AREA_INFO);
+        // 注册延迟，5s后执行
+        JsonObject areaFunctionInfo = areaInfoService.queryAreaInfo();
+        clientInfo.put("areaInfo",areaFunctionInfo);
+        socket.write(Buffer.buffer(clientInfo.toString()));
+    }
+
     /**
      * 宿主机上报领域功能信息
+     * areaInfo 包含 领域功能的参数信息，向spider每个服务端发起注册
      */
-    public void escalationAreaFunctionInfo(){
-
+    public void escalationAreaFunctionInfo(JsonObject areaInfo) {
+        Preconditions.checkArgument(!this.serverMap.isEmpty(), "spider_socket 不存在");
+        for(NetSocket socket : this.serverMap.values()){
+            JsonObject clientInfo = new JsonObject();
+            clientInfo.put("ip", workerIp);
+            clientInfo.put("workerName", this.workerName);
+            clientInfo.put("escalationType", EscalationType.ESCALATION_AREA_INFO);
+            clientInfo.put("areaInfo",areaInfo);
+            socket.write(Buffer.buffer(clientInfo.toString()));
+        }
     }
 }

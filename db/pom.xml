@@ -6,12 +6,12 @@
 
    <groupId>cn.spider-node</groupId>
     <artifactId>db</artifactId>
-    <version>1.0.2</version>
+    <version>2.0.0</version>
 
     <parent>
        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
-        <version>1.0.2</version>
+        <version>2.0.0</version>
     </parent>
 
     <properties>
@@ -65,7 +65,7 @@
         <dependency>
            <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
-            <version>1.0.2</version>
+            <version>2.0.0</version>
         </dependency>
 
         <dependency>

@@ -1,8 +1,10 @@
 package cn.spider.framework.linker.server.socket;
 
+import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
-import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @program: spider-node
@@ -37,6 +39,16 @@ public class ClientInfo {
     private Boolean isHeart;
 
     private Integer port;
+
+    private EscalationType escalationType;
+
+    public EscalationType getEscalationType() {
+        return escalationType;
+    }
+
+    public void setEscalationType(EscalationType escalationType) {
+        this.escalationType = escalationType;
+    }
 
     public Integer getPort() {
         return port;
