@@ -1,9 +1,11 @@
 package cn.spider.framework.linker.server.socket;
 
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
 import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Vertx;
@@ -12,8 +14,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
+import io.vertx.core.shareddata.SharedData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
+
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -34,15 +40,15 @@ public class WorkerRegisterManager {
      */
     private ClientRegisterCenter clientRegisterCenter;
 
-    private NodeInterface nodeInterface;
-
     private Vertx vertx;
 
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, NodeInterface nodeInterface) {
+    private SharedData sharedData;
+
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
-        this.nodeInterface = nodeInterface;
+        this.sharedData = vertx.sharedData();
         init();
     }
 
@@ -58,6 +64,7 @@ public class WorkerRegisterManager {
         netServer.connectHandler(socket -> {
             socket.handler(buffer -> {
                 // 在这里应该解析报文，封装为协议对象，并找到响应的处理类，得到处理结果，并响应
+                log.info("上传数据为 {}", buffer.toString());
                 ClientInfo clientInfo = JSON.parseObject(buffer.toString(), ClientInfo.class);
                 switch (clientInfo.getEscalationType()) {
                     case HEART:
@@ -65,9 +72,6 @@ public class WorkerRegisterManager {
                         break;
                     case REGISTER:
                         register(clientInfo, socket);
-                        break;
-                    case ESCALATION_AREA_INFO:
-                        escalationAreaInfo(clientInfo);
                         break;
                 }
             });
@@ -121,17 +125,27 @@ public class WorkerRegisterManager {
     }
 
     /**
-     * 通知 这台宿主机拥有该能力
-     *
-     * @param clientInfo
+     * @param refreshAreaParam 领域信息
+     * @param ip               宿主机的ip
      */
-    private void escalationAreaInfo(ClientInfo clientInfo) {
-        RefreshAreaParam refreshAreaParam = clientInfo.getRefreshAreaParam();
-        List<RefreshAreaModel> areaModels = refreshAreaParam.getAreaModelList();
-        for (RefreshAreaModel areaModel : areaModels) {
-            clientRegisterCenter.functionRegister(areaModel.getTaskComponent(), areaModel.getTaskService(), clientInfo.getIp());
+    public void escalationAreaInfo(RefreshAreaParam refreshAreaParam, String ip, FunctionEscalationType functionEscalationType) {
+        if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getAreaModelList())) {
+            return;
         }
-        // 刷新-spider中的数据信息
-        nodeInterface.refreshParam(JsonObject.mapFrom(refreshAreaParam));
+        switch (functionEscalationType) {
+            case DEPLOY:
+                List<RefreshAreaModel> areaModels = refreshAreaParam.getAreaModelList();
+                for (RefreshAreaModel areaModel : areaModels) {
+                    clientRegisterCenter.functionRegister(areaModel.getTaskComponent(), areaModel.getTaskService(), ip);
+                }
+
+                break;
+            case UNLOCK:
+                for (RefreshAreaModel refreshAreaModel : refreshAreaParam.getAreaModelList()) {
+                    clientRegisterCenter.destroy(refreshAreaModel.getTaskComponent(), refreshAreaModel.getTaskService(), ip);
+                }
+                break;
+        }
+
     }
 }

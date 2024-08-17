@@ -1,6 +1,7 @@
 package cn.spider.framework.linker.server.socket;
 import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
+import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
 
@@ -48,6 +49,16 @@ public class ClientInfo {
      * 上报的领域信息
      */
     private RefreshAreaParam refreshAreaParam;
+
+    private FunctionEscalationType functionEscalationType;
+
+    public FunctionEscalationType getFunctionEscalationType() {
+        return functionEscalationType;
+    }
+
+    public void setFunctionEscalationType(FunctionEscalationType functionEscalationType) {
+        this.functionEscalationType = functionEscalationType;
+    }
 
     public RefreshAreaParam getRefreshAreaParam() {
         return refreshAreaParam;

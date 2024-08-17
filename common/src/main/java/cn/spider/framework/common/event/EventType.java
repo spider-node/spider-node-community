@@ -51,6 +51,9 @@ public enum EventType {
     FLOW_EXAMPLE_REMOVE_DELAY(SystemRole.FLOW_EXAMPLE,"flow_example_remove_delay","延迟移除流程实例",EventTypeRole.SYSTEM),
 
     FUNCTION_START_STOP(SystemRole.CONTROLLER,"function_start_stop","功能启停",EventTypeRole.SYSTEM),
+
+    //Escalation
+    ESCALATION_AREA_INFO(SystemRole.FLOW_EXAMPLE,"escalation_area_info","宿主应用上报插件信息",EventTypeRole.SYSTEM),
     ;
     private SystemRole role;
 

@@ -1,5 +1,6 @@
 package cn.spider.framework.linker.client.config;
 
+import cn.spider.framework.linker.client.escalation.AreaInfoService;
 import cn.spider.framework.linker.client.grpc.TransferServerHandler;
 import cn.spider.framework.linker.client.socket.SocketManager;
 import cn.spider.framework.linker.client.task.TaskManager;
@@ -46,8 +47,9 @@ public class GrpcConfig {
                                             WebClient webClient,
                                             @Value("${spider.worker.rpc-port}") String rpcPort,
                                             @Value("${spider.server.ip}") String spiderServerIp,
-                                            @Value("${spider.server.port}") String spiderServerPort){
-        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,Integer.parseInt(rpcPort),spiderServerPort,false);
+                                            @Value("${spider.server.port}") String spiderServerPort,
+                                            AreaInfoService areaInfoService){
+        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,Integer.parseInt(rpcPort),spiderServerPort,false,areaInfoService);
     }
 
     @Bean

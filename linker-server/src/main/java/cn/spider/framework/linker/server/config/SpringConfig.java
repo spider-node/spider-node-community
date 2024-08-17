@@ -1,16 +1,15 @@
 package cn.spider.framework.linker.server.config;
-import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
-import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
+import cn.spider.framework.linker.server.consumer.EscalationHandler;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.net.NetServer;
-import io.vertx.core.net.NetServerOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -45,8 +44,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx,NodeInterface nodeInterface){
-        return new WorkerRegisterManager(server,clientRegisterCenter,vertx,nodeInterface);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx){
+        return new WorkerRegisterManager(server,clientRegisterCenter,vertx);
     }
 
     @Bean
@@ -73,6 +72,15 @@ public class SpringConfig {
     @Bean
     public FunctionInterface buildFunctionInterface(Vertx vertx){
         return FunctionInterface.createProxy(vertx,FunctionInterface.ADDRESS);
+    }
+    @Bean
+    public EscalationHandler buildEscalationHandler(EventBus eventBus, WorkerRegisterManager workerRegisterManager){
+        return new EscalationHandler(eventBus,workerRegisterManager);
+    }
+
+    @Bean
+    public EventBus buildEventBus(Vertx vertx){
+        return vertx.eventBus();
     }
 
 }

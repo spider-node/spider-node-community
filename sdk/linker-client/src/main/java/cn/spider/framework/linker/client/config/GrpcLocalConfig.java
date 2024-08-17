@@ -1,5 +1,6 @@
 package cn.spider.framework.linker.client.config;
 
+import cn.spider.framework.linker.client.escalation.AreaInfoService;
 import cn.spider.framework.linker.client.grpc.TransferServerHandler;
 import cn.spider.framework.linker.client.socket.SocketManager;
 import cn.spider.framework.linker.client.task.TaskManager;
@@ -25,7 +26,7 @@ import java.util.concurrent.Executor;
  */
 public class GrpcLocalConfig {
     @Bean
-    public Vertx buildVertx(){
+    public Vertx buildVertx() {
         VertxOptions options = new VertxOptions();
         options.setWorkerPoolSize(10);
         return Vertx.vertx(options);
@@ -36,9 +37,9 @@ public class GrpcLocalConfig {
                                                             PlatformTransactionManager platformTransactionManager,
                                                             @Value("${spider.worker.rpc-port}") String rpcPort,
                                                             TransactionDefinition transactionDefinition,
-                                                            TaskManager taskManager){
+                                                            TaskManager taskManager) {
         TransferServerHandler transferServerHandler = new TransferServerHandler();
-        transferServerHandler.init(vertx,platformTransactionManager,transactionDefinition,taskManager,Integer.parseInt(rpcPort),true);
+        transferServerHandler.init(vertx, platformTransactionManager, transactionDefinition, taskManager, Integer.parseInt(rpcPort), true);
         return transferServerHandler;
     }
 
@@ -46,13 +47,13 @@ public class GrpcLocalConfig {
     public SocketManager buildSocketManager(Vertx vertx, @Value("${spider.worker.name}") String workerName,
                                             BusinessTimer businessTimer,
                                             @Value("${spider.worker.rpc-port}") String rpcPort,
-                                            WebClient webClient){
-        System.out.println("spider.worker.name = "+workerName);
-        return new SocketManager(vertx,workerName,businessTimer,webClient,"localhost",Integer.parseInt(rpcPort),"8081",true);
+                                            WebClient webClient, AreaInfoService areaInfoService) {
+        System.out.println("spider.worker.name = " + workerName);
+        return new SocketManager(vertx, workerName, businessTimer, webClient, "localhost", Integer.parseInt(rpcPort), "8081", true, areaInfoService);
     }
 
     @Bean
-    public BusinessTimer BuildBusinessTimer(Vertx vertx){
+    public BusinessTimer BuildBusinessTimer(Vertx vertx) {
         return new BusinessTimer(vertx);
     }
 }

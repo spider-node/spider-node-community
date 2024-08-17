@@ -7,6 +7,7 @@ import io.grpc.ManagedChannel;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -59,6 +60,23 @@ public class ClientRegisterCenter {
         List<ClientInfo> clientInfoList = clientInfos.stream().filter(item -> !item.getIp().equals(ip)).collect(Collectors.toList());
         robinLoadBalancer.updateAll(clientInfoList);
     }
+
+    public void destroy(String ip, String taskComponent,String taskService) {
+        String key = TaskKeyUtil.buildTaskKey(taskComponent, taskService);
+        if(this.roundRobinLoadBalancerMap.containsKey(key)){
+            return;
+        }
+
+        RoundRobinLoadBalancer robinLoadBalancer = this.roundRobinLoadBalancerMap.get(key);
+        List<ClientInfo> clientInfos = robinLoadBalancer.getAll();
+        List<ClientInfo> clientInfoList = clientInfos.stream().filter(item -> !item.getIp().equals(ip)).collect(Collectors.toList());
+        robinLoadBalancer.updateAll(clientInfoList);
+        Set<String> areaInfos = this.areaClientMap.get(ip);
+        Set<String> areaInfosNew = areaInfos.stream().filter(item->!item.equals(key)).collect(Collectors.toSet());
+        this.areaClientMap.put(ip,areaInfosNew);
+    }
+
+
 
     public void removeClient(String ip, String workerName) {
         destroy(ip, workerName);

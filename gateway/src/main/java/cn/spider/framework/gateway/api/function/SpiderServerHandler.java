@@ -1,5 +1,8 @@
 package cn.spider.framework.gateway.api.function;
 
+import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.EscalationData;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
@@ -14,6 +17,7 @@ import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
 import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
@@ -65,6 +69,8 @@ public class SpiderServerHandler {
 
     private ParamRefreshInterface paramRefreshInterface;
 
+    private EventManager eventManager;
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
@@ -74,7 +80,9 @@ public class SpiderServerHandler {
                                AreaInterface areaInterface,
                                FunctionInterface functionInterface,
                                NodeInterface nodeInterface,
-                               VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface, Vertx vertx) {
+                               VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
+                               Vertx vertx,
+                               EventManager eventManager) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -87,6 +95,7 @@ public class SpiderServerHandler {
         this.nodeInterface = nodeInterface;
         this.isUseSpiderNewStart = BrokerInfoUtil.queryStartSpiderNode(vertx);
         this.paramRefreshInterface = paramRefreshInterface;
+        this.eventManager = eventManager;
     }
 
     public void init(Router router) {
@@ -145,6 +154,8 @@ public class SpiderServerHandler {
         queryNodeConfig();
 
         retryStartFlow();
+
+        escalationInfo();
 
     }
 
@@ -884,6 +895,26 @@ public class SpiderServerHandler {
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });
+                });
+    }
+
+    // 上报领域信息
+    private void escalationInfo() {
+        router.post("/escalation/area_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    log.info("上报的数据为 {}", param.toString());
+                    EscalationData escalationData = JSON.parseObject(param.toString(), EscalationData.class);
+                    eventManager.sendMessage(EventType.ESCALATION_AREA_INFO, escalationData);
+                    // 刷新数据
+                    nodeInterface.refreshParam(JsonObject.mapFrom(escalationData.getRefreshAreaParam())).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                    ;
                 });
     }
 

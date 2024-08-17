@@ -1,4 +1,6 @@
 package cn.spider.framework.gateway.config;
+import cn.spider.framework.common.event.EventConfig;
+import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
@@ -19,6 +21,7 @@ import io.vertx.core.shareddata.SharedData;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * @BelongsProject: spider-node
@@ -28,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * @Description: spring组件的配置类
  * @Version: 1.0
  */
+@Import(EventConfig.class)
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.framework.gateway.api.*"})
 public class SpringConfig {
@@ -102,7 +106,8 @@ public class SpringConfig {
                                                         AreaInterface areaInterface,
                                                         FunctionInterface functionInterface,
                                                         NodeInterface nodeInterface,
-                                                        VersionInterface versionInterface,ParamRefreshInterface paramRefreshInterface,Vertx vertx) {
+                                                        VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
+                                                        Vertx vertx, EventManager eventManager) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -112,7 +117,7 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface,paramRefreshInterface,vertx);
+                versionInterface,paramRefreshInterface,vertx,eventManager);
     }
 
     @Bean

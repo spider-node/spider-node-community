@@ -35,6 +35,5 @@ public class EventManager {
         String paramString = param.toString();
         String addr = eventType.queryAddr();
         eventBus.publish(addr, paramString, options);
-        //log.info("发送成功的消息 {}",paramString);
     }
 }
