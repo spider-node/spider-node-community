@@ -17,7 +17,7 @@
         <module>spider-log-es</module>
         <module>common</module>
         <module>db</module>
-        <module>start</module>
+       <!-- <module>start</module>-->
         <module>linker-server</module>
         <module>transaction-server</module>
         <module>sdk</module>
