@@ -157,6 +157,13 @@ public class SpiderServerHandler {
 
         escalationInfo();
 
+        queryAreaInfo();
+
+        initAreaBaseInfo();
+
+        queryAllAreaInfo();
+
+        initRag();
     }
 
     public void refreshMethodRunParam() {
@@ -761,6 +768,22 @@ public class SpiderServerHandler {
                 });
     }
 
+    /**
+     * 查询节点配置
+     */
+    private void initRag() {
+        router.post("/init/rag")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    nodeInterface.initRag().onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
 
     /**
      * 新增域节点
@@ -898,6 +921,21 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void queryAllAreaInfo() {
+        router.post("/query/area_all_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    log.info("上报的数据为 {}", param.toString());
+                    nodeInterface.areaNodeBase().onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     // 上报领域信息
     private void escalationInfo() {
         router.post("/escalation/area_info")
@@ -914,7 +952,21 @@ public class SpiderServerHandler {
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });
-                    ;
+                });
+    }
+
+    private void initAreaBaseInfo() {
+        router.post("/init/area_base_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.initAreaBase(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
                 });
     }
 

@@ -94,6 +94,12 @@
             <artifactId>log-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>code-agent-sdk</artifactId>
+            <version>2.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

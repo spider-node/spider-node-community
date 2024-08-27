@@ -32,6 +32,7 @@
         <module>annotation</module>
         <module>proto</module>
         <module>spider-mybatis-plugin</module>
+        <module>code-agent-sdk</module>
     </modules>
 
     <properties>

@@ -19,7 +19,9 @@ public class AgentOkhttpClient {
 
     private MediaType mediaType;
 
-    public AgentOkhttpClient(OkHttpClient okHttpClient, String agentPrefix) {
+    private String initAiRagUrl;
+
+    public AgentOkhttpClient(OkHttpClient okHttpClient, String agentPrefix,String aiCodePrefix) {
         this.okHttpClient = okHttpClient;
         this.querySonAreaInfoUrl = agentPrefix + "/areaDomain/query_son_area_info";
         this.deployPluginUrl = agentPrefix + "/code_agent/deploy";

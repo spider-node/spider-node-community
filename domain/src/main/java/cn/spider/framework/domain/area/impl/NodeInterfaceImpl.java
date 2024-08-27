@@ -33,8 +33,9 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private ApplicationPluginManager pluginManager;
 
-    public NodeInterfaceImpl(NodeManger nodeManger) {
+    public NodeInterfaceImpl(NodeManger nodeManger,ApplicationPluginManager pluginManager) {
         this.nodeManger = nodeManger;
+        this.pluginManager = pluginManager;
     }
 
     @Override
@@ -158,17 +159,26 @@ public class NodeInterfaceImpl implements NodeInterface {
                 }).onFailure(fail -> {
                     promise.fail(fail);
                 });
-
         return promise.future();
     }
 
     @Override
-    public Future<JsonObject> areaNodeBase(JsonObject param) {
-        return pluginManager.querySonArea(param);
+    public Future<JsonObject> areaNodeBase() {
+        return pluginManager.queryAllAreaInfo();
     }
 
     @Override
     public Future<JsonObject> deployCode(JsonObject param) {
-        return pluginManager.deployCode(param);
+        return pluginManager.buildPlugin(param);
+    }
+
+    @Override
+    public Future<Void> initAreaBase(JsonObject param) {
+        return pluginManager.initAreaBase(param);
+    }
+
+    @Override
+    public Future<Void> initRag() {
+        return pluginManager.initAiRag();
     }
 }

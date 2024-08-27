@@ -15,6 +15,7 @@ import cn.spider.framework.domain.area.impl.FunctionImpl;
 import cn.spider.framework.domain.area.impl.NodeInterfaceImpl;
 import cn.spider.framework.domain.area.impl.VersionImpl;
 import cn.spider.framework.domain.area.node.NodeManger;
+import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
@@ -106,9 +107,15 @@ public class DomainConfig {
         return LogInterface.createProxy(vertx, LogInterface.ADDRESS);
     }
 
+
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger) {
-        return new NodeInterfaceImpl(nodeManger);
+    public ApplicationPluginManager buildApplicationPluginManager(AgentVertxClient agentClient,AreaManger areaManger){
+        return new ApplicationPluginManager(agentClient,areaManger);
+    }
+
+    @Bean
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager) {
+        return new NodeInterfaceImpl(nodeManger,pluginManager);
     }
 
     @Bean
@@ -127,14 +134,6 @@ public class DomainConfig {
     }
 
     @Bean
-    public AgentOkhttpClient buildAgentClient(OkHttpClient http, Vertx vertx){
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
-        String agentPrefix = localMap.get("spider_agent_url_host");
-        return new AgentOkhttpClient(http,agentPrefix);
-    }
-
-    @Bean
     public WebClient buildWebClient(Vertx vertx){
         return WebClient.create(vertx);
     }
@@ -144,6 +143,7 @@ public class DomainConfig {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String,String> localMap = sharedData.getLocalMap("config");
         String agentPrefix = localMap.get("spider_agent_url_host");
-        return new AgentVertxClient(webClient,agentPrefix);
+        String aiCodePrefix = localMap.get("spider_code_ai_url");
+        return new AgentVertxClient(webClient,agentPrefix,aiCodePrefix);
     }
 }
