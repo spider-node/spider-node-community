@@ -47,9 +47,10 @@ public class GrpcLocalConfig {
     public SocketManager buildSocketManager(Vertx vertx, @Value("${spider.worker.name}") String workerName,
                                             BusinessTimer businessTimer,
                                             @Value("${spider.worker.rpc-port}") String rpcPort,
+                                            @Value("${spider.worker.type}") String workerType,
                                             WebClient webClient, AreaInfoService areaInfoService) {
         System.out.println("spider.worker.name = " + workerName);
-        return new SocketManager(vertx, workerName, businessTimer, webClient, "localhost", Integer.parseInt(rpcPort), "8081", true, areaInfoService);
+        return new SocketManager(vertx, workerName, businessTimer, webClient, "localhost", Integer.parseInt(rpcPort), "8081", true, areaInfoService,workerType);
     }
 
     @Bean

@@ -48,8 +48,9 @@ public class GrpcConfig {
                                             @Value("${spider.worker.rpc-port}") String rpcPort,
                                             @Value("${spider.server.ip}") String spiderServerIp,
                                             @Value("${spider.server.port}") String spiderServerPort,
+                                            @Value("${spider.worker.type}") String workerType,
                                             AreaInfoService areaInfoService){
-        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,Integer.parseInt(rpcPort),spiderServerPort,false,areaInfoService);
+        return new SocketManager(vertx,workerName,businessTimer,webClient,spiderServerIp,Integer.parseInt(rpcPort),spiderServerPort,false,areaInfoService,workerType);
     }
 
     @Bean

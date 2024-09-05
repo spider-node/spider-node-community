@@ -3,6 +3,7 @@ import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.linker.sdk.data.emuns.EscalationType;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
+import cn.spider.framework.linker.server.socket.data.WorkerType;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
 
 
@@ -51,6 +52,19 @@ public class ClientInfo {
     private RefreshAreaParam refreshAreaParam;
 
     private FunctionEscalationType functionEscalationType;
+
+    /**
+     * worker类型,目前支付微服务,宿主机应用
+     */
+    private WorkerType workerType;
+
+    public WorkerType getWorkerType() {
+        return workerType;
+    }
+
+    public void setWorkerType(WorkerType workerType) {
+        this.workerType = workerType;
+    }
 
     public FunctionEscalationType getFunctionEscalationType() {
         return functionEscalationType;

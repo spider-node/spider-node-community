@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class ApplicationPluginManager {
@@ -76,6 +77,7 @@ public class ApplicationPluginManager {
 
     /**
      * 构建插件
+     * 构建完成后，发起部署
      *
      * @param param 构建插件参数
      * @return 返回构建插件后的参数 包含，biz version等信息,
@@ -92,19 +94,33 @@ public class ApplicationPluginManager {
      */
     public Future<Void> initAreaBase(JsonObject param) {
         Promise<Void> promise = Promise.promise();
-        agentClient.initAreaBase(param).onSuccess(initSuss->{
+        agentClient.initAreaBase(param).onSuccess(initSuss -> {
+            log.info("接口返回的数据 {}", initSuss.toString());
             AreaDocInfo areaDocInfo = new AreaDocInfo();
-            InitAreaBaseResult initAreaBaseInfo = initSuss.mapTo(InitAreaBaseResult.class);
+            InitAreaBaseResult initAreaBaseInfo = JSON.parseObject(initSuss.toString(), InitAreaBaseResult.class);
             areaDocInfo.setSonAreaInfos(Lists.newArrayList(initAreaBaseInfo.getSonArea()));
             areaDocInfo.setSonAreaCodeBases(Lists.newArrayList(initAreaBaseInfo.getAreaDomainInfo()));
+            log.info("初始化后产生的数据 {}", JSON.toJSONString(areaDocInfo));
             agentClient.initAiRag(JsonObject.mapFrom(areaDocInfo)).onSuccess(ragSuss -> {
                 promise.complete();
             }).onFailure(ragFail -> {
                 promise.fail(ragFail);
             });
-        }).onFailure(initFail->{
+        }).onFailure(initFail -> {
             promise.fail(initFail);
         });
         return promise.future();
+    }
+
+    public Future<JsonObject> querySonBaseInfo(JsonObject param) {
+        return agentClient.querySonBaseInfo(param);
+    }
+
+    public Future<Void> installPlugin(Set<String> applicationIps, JsonObject pluginParam) {
+        return agentClient.installPlugin(applicationIps, pluginParam);
+    }
+
+    public Future<Void> unInstall(Set<String> applicationIps, JsonObject pluginParam) {
+        return agentClient.unInstall(applicationIps, pluginParam);
     }
 }

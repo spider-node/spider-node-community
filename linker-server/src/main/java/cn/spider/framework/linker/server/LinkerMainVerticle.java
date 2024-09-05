@@ -59,11 +59,6 @@ public class LinkerMainVerticle extends AbstractVerticle {
      *
      * @param stopPromise
      */
-    /**
-     * 关闭verticle
-     *
-     * @param stopPromise
-     */
     @Override
     public void stop(Promise<Void> stopPromise) {
         factory.close();

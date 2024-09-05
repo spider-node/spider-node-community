@@ -14,6 +14,11 @@ public class RefreshAreaModel {
     private String taskService;
 
     /**
+     * 版本
+     */
+    private String version;
+
+    /**
      * 组件出入参数
      */
     private Map<String,Object> parmMap;
@@ -105,5 +110,13 @@ public class RefreshAreaModel {
 
     public void setParmMap(Map<String, Object> parmMap) {
         this.parmMap = parmMap;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

@@ -74,9 +74,9 @@ public class BusinessTimer {
     /**
      * 发送_领域详情
      */
-    public void senAreaInfo(SocketManager socketManager,String serverIp) {
+    public void senAreaInfo(SocketManager socketManager) {
         vertx.setTimer(20 * 1000, id -> {
-            socketManager.escalationAreaFunctionInfo(serverIp);
+            socketManager.escalationAreaFunctionInfo();
         });
     }
 

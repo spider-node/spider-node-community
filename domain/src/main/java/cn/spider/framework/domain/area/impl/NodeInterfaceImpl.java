@@ -1,20 +1,25 @@
 package cn.spider.framework.domain.area.impl;
+
 import cn.spider.framework.domain.area.node.NodeManger;
-import cn.spider.framework.domain.area.node.data.CreateNodeModel;
-import cn.spider.framework.domain.area.node.data.Node;
-import cn.spider.framework.domain.area.node.data.QueryNodeParam;
+import cn.spider.framework.domain.area.node.data.*;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
 import cn.spider.framework.domain.sdk.data.NodeParamConfigModel;
 import cn.spider.framework.domain.sdk.data.NodeParamConfigResult;
 import cn.spider.framework.domain.sdk.data.QueryBaseNodeParam;
 import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.linker.sdk.data.HostApplicationInfo;
+import cn.spider.framework.linker.sdk.data.QueryHostApplicationParam;
+import cn.spider.framework.linker.sdk.interfaces.LinkerService;
+import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.springframework.util.CollectionUtils;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -33,7 +38,9 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private ApplicationPluginManager pluginManager;
 
-    public NodeInterfaceImpl(NodeManger nodeManger,ApplicationPluginManager pluginManager) {
+    private LinkerService linkerService;
+
+    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
     }
@@ -59,7 +66,7 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     @Override
     public Future<Void> updateNode(JsonObject data) {
-        Node node = JSON.parseObject(data.toString(),Node.class);
+        Node node = JSON.parseObject(data.toString(), Node.class);
         node.setParamMapping(data.getJsonObject("paramMapping"));
         node.setResultMapping(data.getJsonObject("resultMapping"));
         return nodeManger.updateNode(node);
@@ -85,13 +92,13 @@ public class NodeInterfaceImpl implements NodeInterface {
             JsonArray array = new JsonArray();
             for (Node node : nodes) {
                 JsonObject object = JsonObject.mapFrom(node);
-                if(Objects.nonNull(node.getParamMapping())){
+                if (Objects.nonNull(node.getParamMapping())) {
                     NodeParamConfigModel nodeParamConfigList = JSON.parseObject(node.getParamMapping().toString(), NodeParamConfigModel.class);
-                    object.put("paramMapping",JsonObject.mapFrom(nodeParamConfigList));
+                    object.put("paramMapping", JsonObject.mapFrom(nodeParamConfigList));
                 }
-                if(Objects.nonNull(node.getResultMapping())){
+                if (Objects.nonNull(node.getResultMapping())) {
                     NodeParamConfigModel nodeParamConfigList = JSON.parseObject(node.getResultMapping().toString(), NodeParamConfigModel.class);
-                    object.put("resultMapping",JsonObject.mapFrom(nodeParamConfigList));
+                    object.put("resultMapping", JsonObject.mapFrom(nodeParamConfigList));
                 }
                 array.add(object);
             }
@@ -168,8 +175,10 @@ public class NodeInterfaceImpl implements NodeInterface {
     }
 
     @Override
-    public Future<JsonObject> deployCode(JsonObject param) {
-        return pluginManager.buildPlugin(param);
+    public Future<Void> deployCode(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+
+        return promise.future();
     }
 
     @Override
@@ -180,5 +189,10 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<Void> initRag() {
         return pluginManager.initAiRag();
+    }
+
+    @Override
+    public Future<JsonObject> querySonAreaBaseInfo(JsonObject param) {
+        return pluginManager.querySonBaseInfo(param);
     }
 }

@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-   <groupId>cn.spider-node</groupId>
+    <groupId>cn.spider-node</groupId>
     <artifactId>linker-server</artifactId>
     <version>2.0.0</version>
 
     <parent>
-       <groupId>cn.spider-node</groupId>
+        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
         <version>2.0.0</version>
     </parent>
@@ -50,25 +50,25 @@
 
         <!-- proto相关自动生成的数据 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>proto</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <!-- 对外请求的sdk -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>linker-server-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>domain-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
@@ -90,6 +90,12 @@
             <artifactId>annotations</artifactId>
             <version>3.0.0</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>host-plugin-center-sdk</artifactId>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
 

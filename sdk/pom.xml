@@ -33,6 +33,7 @@
         <module>proto</module>
         <module>spider-mybatis-plugin</module>
         <module>code-agent-sdk</module>
+        <module>host-plugin-center-sdk</module>
     </modules>
 
     <properties>

@@ -1,21 +1,17 @@
 package cn.spider.framework.linker.server.socket;
 
-import cn.spider.framework.common.utils.TaskKeyUtil;
 import cn.spider.framework.linker.server.loadbalancer.RoundRobinLoadBalancer;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
 import io.grpc.ManagedChannel;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @program: spider-node
- * @description: 客户端的注册中心- 当客户端启动完成的时候会进行上报
+ * @description: 使用于服务,不适应于宿主应用提供的能力
  * @author: dds
  * @create: 2023-02-24 17:32
  */
@@ -25,17 +21,12 @@ public class ClientRegisterCenter {
     private Map<String, RoundRobinLoadBalancer<ClientInfo>> roundRobinLoadBalancerMap;
 
     // 并于通过ip找到client
-    private Map<String, ClientInfo> clientInfoMap;
-
-    private Map<String, Set<String>> areaClientMap;
 
     private Vertx vertx;
 
     public ClientRegisterCenter(Vertx vertx) {
         this.vertx = vertx;
         this.roundRobinLoadBalancerMap = new HashMap<>();
-        this.clientInfoMap = new HashMap<>();
-        this.areaClientMap = new HashMap<>();
     }
 
     /**
@@ -44,53 +35,25 @@ public class ClientRegisterCenter {
      * @param clientInfo
      */
     public void registerClient(ClientInfo clientInfo) {
-        if (StringUtils.isEmpty(clientInfo.getWorkerName())) {
-            hostApplication(clientInfo);
-            return;
-        }
         serviceRegistry(clientInfo);
     }
 
     public void destroy(String ip, String workerName) {
-        if (StringUtils.isEmpty(workerName)) {
-            return;
-        }
         RoundRobinLoadBalancer robinLoadBalancer = this.roundRobinLoadBalancerMap.get(workerName);
         List<ClientInfo> clientInfos = robinLoadBalancer.getAll();
         List<ClientInfo> clientInfoList = clientInfos.stream().filter(item -> !item.getIp().equals(ip)).collect(Collectors.toList());
         robinLoadBalancer.updateAll(clientInfoList);
     }
 
-    public void destroy(String ip, String taskComponent,String taskService) {
-        String key = TaskKeyUtil.buildTaskKey(taskComponent, taskService);
-        if(this.roundRobinLoadBalancerMap.containsKey(key)){
-            return;
-        }
-
-        RoundRobinLoadBalancer robinLoadBalancer = this.roundRobinLoadBalancerMap.get(key);
-        List<ClientInfo> clientInfos = robinLoadBalancer.getAll();
-        List<ClientInfo> clientInfoList = clientInfos.stream().filter(item -> !item.getIp().equals(ip)).collect(Collectors.toList());
-        robinLoadBalancer.updateAll(clientInfoList);
-        Set<String> areaInfos = this.areaClientMap.get(ip);
-        Set<String> areaInfosNew = areaInfos.stream().filter(item->!item.equals(key)).collect(Collectors.toSet());
-        this.areaClientMap.put(ip,areaInfosNew);
-    }
-
-
-
+    /**
+     * 移除 -client
+     *
+     * @param ip         worker的ip
+     * @param workerName worker的名称 可能是宿主应用
+     */
     public void removeClient(String ip, String workerName) {
         destroy(ip, workerName);
-        if (StringUtils.isEmpty(workerName)) {
-            return;
-        }
-        this.clientInfoMap.remove(ip);
-        Set<String> areaInfos = this.areaClientMap.get(ip);
-        for (String areaInfo : areaInfos) {
-            // 移除这个项目中的所有功能点
-            destroy(ip, areaInfo);
-        }
     }
-
 
     public ClientInfo queryClientInfo(String workerName) {
         RoundRobinLoadBalancer<ClientInfo> robinLoadBalancer = this.roundRobinLoadBalancerMap.get(workerName);
@@ -141,36 +104,8 @@ public class ClientRegisterCenter {
         VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = VertxTransferServerGrpc.newVertxStub(channel);
         // 设置代理,方便后续调用
         clientInfo.setServerVertxStub(serverVertxStub);
-        clientInfoMap.put(clientInfo.getIp(), clientInfo);
     }
 
-    /**
-     * 上报功能的时候- 做相关注册
-     *
-     * @param taskComponent 组件
-     * @param taskService   组件中的能力
-     * @param ip            提供您服务的ip
-     */
-    public void functionRegister(String taskComponent, String taskService, String ip) {
-        String key = TaskKeyUtil.buildTaskKey(taskComponent, taskService);
-        if (!this.roundRobinLoadBalancerMap.containsKey(key)) {
-            RoundRobinLoadBalancer<ClientInfo> robinLoadBalancer = buildRoundRobinLoadBalancer();
-            this.roundRobinLoadBalancerMap.put(key, robinLoadBalancer);
-        }
-
-        ClientInfo clientInfo = clientInfoMap.get(ip);
-
-        RoundRobinLoadBalancer clientInfos = this.roundRobinLoadBalancerMap.get(key);
-        clientInfos.add(clientInfo);
-        // 记录 ip对应的组件功能有那些
-        Set<String> areaClients = new HashSet<>();
-        if (areaClientMap.containsKey(ip)) {
-            areaClients = areaClientMap.get(ip);
-        } else {
-            areaClientMap.put(ip, areaClients);
-        }
-        areaClients.add(key);
-    }
 
     private RoundRobinLoadBalancer<ClientInfo> buildRoundRobinLoadBalancer() {
         return RoundRobinLoadBalancer

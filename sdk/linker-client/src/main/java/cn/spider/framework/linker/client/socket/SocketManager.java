@@ -51,6 +51,8 @@ public class SocketManager {
 
     private AreaInfoService areaInfoService;
 
+    private String workerType;
+
 
     public SocketManager(Vertx vertx,
                          String workerName,
@@ -59,7 +61,7 @@ public class SocketManager {
                          String spiderServerIp,
                          Integer rpcPort,
                          String spiderServerPort, Boolean isLocal,
-                         AreaInfoService areaInfoService) {
+                         AreaInfoService areaInfoService,String workerType) {
         NetClientOptions options = new NetClientOptions()
                 .setLogActivity(true)
                 .setConnectTimeout(10000);
@@ -80,6 +82,7 @@ public class SocketManager {
         this.spiderServerIp = spiderServerIp;
         this.spiderServerPort = Integer.parseInt(spiderServerPort);
         this.areaInfoService = areaInfoService;
+        this.workerType = workerType;
         // 跟spider-server进行建立链接
         connect(rpcPort);
         businessTimer.updateSpiderServer(this, rpcPort);
@@ -124,14 +127,15 @@ public class SocketManager {
                 this.serverMap.put(serverIp, socket);
                 // 回写服务信息
                 JsonObject clientInfo = new JsonObject();
-                clientInfo.put("ip", workerIp);
+                clientInfo.put("ip", this.workerIp);
                 clientInfo.put("workerName", this.workerName);
                 clientInfo.put("port", rpcPort);
+                clientInfo.put("workerType",this.workerType);
                 clientInfo.put("escalationType", EscalationType.REGISTER);
                 socket.write(Buffer.buffer(clientInfo.toString()));
                 monitorSocket(res.result(), serverIp);
                 this.businessTimer.registerSocketHeart(serverIp, this);
-                this.businessTimer.senAreaInfo(this, serverIp);
+                this.businessTimer.senAreaInfo(this);
                 // 注册 heart
             } else {
                 log.error("跟spider-server通信进行链接失败 serverIp {} 错误信息为 {}", serverIp, ExceptionMessage.getStackTrace(res.cause()));
@@ -142,19 +146,15 @@ public class SocketManager {
     public void heart(String serverIp) {
         NetSocket socket = this.serverMap.get(serverIp);
         JsonObject clientInfo = new JsonObject();
-        clientInfo.put("ip", workerIp);
+        clientInfo.put("ip", this.workerIp);
         clientInfo.put("workerName", this.workerName);
         clientInfo.put("escalationType", EscalationType.HEART);
+        clientInfo.put("workerType",this.workerType);
         socket.write(Buffer.buffer(clientInfo.toString()));
     }
 
-    public void escalationAreaFunctionInfo(String serverIp) {
-        NetSocket socket = this.serverMap.get(serverIp);
-        JsonObject clientInfo = new JsonObject();
-        clientInfo.put("ip", workerIp);
-        clientInfo.put("workerName", this.workerName);
-        clientInfo.put("escalationType", EscalationType.ESCALATION_AREA_INFO);
-        socket.write(Buffer.buffer(clientInfo.toString()));
+    public void escalationAreaFunctionInfo() {
+
         // 注册延迟，5s后执行
         areaInfoService.escalationAreaInfo();
     }
@@ -169,9 +169,10 @@ public class SocketManager {
             return;
         }
         JsonObject clientInfo = new JsonObject();
-        clientInfo.put("ip", workerIp);
+        clientInfo.put("ip", this.workerIp);
         clientInfo.put("functionEscalationType", functionEscalationType);
         clientInfo.put("refreshAreaParam", areaInfo);
+        clientInfo.put("workerType",this.workerType);
         // 调用spider-node进行上报
         this.webClient.post(this.spiderServerPort, this.spiderServerIp, "/escalation/area_info")
                 .sendJsonObject(clientInfo)

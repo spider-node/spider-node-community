@@ -51,12 +51,16 @@ public interface NodeInterface {
     // 查询领域信息
     Future<JsonObject> areaNodeBase();
     // 部署代码
-    Future<JsonObject> deployCode(JsonObject param);
+    Future<Void> deployCode(JsonObject param);
 
     // 基础信息初始化与新增
     Future<Void> initAreaBase(JsonObject param);
 
     Future<Void> initRag();
+
+    Future<JsonObject> querySonAreaBaseInfo(JsonObject param);
+
+
 
 
 }

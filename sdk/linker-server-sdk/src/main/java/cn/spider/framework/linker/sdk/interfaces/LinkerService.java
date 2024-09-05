@@ -28,4 +28,9 @@ public interface LinkerService {
      * @return
      */
     Future<JsonObject> submittals(JsonObject data);
+
+    /**
+     * 查询-可部署的宿主应用节点
+     */
+    Future<JsonObject> queryHostApplication(JsonObject data);
 }

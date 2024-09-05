@@ -1,9 +1,12 @@
 package cn.spider.framework.linker.server.config;
+import cn.spider.framework.common.event.EventConfig;
+import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
 import cn.spider.framework.linker.server.consumer.EscalationHandler;
+import cn.spider.framework.linker.server.socket.HostWorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
 import io.vertx.core.Vertx;
@@ -13,6 +16,8 @@ import io.vertx.core.net.NetServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @create: 2023-03-02 10:55
  */
 @Configuration
+@Import(EventConfig.class)
 @ComponentScan(basePackages = {"cn.spider.framework.linker.server.*"})
 public class SpringConfig {
 
@@ -44,8 +50,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server,ClientRegisterCenter clientRegisterCenter,Vertx vertx){
-        return new WorkerRegisterManager(server,clientRegisterCenter,vertx);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager){
+        return new WorkerRegisterManager(server,clientRegisterCenter,vertx,eventManager);
     }
 
     @Bean
@@ -81,6 +87,11 @@ public class SpringConfig {
     @Bean
     public EventBus buildEventBus(Vertx vertx){
         return vertx.eventBus();
+    }
+
+    @Bean
+    public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx){
+        return new HostWorkerRegisterManager(vertx);
     }
 
 }

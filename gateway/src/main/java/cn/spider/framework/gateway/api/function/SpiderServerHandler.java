@@ -164,6 +164,10 @@ public class SpiderServerHandler {
         queryAllAreaInfo();
 
         initRag();
+
+        querySonAreaInfo();
+
+        deployPlugin();
     }
 
     public void refreshMethodRunParam() {
@@ -897,7 +901,7 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     nodeInterface.deployCode(param).onSuccess(suss -> {
-                        response.end(ResponseData.suss(suss));
+                        response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });
@@ -926,8 +930,6 @@ public class SpiderServerHandler {
                 .handler(ctx -> {
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
-                    JsonObject param = ctx.getBodyAsJson();
-                    log.info("上报的数据为 {}", param.toString());
                     nodeInterface.areaNodeBase().onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
@@ -964,6 +966,21 @@ public class SpiderServerHandler {
                     nodeInterface.initAreaBase(param).onSuccess(suss -> {
                         // 进行部署
                         response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void querySonAreaInfo() {
+        router.post("/query/son_area")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.querySonAreaBaseInfo(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });

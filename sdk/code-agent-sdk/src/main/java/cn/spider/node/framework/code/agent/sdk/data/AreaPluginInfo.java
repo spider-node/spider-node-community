@@ -81,4 +81,24 @@ public class AreaPluginInfo {
      * pom中的artifactId
      */
     private String artifactId;
+
+    /**
+     * 领域id
+     */
+    private String areaId;
+
+    /**
+     * 领域名称
+     */
+    private String areaName;
+
+    /**
+     * 子域id
+     */
+    private Integer sonAreaId;
+
+    /**
+     * 子域名称
+     */
+    private String sonAreaName;
 }
