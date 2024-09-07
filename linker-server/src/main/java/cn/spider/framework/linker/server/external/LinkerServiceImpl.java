@@ -3,6 +3,7 @@ package cn.spider.framework.linker.server.external;
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.common.utils.TaskKeyUtil;
 import cn.spider.framework.domain.sdk.data.FlowElementModel;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -20,6 +21,8 @@ import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionInfoResult;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -31,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: spider-node
@@ -63,6 +67,19 @@ public class LinkerServiceImpl implements LinkerService {
         this.vertx = vertx;
         this.functionInterface = functionInterface;
     }
+
+    /**
+     * 版本号的缓存
+     */
+    private final Cache<String, String> cache = CacheBuilder.newBuilder()
+            //设置cache的初始大小为10，要合理设置该值
+            .initialCapacity(10)
+            //设置并发数为10，即同一时间最多只能有10个线程往cache执行写入操作
+            .concurrencyLevel(2)
+            //设置cache中的数据在写入之后的存活时间为10分钟
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            //构建cache实例
+            .build();
 
     /**
      * 执行入口
@@ -170,18 +187,29 @@ public class LinkerServiceImpl implements LinkerService {
         if (StringUtils.isNotEmpty(version)) {
             return Future.succeededFuture(version);
         }
+        String key = TaskKeyUtil.buildTaskKey(taskComponent,taskService);
+        String versionOld = cache.getIfPresent(key);
+        if(StringUtils.isNotEmpty(versionOld)){
+            return Future.succeededFuture(versionOld);
+        }
+        // 查询缓存 查询到就直接返回
         Promise<String> promise = Promise.promise();
         QueryFunctionInfo queryFunctionInfo = new QueryFunctionInfo();
         queryFunctionInfo.setTaskService(taskService);
         queryFunctionInfo.setTaskComponent(taskComponent);
         hostPluginInterface.queryFunctionVersion(JsonObject.mapFrom(queryFunctionInfo)).onSuccess(functionSuss -> {
             QueryFunctionInfoResult queryFunctionInfoResult = functionSuss.mapTo(QueryFunctionInfoResult.class);
+
+            cache.put(key,queryFunctionInfoResult.getVersion());
             promise.complete(queryFunctionInfoResult.getVersion());
         }).onFailure(functionFail -> {
             promise.fail(functionFail);
         });
         return promise.future();
     }
+
+
+
 
     /**
      * 执行事务请求

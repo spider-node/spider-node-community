@@ -55,4 +55,9 @@ public class CreateProjectResult {
      * 组件功能
      */
     private String taskService;
+
+    /**
+     * 功能id
+     */
+    private Integer id;
 }

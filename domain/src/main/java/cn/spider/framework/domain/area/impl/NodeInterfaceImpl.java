@@ -12,6 +12,8 @@ import cn.spider.framework.linker.sdk.data.HostApplicationInfo;
 import cn.spider.framework.linker.sdk.data.QueryHostApplicationParam;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
+import cn.spider.node.host.plugin.center.sdk.data.FunctionPluginOnlineParam;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import io.vertx.core.Future;
@@ -38,7 +40,7 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private ApplicationPluginManager pluginManager;
 
-    private LinkerService linkerService;
+    private HostPluginInterface hostPluginInterface;
 
     public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager) {
         this.nodeManger = nodeManger;
@@ -174,10 +176,25 @@ public class NodeInterfaceImpl implements NodeInterface {
         return pluginManager.queryAllAreaInfo();
     }
 
+    /**
+     * 构建并且-发起部署申请
+     * @param param 构建应用插件的参数信息
+     *
+     */
     @Override
     public Future<Void> deployCode(JsonObject param) {
         Promise<Void> promise = Promise.promise();
-
+        pluginManager.buildPlugin(param).onSuccess(buildSuss->{
+            CreateProjectResult projectResult = buildSuss.mapTo(CreateProjectResult.class);
+            // 构造基础信息成功- 开始发起部署
+            hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
+                promise.complete();
+            }).onFailure(onlineFail->{
+                promise.fail(onlineFail);
+            });
+        }).onFailure(buildFail->{
+            promise.fail(buildFail);
+        });
         return promise.future();
     }
 

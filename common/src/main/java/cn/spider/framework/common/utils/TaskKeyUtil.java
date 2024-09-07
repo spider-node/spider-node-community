@@ -9,4 +9,8 @@ public class TaskKeyUtil {
     public static String buildTaskKey(String taskComponent,String taskService,String version){
         return taskComponent + segmentation + taskService + VERSION_PARTITION + version;
     }
+
+    public static String buildTaskKey(String taskComponent,String taskService){
+        return taskComponent + segmentation + taskService;
+    }
 }
