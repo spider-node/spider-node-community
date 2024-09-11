@@ -102,6 +102,7 @@ public class RoleManager {
                     localMap.put("param", "1");
                     localMap.put("refresh", "1");
                     localMap.put("log", "1");
+                    localMap.put("host_application","1");
                     break;
                 case "ui":
                     localMap.put("ui", "1");
@@ -182,6 +183,11 @@ public class RoleManager {
                         case "refresh":
                             String refresh = "cn.spider.framework.area.method.param.MainVerticle";
                             startRole(refresh, role, vertx, deployOptions);
+                            break;
+
+                        case "host_application":
+                            String hostApplicationPath = "cn.spider.node.host.plugin.center.MainVerticle";
+                            startRole(hostApplicationPath, role, vertx, deployOptions);
                             break;
                     }
                 }

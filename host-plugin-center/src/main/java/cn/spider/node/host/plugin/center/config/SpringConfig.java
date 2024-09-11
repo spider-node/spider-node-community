@@ -2,6 +2,7 @@ package cn.spider.node.host.plugin.center.config;
 
 import cn.spider.node.host.plugin.center.MainVerticle;
 import cn.spider.node.host.plugin.center.application.HostApplicationManager;
+import cn.spider.node.host.plugin.center.application.http.HostApplicationClient;
 import cn.spider.node.host.plugin.center.event.HostApplicationOfflineHandler;
 import cn.spider.node.host.plugin.center.event.HostApplicationOnlineHandler;
 import cn.spider.node.host.plugin.center.task.TaskManager;
@@ -12,8 +13,10 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
+import io.vertx.ext.web.client.WebClient;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +28,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.node.host.plugin.center.*"})
+@MapperScan("cn.spider.node.host.plugin.center.model.mapper")
 public class SpringConfig {
     @Bean
     public Vertx buildVertx() {
@@ -60,7 +64,7 @@ public class SpringConfig {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         DruidDataSource dataSource = new DruidDataSource();
-        dataSource.setUrl(localMap.get("mysql-host"));
+        dataSource.setUrl(localMap.get("mysql-url"));
         dataSource.setUsername(localMap.get("mysql-user"));
         dataSource.setPassword(localMap.get("mysql-password"));
         dataSource.setDriverClassName(localMap.get("mysql-driver-class-name"));
@@ -113,5 +117,18 @@ public class SpringConfig {
     @Bean
     public HostApplicationOnlineHandler buildHostApplicationOnlineHandler(EventBus eventBus, HostApplicationManager applicationManager, Vertx vertx) {
         return new HostApplicationOnlineHandler(eventBus, applicationManager, vertx);
+    }
+
+    @Bean
+    public WebClient buildWebClient(Vertx vertx){
+        return WebClient.create(vertx);
+    }
+
+    @Bean
+    public HostApplicationClient buildApplicationClient(WebClient webClient,Vertx vertx){
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        Integer hostApplicationPort = Integer.parseInt(localMap.get("host_application_port"));
+        return new HostApplicationClient(webClient,hostApplicationPort);
     }
 }

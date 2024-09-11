@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-       <groupId>cn.spider-node</groupId>
+        <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
         <version>2.0.0</version>
     </parent>
 
-   <groupId>cn.spider-node</groupId>
+    <groupId>cn.spider-node</groupId>
     <artifactId>start</artifactId>
     <version>2.0.0</version>
 
@@ -82,57 +82,57 @@
 
         <!-- 网关依赖 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>gateway</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-流程的管控与监控 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-flow</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-跟worker通信 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>linker-server</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <!-- 核心组件-事务组件 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>transaction-server</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-controller -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>controller</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-领域功能 -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>domain</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-param</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>area-method-param</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <!-- 核心组件-log -->
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-log-es</artifactId>
             <version>2.0.0</version>
             <!--<exclusions>
@@ -141,6 +141,12 @@
                     <artifactId>spring-data-elasticsearch</artifactId>
                 </exclusion>
             </exclusions>-->
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>host-plugin-center</artifactId>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
 

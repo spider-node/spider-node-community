@@ -2,6 +2,7 @@ package cn.spider.node.host.plugin.center.model.mapper;
 
 import cn.spider.node.host.plugin.center.model.entity.AreaDomainFunctionInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author dds
  * @since 2024-09-03
  */
+@Mapper
 public interface AreaDomainFunctionInfoMapper extends BaseMapper<AreaDomainFunctionInfo> {
 
 }

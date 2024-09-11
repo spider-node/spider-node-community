@@ -33,8 +33,10 @@ public class TaskTimer {
      */
     private void runPluginTaskTimer() {
         vertx.setPeriodic(20 * 1000, id -> {
-            this.sharedData.getLockWithTimeout(LOCK,500).onSuccess(suss -> {
+            taskManager.run();
+            /*this.sharedData.getLockWithTimeout(LOCK,1000).onSuccess(suss -> {
                 try {
+                    log.info("获取锁成功");
                     taskManager.run();
                 } catch (Exception e) {
                     log.error("执行任务失败");
@@ -43,7 +45,7 @@ public class TaskTimer {
                 registerLockRelease(suss);
             }).onFailure(lockFail->{
                 log.error("获取锁失败 {}",ExceptionMessage.getStackTrace(lockFail));
-            });
+            });*/
         });
     }
 
