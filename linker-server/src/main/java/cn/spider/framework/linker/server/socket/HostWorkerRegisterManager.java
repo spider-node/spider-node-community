@@ -3,13 +3,16 @@ package cn.spider.framework.linker.server.socket;
 import cn.spider.framework.common.utils.TaskKeyUtil;
 import cn.spider.framework.linker.server.socket.data.HostApplication;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
+import com.alibaba.fastjson.JSON;
 import io.grpc.ManagedChannel;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxChannelBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 
+@Slf4j
 public class HostWorkerRegisterManager {
 
     private Vertx vertx;
@@ -43,6 +46,7 @@ public class HostWorkerRegisterManager {
         hostApplication.setClientInfo(clientInfo);
         hostApplication.setFunctionInfo(new HashMap<>());
         hostApplicationMap.put(clientInfo.getIp(), hostApplication);
+        log.info("当前宿主应用的内容为 {}", JSON.toJSONString(hostApplicationMap));
     }
 
     /**

@@ -20,6 +20,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -33,7 +34,7 @@ import java.util.Objects;
  * @Description: 节点 - 实现类
  * @Version: 1.0
  */
-
+@Slf4j
 public class NodeInterfaceImpl implements NodeInterface {
 
     private NodeManger nodeManger;
@@ -186,12 +187,14 @@ public class NodeInterfaceImpl implements NodeInterface {
         Promise<Void> promise = Promise.promise();
         pluginManager.buildPlugin(param).onSuccess(buildSuss->{
             CreateProjectResult projectResult = buildSuss.mapTo(CreateProjectResult.class);
+            log.info("编译的参数为 {}",buildSuss.toString());
+            promise.complete();
             // 构造基础信息成功- 开始发起部署
-            hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
+            /*hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
                 promise.complete();
             }).onFailure(onlineFail->{
                 promise.fail(onlineFail);
-            });
+            });*/
         }).onFailure(buildFail->{
             promise.fail(buildFail);
         });

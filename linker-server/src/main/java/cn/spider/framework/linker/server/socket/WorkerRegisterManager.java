@@ -54,12 +54,13 @@ public class WorkerRegisterManager {
 
     private HostWorkerRegisterManager hostWorkerRegisterManager;
 
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager) {
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
         this.eventManager = eventManager;
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
+        this.hostWorkerRegisterManager = hostWorkerRegisterManager;
         init();
     }
 
@@ -148,6 +149,7 @@ public class WorkerRegisterManager {
                         .brokerName(this.brokerName)
                         .build();
                 eventManager.sendMessage(EventType.HOST_ONLINE, hostApplicationOnlineData);
+
                 break;
             case INTERFACE:
                 clientRegisterCenter.registerClient(clientInfo);
@@ -183,9 +185,9 @@ public class WorkerRegisterManager {
 
     }
 
-    public ClientInfo queryClientInfo(String taskComponent,String taskService,String version,String workerName){
-        if(StringUtils.isEmpty(workerName)){
-            return hostWorkerRegisterManager.queryClientInfo(taskComponent,taskService,version).getClientInfo();
+    public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName) {
+        if (StringUtils.isEmpty(workerName)) {
+            return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
         }
         return clientRegisterCenter.queryClientInfo(workerName);
     }

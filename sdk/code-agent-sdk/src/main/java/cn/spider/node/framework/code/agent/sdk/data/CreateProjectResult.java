@@ -17,6 +17,11 @@ public class CreateProjectResult {
     private String errorStackTrace;
 
     /**
+     * mvn install后的异常信息
+     */
+    private String mvnInstallFailStackTrace;
+
+    /**
      * 插件名称
      */
     private String bizName;

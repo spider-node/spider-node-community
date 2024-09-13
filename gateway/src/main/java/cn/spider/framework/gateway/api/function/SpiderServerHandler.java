@@ -900,6 +900,7 @@ public class SpiderServerHandler {
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
+                    log.info("deployPlugin-info {}",param.toString());
                     nodeInterface.deployCode(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {

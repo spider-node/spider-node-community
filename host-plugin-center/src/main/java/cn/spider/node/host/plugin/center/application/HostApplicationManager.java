@@ -1,5 +1,6 @@
 package cn.spider.node.host.plugin.center.application;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.node.host.plugin.center.model.entity.AreaDomainFunctionInfo;
 import cn.spider.node.host.plugin.center.model.entity.SpiderApplicationTask;
 import cn.spider.node.host.plugin.center.model.entity.SpiderHostApplication;
@@ -42,7 +43,12 @@ public class HostApplicationManager {
         SpiderHostApplication hostApplication = SpiderHostApplication.builder()
                 .ip(ip)
                 .build();
-        hostApplicationService.save(hostApplication);
+
+        try {
+            hostApplicationService.save(hostApplication);
+        } catch (Exception e) {
+            log.warn("应用上线出现异常 {}", ExceptionMessage.getStackTrace(e));
+        }
     }
 
     // 卸载 宿主应用
