@@ -8,11 +8,7 @@ import cn.spider.framework.domain.sdk.data.NodeParamConfigResult;
 import cn.spider.framework.domain.sdk.data.QueryBaseNodeParam;
 import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.linker.sdk.data.HostApplicationInfo;
-import cn.spider.framework.linker.sdk.data.QueryHostApplicationParam;
-import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
-import cn.spider.node.host.plugin.center.sdk.data.FunctionPluginOnlineParam;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -21,7 +17,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +51,7 @@ public class NodeInterfaceImpl implements NodeInterface {
         Node node = JSON.parseObject(data.toString(), Node.class);
         if (Objects.nonNull(model.getMethodParam())) {
             if (model.getMethodParam().containsKey("param")) {
-                JSONArray paramMapping = model.getMethodParam().getJSONObject("param").getJSONArray("fieldInjectDefList");
+                JSONArray paramMapping = model.getMethodParam().getJSONArray("param");
                 JsonObject param = new JsonObject().put("nodeParamConfigs", paramMapping);
                 node.setParamMapping(param);
             }
@@ -64,6 +60,7 @@ public class NodeInterfaceImpl implements NodeInterface {
                 node.setResultMapping(resultFinal);
             }
         }
+
         return nodeManger.createNode(node);
     }
 
@@ -183,18 +180,20 @@ public class NodeInterfaceImpl implements NodeInterface {
      *
      */
     @Override
-    public Future<Void> deployCode(JsonObject param) {
-        Promise<Void> promise = Promise.promise();
+    public Future<JsonObject> deployCode(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
         pluginManager.buildPlugin(param).onSuccess(buildSuss->{
             CreateProjectResult projectResult = buildSuss.mapTo(CreateProjectResult.class);
-            log.info("编译的参数为 {}",buildSuss.toString());
-            promise.complete();
+            if(StringUtils.isNotEmpty(projectResult.getErrorStackTrace())){
+                promise.complete(JsonObject.mapFrom(projectResult));
+                return;
+            }
             // 构造基础信息成功- 开始发起部署
-            /*hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
+            hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
                 promise.complete();
             }).onFailure(onlineFail->{
                 promise.fail(onlineFail);
-            });*/
+            });
         }).onFailure(buildFail->{
             promise.fail(buildFail);
         });

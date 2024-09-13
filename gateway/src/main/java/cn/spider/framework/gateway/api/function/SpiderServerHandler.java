@@ -902,7 +902,7 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     log.info("deployPlugin-info {}",param.toString());
                     nodeInterface.deployCode(param).onSuccess(suss -> {
-                        response.end(ResponseData.suss());
+                        response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });
