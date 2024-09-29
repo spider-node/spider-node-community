@@ -77,13 +77,13 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
-            <version>3.5.8</version>
+            <version>3.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
-            <version>1.2.23</version>
+            <version>1.2.8</version>
             <scope>compile</scope>
         </dependency>
 

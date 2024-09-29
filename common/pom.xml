@@ -27,7 +27,7 @@
         <dependency.junit.version>4.13.2</dependency.junit.version>
         <jakarta.el.version>3.0.3</jakarta.el.version>
         <dependency.collections.version>3.2.2</dependency.collections.version>
-        <dependency.spring.version>5.3.23</dependency.spring.version>
+        <dependency.spring.version>5.3.31</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -220,7 +220,7 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>3.14.9</version>
+            <version>4.8.1</version>
         </dependency>
     </dependencies>
 

@@ -26,13 +26,13 @@
         <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
         <dependency.fastjson.version>1.2.75</dependency.fastjson.version>
-        <dependency.spring.version>5.3.23</dependency.spring.version>
+        <dependency.spring.version>5.3.31</dependency.spring.version>
 
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <dependency.spring.version>5.3.23</dependency.spring.version>
+        <dependency.spring.version>5.3.31</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
         <dependency.collections.version>3.2.2</dependency.collections.version>
         <dependency.fastjson.version>1.2.83</dependency.fastjson.version>

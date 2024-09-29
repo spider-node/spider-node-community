@@ -24,13 +24,13 @@
         <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <h2>2.11.0</h2>
-        <spring.version>5.3.23</spring.version>
+        <spring.version>5.3.31</spring.version>
         <netty4.version>4.1.30.Final</netty4.version>
         <dubbo.version>2.7.4</dubbo.version>
         <hsf.version>1.8.3</hsf.version>
         <dubbo.alibaba.version>2.6.5</dubbo.alibaba.version>
         <sofa.rpc.version>5.5.3</sofa.rpc.version>
-        <fastjson.version>1.2.73</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <protostuff.version>1.5.9</protostuff.version>
         <config.version>1.2.1</config.version>
         <slf4j-api.version>1.7.22</slf4j-api.version>
@@ -130,7 +130,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.73</version>
+            <version>1.2.83</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
