@@ -58,54 +58,54 @@
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
-            <version>3.18.1</version>
+            <version>3.15.1</version>
         </dependency>
 
         <!-- minio依赖 -->
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
-            <version>8.5.12</version>
+            <version>8.2.2</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>spider-commons</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>container-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>db</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>log-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>controller-sdk</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>domain-sdk</artifactId>
             <version>2.0.0</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
-           <groupId>cn.spider-node</groupId>
+            <groupId>cn.spider-node</groupId>
             <artifactId>param-result-build</artifactId>
             <version>2.0.0</version>
             <scope>compile</scope>

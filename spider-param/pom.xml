@@ -14,98 +14,99 @@
     <version>2.0.0</version>
   </parent>
 
-  <properties>
+    <properties>
 
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
 
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-    <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
-    <junit-jupiter.version>5.9.1</junit-jupiter.version>
-  </properties>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+        <junit-jupiter.version>5.9.1</junit-jupiter.version>
+    </properties>
 
-  <dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-stack-depchain</artifactId>
+                <version>${vertx.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-stack-depchain</artifactId>
-        <version>${vertx.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>spider-commons</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>db</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>domain-sdk</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>spider-commons</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.11.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>snack3</artifactId>
+            <version>3.2.84</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>param-sdk</artifactId>
+            <version>2.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
-  </dependencyManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-    </dependency>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-    <dependency>
-     <groupId>cn.spider-node</groupId>
-      <artifactId>spider-commons</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
-    <dependency>
-     <groupId>cn.spider-node</groupId>
-      <artifactId>db</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
-    <dependency>
-     <groupId>cn.spider-node</groupId>
-      <artifactId>domain-sdk</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
-
-    <dependency>
-     <groupId>cn.spider-node</groupId>
-      <artifactId>spider-commons</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
-      <version>2.12.0</version>
-    </dependency>
-      <dependency>
-          <groupId>org.noear</groupId>
-          <artifactId>snack3</artifactId>
-          <version>3.2.111</version>
-          <scope>compile</scope>
-      </dependency>
-      <dependency>
-         <groupId>cn.spider-node</groupId>
-          <artifactId>param-sdk</artifactId>
-          <version>2.0.0</version>
-          <scope>compile</scope>
-      </dependency>
-
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>8</source>
-          <target>8</target>
-          <compilerArgs>
-            <arg>-parameters</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
 
 </project>

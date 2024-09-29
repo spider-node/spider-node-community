@@ -26,18 +26,18 @@
         <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
         <dependency.fastjson.version>1.2.75</dependency.fastjson.version>
-        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
+        <dependency.spring.version>5.3.23</dependency.spring.version>
 
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
+        <dependency.spring.version>5.3.23</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
         <dependency.collections.version>3.2.2</dependency.collections.version>
         <dependency.fastjson.version>1.2.83</dependency.fastjson.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>
-        <dependency.guava.version>27.0.1-jre</dependency.guava.version>
+        <dependency.guava.version>31.1-jre</dependency.guava.version>
         <dependency.beanutils.version>1.9.4</dependency.beanutils.version>
         <dependency.slf4j.version>1.7.30</dependency.slf4j.version>
         <dependency.logback-classic.version>1.2.3</dependency.logback-classic.version>
@@ -176,20 +176,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
 
             <!--maven插件-->
             <plugin>

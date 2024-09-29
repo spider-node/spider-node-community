@@ -29,7 +29,7 @@
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
         <dependency.fastjson.version>1.2.75</dependency.fastjson.version>
 
-        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
+        <dependency.spring.version>5.3.23</dependency.spring.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>
         <gpg.executable>gpg2</gpg.executable>
         <gpg.passphrase>YOUR_PASSPHRASE</gpg.passphrase>
@@ -127,20 +127,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
             <!--maven插件-->
             <plugin>
                 <groupId>org.sonatype.central</groupId>

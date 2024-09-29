@@ -24,7 +24,7 @@
         <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
-        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
+        <dependency.spring.version>5.3.23</dependency.spring.version>
         <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.9.1</junit-jupiter.version>
     </properties>
@@ -75,20 +75,20 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>4.2.27</version>
+            <version>3.1.1</version>
         </dependency>
 
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
+            <version>3.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
-            <version>3.0.1u2</version>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -114,6 +114,7 @@
             </plugin>
         </plugins>
     </build>
+
 
 
 </project>
