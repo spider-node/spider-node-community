@@ -75,6 +75,13 @@ public class AreaVerticle extends AbstractVerticle {
         MessageConsumer<JsonObject> versionConsumer = this.binder.setAddress(VersionInterface.ADDRESS)
                 .register(VersionInterface.class, versionInterface);
 
+        DataFlowInterface dataFlowInterface = this.factory.getBean(DataFlowInterface.class);
+
+        MessageConsumer<JsonObject> dataFlowConsumer = this.binder.setAddress(DataFlowInterface.ADDRESS)
+                .register(DataFlowInterface.class, dataFlowInterface);
+
+        this.containerConsumers.add(dataFlowConsumer);
+
         this.containerConsumers.add(versionConsumer);
 
         this.containerConsumers.add(nodeConsumer);

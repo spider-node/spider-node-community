@@ -6,25 +6,24 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.db.config.MysqlConfig;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.AreaVerticle;
-import cn.spider.framework.domain.area.agent.AgentOkhttpClient;
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
+import cn.spider.framework.domain.area.datasource.DatasourceManager;
+import cn.spider.framework.domain.area.datasource.service.IAreaDatasourceInfoService;
+import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.version.VersionManager;
-import cn.spider.framework.domain.area.impl.AreaImpl;
-import cn.spider.framework.domain.area.impl.FunctionImpl;
-import cn.spider.framework.domain.area.impl.NodeInterfaceImpl;
-import cn.spider.framework.domain.area.impl.VersionImpl;
+import cn.spider.framework.domain.area.impl.*;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
+import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
-import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
-import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.druid.pool.DruidDataSource;
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
@@ -62,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @Import({EventConfig.class, MysqlConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.domain.area.*"})
-@MapperScan("cn.spider.framework.domain.area.*")
+@MapperScan(value = {"cn.spider.framework.domain.area.flowdata.mapper","cn.spider.framework.domain.area.sondomain.mapper","cn.spider.framework.domain.area.datasource.mapper"})
 public class DomainConfig {
 
     @Bean
@@ -106,8 +105,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public AreaInterface buildAreaImpl(AreaManger areaManger) {
-        return new AreaImpl(areaManger);
+    public AreaInterface buildAreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService,DatasourceManager datasourceManager) {
+        return new AreaImpl(areaManger,spiderSonAreaService,datasourceManager);
     }
 
     @Bean
@@ -127,13 +126,23 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager) {
-        return new NodeInterfaceImpl(nodeManger,pluginManager);
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface) {
+        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface);
+    }
+
+    @Bean
+    public HostPluginInterface buildHostPluginInterface(Vertx vertx){
+        return HostPluginInterface.createProxy(vertx,HostPluginInterface.ADDRESS);
     }
 
     @Bean
     public VersionInterface buildVersionImpl(VersionManager versionManager) {
         return new VersionImpl(versionManager);
+    }
+
+    @Bean
+    public DataFlowInterface buildDataFlowInterface(ISpiderDataFlowService spiderDataFlowService){
+        return new DataFlowInterfaceImpl(spiderDataFlowService);
     }
 
     @Bean
@@ -176,12 +185,21 @@ public class DomainConfig {
     }
 
     @Bean(name = "sqlSessionFactory")
-    public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource,PaginationInterceptor interceptor) throws Exception {
 
         MybatisSqlSessionFactoryBean factory = new MybatisSqlSessionFactoryBean();
         factory.setDataSource(dataSource);
+        factory.setPlugins(interceptor);
         // 可以在这里配置其他属性，如mapperLocations、configuration等
         return factory.getObject();
+    }
+
+    /**
+     * 分页插件
+     */
+    @Bean
+    public PaginationInterceptor buildPaginationInterceptor(){
+        return new PaginationInterceptor();
     }
 
     @Bean
@@ -244,4 +262,10 @@ public class DomainConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean
+    public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService){
+        return new DatasourceManager(datasourceInfoService);
+    }
+
 }

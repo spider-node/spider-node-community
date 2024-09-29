@@ -53,4 +53,45 @@ public interface AreaInterface {
 
     // 查询bpmn-可部署sdk的url
     Future<JsonObject> queryAreaSdk();
+
+    /**
+     * 查询领域信息
+     * @param data
+     * @return
+     */
+    Future<JsonObject> querySonArea(JsonObject data);
+
+
+    /**
+     * 查询子域的base信息
+     * @param data
+     * @return
+     */
+    Future<JsonObject> querySonBase(JsonObject data);
+
+    /**
+     * 查询子域的base信息
+     * @param data
+     * @return
+     */
+    Future<JsonObject> querySonAreaInfos(JsonObject data);
+
+    /**
+     * 新增或者修改子域
+     */
+    Future<Void> upsertSonAreaInfo(JsonObject data);
+
+    /**
+     * 查询数据源
+     */
+    Future<JsonObject> queryDatasource(JsonObject data);
+
+    /**
+     * 查询表信息
+     */
+    Future<JsonObject> queryTableInfo(JsonObject data);
+
+
+
+
 }

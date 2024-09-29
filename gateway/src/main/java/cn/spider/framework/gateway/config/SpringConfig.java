@@ -6,10 +6,7 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.BrokerInfoService;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
-import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
-import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.GatewayVerticle;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
@@ -97,6 +94,11 @@ public class SpringConfig {
     }
 
     @Bean
+    public DataFlowInterface buildDataFlowInterface(Vertx vertx){
+        return DataFlowInterface.createProxy(vertx,DataFlowInterface.ADDRESS);
+    }
+
+    @Bean
     public SpiderServerHandler buildSpiderServerHandler(ContainerService containerService,
                                                         FlowService flowService,
                                                         BusinessService businessService,
@@ -107,7 +109,7 @@ public class SpringConfig {
                                                         FunctionInterface functionInterface,
                                                         NodeInterface nodeInterface,
                                                         VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
-                                                        Vertx vertx, EventManager eventManager) {
+                                                        Vertx vertx, EventManager eventManager, DataFlowInterface dataFlowInterface) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -117,7 +119,7 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface,paramRefreshInterface,vertx,eventManager);
+                versionInterface,paramRefreshInterface,vertx,eventManager,dataFlowInterface);
     }
 
     @Bean

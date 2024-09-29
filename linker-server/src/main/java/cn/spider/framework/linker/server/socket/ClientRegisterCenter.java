@@ -6,12 +6,13 @@ import io.grpc.ManagedChannel;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @program: spider-node
- * @description: 使用于服务,不适应于宿主应用提供的能力
+ * @description: 使用于服务, 不适应于宿主应用提供的能力
  * @author: dds
  * @create: 2023-02-24 17:32
  */
@@ -39,6 +40,9 @@ public class ClientRegisterCenter {
     }
 
     public void destroy(String ip, String workerName) {
+        if (!this.roundRobinLoadBalancerMap.containsKey(workerName)) {
+            return;
+        }
         RoundRobinLoadBalancer robinLoadBalancer = this.roundRobinLoadBalancerMap.get(workerName);
         List<ClientInfo> clientInfos = robinLoadBalancer.getAll();
         List<ClientInfo> clientInfoList = clientInfos.stream().filter(item -> !item.getIp().equals(ip)).collect(Collectors.toList());

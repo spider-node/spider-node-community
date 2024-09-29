@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "bms-spider-element-v1", shards = 10, replicas = 0)
+@Document(indexName = "bms-spider-element-v1")
 @Data
 public class SpiderFlowElementExampleLog extends SpiderLog implements Serializable {
     /**

@@ -4,12 +4,17 @@ package cn.spider.node.host.plugin.center.sdk.interfaces;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 @ProxyGen
 @VertxGen
 public interface HostPluginInterface {
     String ADDRESS = "HOST_PLUGIN-SERVICE";
+
+    static HostPluginInterface createProxy(Vertx vertx, String address) {
+        return new HostPluginInterfaceVertxEBProxy(vertx, address);
+    }
 
     /**
      * 上线 宿主机

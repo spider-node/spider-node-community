@@ -3,6 +3,14 @@ package cn.spider.framework.domain.area.impl;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
+import cn.spider.framework.domain.area.datasource.DatasourceManager;
+import cn.spider.framework.domain.area.datasource.data.QueryDatasourceParam;
+import cn.spider.framework.domain.area.datasource.data.QueryDatasourceResult;
+import cn.spider.framework.domain.area.datasource.data.QueryTableInfoParam;
+import cn.spider.framework.domain.area.datasource.data.QueryTableInfoResult;
+import cn.spider.framework.domain.area.sondomain.QuerySonAreaInfoParam;
+import cn.spider.framework.domain.area.sondomain.entity.*;
+import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
 import cn.spider.framework.domain.sdk.data.RefreshSdkParam;
 import cn.spider.framework.domain.sdk.data.SdkInfo;
 import cn.spider.framework.domain.sdk.data.SdkUrlQueryResult;
@@ -22,8 +30,14 @@ public class AreaImpl implements AreaInterface {
 
     private AreaManger areaManger;
 
-    public AreaImpl(AreaManger areaManger) {
+    private ISpiderSonAreaService spiderSonAreaService;
+
+    private DatasourceManager datasourceManager;
+
+    public AreaImpl(AreaManger areaManger,ISpiderSonAreaService spiderSonAreaService,DatasourceManager datasourceManager) {
         this.areaManger = areaManger;
+        this.spiderSonAreaService = spiderSonAreaService;
+        this.datasourceManager = datasourceManager;
     }
 
     /**
@@ -91,4 +105,48 @@ public class AreaImpl implements AreaInterface {
         });
         return promise.future();
     }
+
+    @Override
+    public Future<JsonObject> querySonArea(JsonObject data) {
+        QuerySonAreaParam areaParam = data.mapTo(QuerySonAreaParam.class);
+        QuerySonAreaResult areaResult = spiderSonAreaService.querySonAreaBase(areaParam);
+        return Future.succeededFuture(JsonObject.mapFrom(areaResult));
+    }
+
+    @Override
+    public Future<JsonObject> querySonBase(JsonObject data) {
+        QuerySonBaseParam param = data.mapTo(QuerySonBaseParam.class);
+        List<SpiderSonArea> spiderSonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId,param.getSonIds()).list();
+        QuerySonBaseResult result = new QuerySonBaseResult(spiderSonAreas);
+        return Future.succeededFuture(JsonObject.mapFrom(result));
+    }
+
+    @Override
+    public Future<JsonObject> querySonAreaInfos(JsonObject data) {
+        QuerySonAreaInfoParam querySonAreaInfoParam = data.mapTo(QuerySonAreaInfoParam.class);
+        QuerySonAreaInfoResult querySonAreaInfoResult = spiderSonAreaService.querySonAreaInfos(querySonAreaInfoParam);
+        return Future.succeededFuture(JsonObject.mapFrom(querySonAreaInfoResult));
+    }
+
+    @Override
+    public Future<Void> upsertSonAreaInfo(JsonObject data) {
+        SpiderSonArea sonArea = data.mapTo(SpiderSonArea.class);
+        spiderSonAreaService.saveOrUpdate(sonArea);
+        return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<JsonObject> queryDatasource(JsonObject data) {
+        QueryDatasourceParam param = data.mapTo(QueryDatasourceParam.class);
+        QueryDatasourceResult result = datasourceManager.queryDatasource(param);
+        return Future.succeededFuture(JsonObject.mapFrom(result));
+    }
+
+    @Override
+    public Future<JsonObject> queryTableInfo(JsonObject data) {
+        QueryTableInfoParam param = data.mapTo(QueryTableInfoParam.class);
+        QueryTableInfoResult result = datasourceManager.queryTableInfos(param);
+        return Future.succeededFuture(JsonObject.mapFrom(result));
+    }
+
 }

@@ -12,6 +12,7 @@ import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
@@ -39,9 +40,10 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private HostPluginInterface hostPluginInterface;
 
-    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager) {
+    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
+        this.hostPluginInterface = hostPluginInterface;
     }
 
     @Override
@@ -51,12 +53,11 @@ public class NodeInterfaceImpl implements NodeInterface {
         Node node = JSON.parseObject(data.toString(), Node.class);
         if (Objects.nonNull(model.getMethodParam())) {
             if (model.getMethodParam().containsKey("param")) {
-                JSONArray paramMapping = model.getMethodParam().getJSONArray("param");
-                JsonObject param = new JsonObject().put("nodeParamConfigs", paramMapping);
+                JsonObject param = new JsonObject(model.getMethodParam().getJSONObject("param").toString());
                 node.setParamMapping(param);
             }
             if (model.getMethodParam().containsKey("result")) {
-                JsonObject resultFinal = new JsonObject().put("nodeParamConfigs", model.getMethodParam().getJSONArray("result"));
+                JsonObject resultFinal = new JsonObject(model.getMethodParam().getJSONObject("result").toString());
                 node.setResultMapping(resultFinal);
             }
         }
@@ -67,8 +68,14 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<Void> updateNode(JsonObject data) {
         Node node = JSON.parseObject(data.toString(), Node.class);
-        node.setParamMapping(data.getJsonObject("paramMapping"));
-        node.setResultMapping(data.getJsonObject("resultMapping"));
+        JSONObject methodParam = JSONObject.parseObject(data.getJsonObject("methodParam").toString());
+
+        if(methodParam.containsKey("param")){
+            node.setParamMapping(new JsonObject(methodParam.getJSONObject("param").toString()));
+        }
+        if (methodParam.containsKey("result")){
+            node.setResultMapping(new JsonObject(methodParam.getJSONObject("result").toString()));
+        }
         return nodeManger.updateNode(node);
     }
 

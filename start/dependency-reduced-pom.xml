@@ -21,7 +21,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>spider-node-1.0.2</finalName>
+    <finalName>spider-node-2.0.0</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>

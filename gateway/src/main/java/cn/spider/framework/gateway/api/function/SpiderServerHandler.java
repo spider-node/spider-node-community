@@ -10,10 +10,7 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.BrokerInfoService;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
-import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
-import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
@@ -71,6 +68,8 @@ public class SpiderServerHandler {
 
     private EventManager eventManager;
 
+    private DataFlowInterface dataFlowInterface;
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
@@ -82,7 +81,7 @@ public class SpiderServerHandler {
                                NodeInterface nodeInterface,
                                VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
                                Vertx vertx,
-                               EventManager eventManager) {
+                               EventManager eventManager, DataFlowInterface dataFlowInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -96,6 +95,7 @@ public class SpiderServerHandler {
         this.isUseSpiderNewStart = BrokerInfoUtil.queryStartSpiderNode(vertx);
         this.paramRefreshInterface = paramRefreshInterface;
         this.eventManager = eventManager;
+        this.dataFlowInterface = dataFlowInterface;
     }
 
     public void init(Router router) {
@@ -168,6 +168,17 @@ public class SpiderServerHandler {
         querySonAreaInfo();
 
         deployPlugin();
+
+        queryFlowData();
+        upsertFlowData();
+        querySonAreaV2();
+        querySonAreaBase();
+        updateFlowDataStatus();
+        queryFlowDataInfo();
+        querySonAreaInfos();
+        upsertSonAreaInfo();
+        queryDatasource();
+        queryTables();
     }
 
     public void refreshMethodRunParam() {
@@ -900,7 +911,7 @@ public class SpiderServerHandler {
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
-                    log.info("deployPlugin-info {}",param.toString());
+                    log.info("deployPlugin-info {}", param.toString());
                     nodeInterface.deployCode(param).onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
@@ -988,5 +999,165 @@ public class SpiderServerHandler {
                 });
     }
 
+    // 查询数据流
+    private void queryFlowData() {
+        router.post("/query/flow_data")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.queryDataFlow(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryFlowDataInfo() {
+        router.post("/query/flow_data_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.queryDataFlowInfos(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+
+    // 新增或者修改数据流
+    // 查询数据流
+    private void upsertFlowData() {
+        router.post("/upsert/flow_data")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.upsertDataFlow(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // 查询子域信息
+    private void querySonAreaV2() {
+        router.post("/query/son_area_v2")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.querySonArea(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // 查询子域信息
+    private void querySonAreaBase() {
+        router.post("/query/son_area_base")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.querySonBase(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 数据流启停
+     */
+    // 查询子域信息
+    private void updateFlowDataStatus() {
+        router.post("/data_flow/update_status")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.upsertDataFlowStatus(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void querySonAreaInfos() {
+        router.post("/query/son_area_infos")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.querySonAreaInfos(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void upsertSonAreaInfo() {
+        router.post("/upsert/son_area_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.upsertSonAreaInfo(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    //
+    private void queryDatasource() {
+        router.post("/query/datasource")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.queryDatasource(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryTables() {
+        router.post("/query/tables")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.queryTableInfo(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
 
 }

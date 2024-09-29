@@ -38,13 +38,13 @@
 
     <properties>
         <java.version>8</java.version>
-        <dependency.spring.version>5.3.23</dependency.spring.version>
+        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <vertx.version>4.3.7</vertx.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <vertx.ignite>4.2.3</vertx.ignite>
-        <spring.version>5.3.23</spring.version>
+        <spring.version>5.1.8.RELEASE</spring.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>
     </properties>
 

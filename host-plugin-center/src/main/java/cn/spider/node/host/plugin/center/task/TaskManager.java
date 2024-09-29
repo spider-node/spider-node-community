@@ -13,6 +13,7 @@ import cn.spider.node.host.plugin.center.model.service.IAreaDomainFunctionInfoSe
 import cn.spider.node.host.plugin.center.model.service.ISpiderApplicationTaskService;
 import cn.spider.node.host.plugin.center.model.service.ISpiderHostApplicationService;
 import cn.spider.node.host.plugin.center.model.service.ISpiderPluginDeployInfoService;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableSet;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ public class TaskManager {
         if (CollectionUtils.isEmpty(tasks)) {
             return;
         }
+        log.info("获取到任务了");
         for (SpiderApplicationTask task : tasks) {
             switch (task.getTaskType()) {
                 case INSTALL:
@@ -74,15 +76,19 @@ public class TaskManager {
                 .eq(SpiderPluginDeployInfo::getFunctionId, task.getTaskBusinessId())
                 .in(SpiderPluginDeployInfo::getStatus, ImmutableSet.of(PluginStatus.ING))
                 .list();
+        // 已经获取到宿主应用
+
         // 获取倒-已经部署的ip
         Set<String> ips = spiderPluginDeployInfos.stream().map(SpiderPluginDeployInfo::getIp).collect(Collectors.toSet());
         // 获取倒可部署的ip
         SpiderHostApplication hostApplication = hostApplicationService.lambdaQuery()
-                .le(SpiderHostApplication::getId, 0)
+                .gt(SpiderHostApplication::getId, 0)
                 .ne(CollectionUtils.isNotEmpty(ips), SpiderHostApplication::getIp, ips).last("limit 1").one();
         if (Objects.isNull(hostApplication)) {
+            log.info("没有获取到宿主应用");
             return;
         }
+        log.info("获取到的宿主应用为 {}", JSON.toJSONString(hostApplication));
         // 设置ip倒task中
         task.setIp(hostApplication.getIp());
         // 构建部署的参数信息

@@ -33,6 +33,7 @@ public class TaskTimer {
      */
     private void runPluginTaskTimer() {
         vertx.setPeriodic(20 * 1000, id -> {
+            log.info("找任务了");
             taskManager.run();
             /*this.sharedData.getLockWithTimeout(LOCK,1000).onSuccess(suss -> {
                 try {
