@@ -61,6 +61,9 @@ public class SpiderSonAreaServiceImpl extends ServiceImpl<SpiderSonAreaMapper, S
         List<QuerySonAreaData> sonAreaData = new ArrayList<>(spiderSonAreas.size());
         for (SpiderSonArea sonArea : spiderSonAreas) {
             List<AreaDomainBaseInfo> areaDomainBaseInfoList = areaDomainBaseInfoMap.get(sonArea.getSonAreaName());
+            if(CollectionUtils.isEmpty(areaDomainBaseInfoList)){
+                continue;
+            }
             // 把areaDomainBaseInfoList根据createTime进行排序返回创建时间最新的一条数据
             AreaDomainBaseInfo baseInfo  = areaDomainBaseInfoList.stream().sorted(Comparator.comparing(AreaDomainBaseInfo :: getId).reversed()).findFirst().get();
 
