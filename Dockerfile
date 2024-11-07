@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM registry.cn-hangzhou.aliyuncs.com/acs-sample/jdk8:latest
 RUN mkdir /usr/local/spider-node/
 COPY start/target/spider-node-2.0.0.tar.gz /usr/local/spider-node/
 WORKDIR /usr/local/spider-node/
