@@ -1,4 +1,4 @@
-FROM registry.cn-hangzhou.aliyuncs.com/helowin/jdk:8u252-b09-jre
+FROM openjdk:8
 RUN mkdir /usr/local/spider-node/
 COPY start/target/spider-node-2.0.0.tar.gz /usr/local/spider-node/
 WORKDIR /usr/local/spider-node/
