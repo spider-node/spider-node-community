@@ -69,4 +69,9 @@ public class FunctionVersionModel {
      * 返回参数的隐射
      */
     private String resultMapping;
+
+    /**
+     * 返回参数的隐射
+     */
+    private String runMapping;
 }

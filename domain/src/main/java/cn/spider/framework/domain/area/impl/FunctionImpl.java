@@ -85,6 +85,11 @@ public class FunctionImpl implements FunctionInterface {
     }
 
     @Override
+    public Future<JsonObject> queryVersionInfo(JsonObject data) {
+        return null;
+    }
+
+    @Override
     public Future<JsonObject> findExecuteFunction(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
         // 查询当前执行的版本

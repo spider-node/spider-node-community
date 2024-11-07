@@ -34,10 +34,9 @@ import org.springframework.core.ResolvableType;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -112,8 +111,8 @@ public class MethodWrapper {
 
     private void methodParser(Method method) {
         Class<?> returnType = method.getReturnType();
-        if (!Objects.equals(Constant.VOID,returnType.getName())) {
-            returnTypeParser(method.getGenericReturnType(), returnType);
+        if (!Objects.equals(Constant.VOID, returnType.getName())) {
+            returnTypeParserNew(returnType);
         }
         Parameter[] parameters = method.getParameters();
         // 获取到对应的接口-方法参数名称
@@ -131,7 +130,7 @@ public class MethodWrapper {
      */
     public String[] queryParameterNames(Parameter[] parameters) {
         String[] paramNames = new String[parameters.length];
-        for(int i = 0;i< parameters.length;i++){
+        for (int i = 0; i < parameters.length; i++) {
             Parameter p = parameters[i];
             paramNames[i] = p.getName();
         }
@@ -179,21 +178,12 @@ public class MethodWrapper {
         return ElementParserUtil.getFieldInjectDefList(clazz);
     }
 
-    private void returnTypeParser(Type genericReturnType, Class<?> returnType) {
-        if (Mono.class.isAssignableFrom(returnType)) {
-            returnType = Object.class;
-            if (genericReturnType != null) {
-                Class<?>[] resolveArray = ResolvableType.forType(genericReturnType).resolveGenerics();
-                returnType = (resolveArray.length > 0 && resolveArray[0] != null && !Objects.equals(GlobalConstant.VOID, resolveArray[0].getName())) ? resolveArray[0] : returnType;
-            }
-            monoResult = true;
-        }
+    private void returnTypeParser(Class<?> returnType) {
 
         String className = StringUtils.uncapitalize(returnType.getSimpleName());
+        // 加载方法上面的注解信息
         parseReturnType(noticeMethodSpecify, returnType, className);
-
-        parseReturnType(new NoticeAnnotationWrapper(returnType), returnType, className);
-
+        // 获取字段上面的字段上的注解信息
         List<Field> fieldsList = FieldUtils.getAllFieldsList(returnType);
         if (CollectionUtils.isNotEmpty(fieldsList)) {
             fieldsList.forEach(field -> {
@@ -203,12 +193,112 @@ public class MethodWrapper {
         }
     }
 
+    private void returnTypeParserNew(Class<?> returnType) {
+        List<Field> fieldsList = FieldUtils.getAllFieldsList(returnType);
+        List<NodeField> nodeFields = new ArrayList<>();
+        if (noticeMethodSpecify.getNoticeScope().isPresent()) {
+            // 说明在方法上面有注解，那么用方面上面的注解为p0
+
+            NoticeScope noticeScope = noticeMethodSpecify.getNoticeScope().get();
+            for (Field field : fieldsList) {
+                String finalTargetName = noticeScope.target() + "." + field.getName();
+                String fieldType = queryFieldType(field.getType());
+                NodeField nodeField = new NodeField(field.getName(), finalTargetName, fieldType);
+                List<NodeObjectStructure> nodeObjectStructures = queryListInfoByField(field);
+                nodeField.setNodeParamStructure(nodeObjectStructures);
+                nodeFields.add(nodeField);
+            }
+            returnTypeNoticeDef.setNodeFields(nodeFields);
+            return;
+        }
+        // 加载方法上面的注解信息
+        // 获取字段上面的字段上的注解信息 为p1
+        if (CollectionUtils.isNotEmpty(fieldsList)) {
+            for (Field field : fieldsList) {
+                String finalTargetName = buildFinalTargetName(field);
+                String fieldType = queryFieldType(field.getType());
+                NodeField nodeField = new NodeField(field.getName(), finalTargetName, fieldType);
+                List<NodeObjectStructure> nodeObjectStructures = queryListInfoByField(field);
+                nodeField.setNodeParamStructure(nodeObjectStructures);
+                nodeFields.add(nodeField);
+            }
+            returnTypeNoticeDef.setNodeFields(nodeFields);
+        }
+    }
+
+    private String buildFinalTargetName(Field field) {
+        NoticeAnnotationWrapper fieldNoticeAnn = new NoticeAnnotationWrapper(field);
+        if (fieldNoticeAnn.getNoticeSta().isPresent()) {
+            return fieldNoticeAnn.getNoticeSta().get().target();
+        } else if (fieldNoticeAnn.getNoticeVar().isPresent()) {
+            return fieldNoticeAnn.getNoticeVar().get().target();
+        } else if (fieldNoticeAnn.getNoticeScope().isPresent()) {
+            return fieldNoticeAnn.getNoticeScope().get().target();
+        } else {
+            return null;
+        }
+    }
+
+    public List<NodeObjectStructure> queryListInfoByField(Field field) {
+        List<NodeObjectStructure> structures = new ArrayList<>();
+        if (List.class.isAssignableFrom(field.getType())) {
+            // 说明字段类似为List
+            if (field.getGenericType() instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+                // 获取实际类型参数数组
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+
+                // 假设只有一个类型参数，并且它是Class类型
+                if (actualTypeArguments.length > 0 && actualTypeArguments[0] instanceof Class) {
+                    Class<?> sonClass = (Class<?>) actualTypeArguments[0];
+                    // 获取Student类的所有字段
+                    Field[] sonFields = sonClass.getDeclaredFields();
+                    for (Field f : sonFields) {
+                        NodeObjectStructure structure = new NodeObjectStructure(queryFieldType(f.getType()), f.getName());
+                        structures.add(structure);
+                    }
+                }
+
+            }
+        } else if (queryFieldType(field.getType()).equals("java.lang.Object")) {
+            List<Field> sonfieldsList = FieldUtils.getAllFieldsList(field.getType());
+            for (Field sonField : sonfieldsList) {
+                NodeObjectStructure structure = new NodeObjectStructure(queryFieldType(sonField.getType()), sonField.getName());
+                structures.add(structure);
+            }
+        }
+        return structures;
+    }
+
+    /**
+     * 实现Field 判断是否为实体类，如
+     *
+     * @param fieldClass
+     * @return
+     */
+
+    public String queryFieldType(Class fieldClass) {
+        // 判断fieldClass如果是枚举类型
+        if (fieldClass.isEnum()) {
+            return "java.lang.String";
+        }
+        // 如果 fieldClass的类型不是String,Integer,Long,Float,Double,Boolean,Date,BigDecimal,LocalDateTime,这些类型就执行改为Object
+        if (!(fieldClass.equals(String.class) || fieldClass.equals(Integer.class) ||
+                fieldClass.equals(Long.class) || fieldClass.equals(Float.class) ||
+                fieldClass.equals(Double.class) || fieldClass.equals(Boolean.class) ||
+                fieldClass.equals(Date.class) || fieldClass.equals(BigDecimal.class) ||
+                fieldClass.equals(LocalDateTime.class))) {
+            return "java.lang.Object";
+        }
+        return fieldClass.getTypeName();
+    }
+
+
     private void noticeScopeDef(NoticeScope annotation, NoticeFieldItem noticeFieldItem) {
         if (ArrayUtils.isEmpty(annotation.scope())) {
             returnTypeNoticeDef.noticeStaDefSet.add(noticeFieldItem);
             return;
         }
-
         List<ScopeTypeEnum> scopeTypeList = Lists.newArrayList(annotation.scope());
         if (scopeTypeList.contains(ScopeTypeEnum.STABLE)) {
             returnTypeNoticeDef.noticeStaDefSet.add(noticeFieldItem);
@@ -228,12 +318,6 @@ public class MethodWrapper {
             NoticeFieldItem noticeFieldItem = new NoticeFieldItem(fieldName, noticeVar.target(), returnType, noticeAnn.isNotField());
             returnTypeNoticeDef.noticeStaDefSet.add(noticeFieldItem);
         });
-        noticeAnn.getNoticeResult().ifPresent(noticeResult -> {
-            if (returnTypeNoticeDef.storyResultDef != null) {
-                return;
-            }
-            returnTypeNoticeDef.storyResultDef = new NoticeFieldItem(fieldName, null, returnType, noticeAnn.isNotField());
-        });
         noticeAnn.getNoticeScope().ifPresent(noticeScope -> {
             NoticeFieldItem noticeFieldItem = new NoticeFieldItem(fieldName, noticeScope.target(), returnType, noticeAnn.isNotField());
             noticeScopeDef(noticeScope, noticeFieldItem);
@@ -246,7 +330,17 @@ public class MethodWrapper {
 
         private final Set<NoticeFieldItem> noticeStaDefSet = new InSet<>();
 
+        private List<NodeField> nodeFields;
+
         private NoticeFieldItem storyResultDef;
+
+        public List<NodeField> getNodeFields() {
+            return nodeFields;
+        }
+
+        public void setNodeFields(List<NodeField> nodeFields) {
+            this.nodeFields = nodeFields;
+        }
 
         public Set<NoticeFieldItem> getNoticeVarDefSet() {
             return noticeVarDefSet;

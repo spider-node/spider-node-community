@@ -29,6 +29,11 @@ public interface FunctionInterface {
     Future<Void> updateFunction(JsonObject data);
     // 查询功能
     Future<JsonObject> queryFunction(JsonObject data);
+
+    // 查询功能
+    Future<JsonObject> queryVersionInfo(JsonObject data);
+
+
     // 查询执行的功能节点
     Future<JsonObject> findExecuteFunction(JsonObject data);
 

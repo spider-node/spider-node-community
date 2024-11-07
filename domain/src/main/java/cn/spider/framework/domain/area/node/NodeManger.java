@@ -164,6 +164,9 @@ public class NodeManger {
     private String buildQuerySql(QueryNodeParam param) {
         StringBuilder querySql = new StringBuilder();
         querySql.append("select * from spider_area_function where 1=1 ");
+        if(StringUtils.isNotEmpty(param.getId())){
+            querySql.append(" and id = #{id}");
+        }
         if (StringUtils.isNotEmpty(param.getName())) {
             querySql.append(" and name = #{name}");
         }

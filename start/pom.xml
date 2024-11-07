@@ -253,7 +253,6 @@
                     </excludes>
                 </configuration>
             </plugin>
-
         </plugins>
         <finalName>spider-node-2.0.0</finalName>
     </build>

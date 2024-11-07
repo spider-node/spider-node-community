@@ -152,6 +152,9 @@ public class FunctionManger {
         JsonObject params = JsonObject.mapFrom(param);
         Map<String, Object> parameters = params.getMap();
         sql.append("select * from spider_business_function where 1=1 ");
+        if(StringUtils.isNotEmpty(param.getId())){
+            sql.append(" and id = #{id} ");
+        }
         if (StringUtils.isNotEmpty(param.getFunctionName())) {
             sql.append(" and function_name = #{functionName} ");
         }

@@ -7,7 +7,6 @@ import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.param.result.build.*;
 import cn.spider.framework.param.result.build.scan.loader.AnalysisClassLoader;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections.CollectionUtils;
@@ -15,11 +14,11 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,9 +37,10 @@ public class AnalysisClass {
 
     /**
      * 获取jar中的出参,入参
-     * @param url 请求地址
+     *
+     * @param url       请求地址
      * @param classPath 扫码的class地址
-     * @return 返回出参,入参配置
+     * @return 返回出参, 入参配置
      * @throws MalformedURLException url异常
      */
     public Map<String, Map<String, Object>> buildParam(String url, String classPath) throws MalformedURLException {
@@ -55,6 +55,7 @@ public class AnalysisClass {
                 continue;
             }
             Map<String, Map<String, Object>> param = doInit(clazz, true);
+            System.out.println(JSON.toJSONString(param));
             paramAll.putAll(param);
         }
         return paramAll;
@@ -79,24 +80,7 @@ public class AnalysisClass {
             MethodWrapper methodWrapper = new MethodWrapper(method, annotation, noticeMethodSpecify, taskInstruct, true);
             List<ParamInjectDef> paramInjectDefsList = new ArrayList<>();
             methodWrapper.getReturnTypeNoticeDef().getNoticeStaDefSet().stream().forEach(item -> {
-                String targetName = item.getTargetName();
-                List<ParamInjectDef> paramInjectDefs = new ArrayList<>();
-                // 包含. targetName说明本身已经是不需要组装域参数信息了
-                if(targetName.contains(Constant.SPOT)){
-                    ParamInjectDef parameter = new ParamInjectDef(item.getFieldName(), targetName);
-                    paramInjectDefs.add(parameter);
-                    paramInjectDefsList.addAll(paramInjectDefs);
-                    return;
-                }
-                Field[] fields = item.getFieldClass().getDeclaredFields();
-                if (fields.length > 0) {
 
-                    for (Field field : fields) {
-                        ParamInjectDef parameter = new ParamInjectDef(field.getName(), targetName + "." + field.getName());
-                        paramInjectDefs.add(parameter);
-                    }
-                    paramInjectDefsList.addAll(paramInjectDefs);
-                }
             });
             Object params = CollectionUtils.isEmpty(methodWrapper.getParamInjectDefs()) ? null : methodWrapper.getParamInjectDefs().get(0).getFieldInjectDefList();
             // 构造入参
@@ -108,13 +92,13 @@ public class AnalysisClass {
 
             mapping.put("param", paramObject);
             mapping.put("result", resultObject);
-            mapping.put("worker",taskComponent.workerName());
-            mapping.put("method",methodWrapper.getMethod().getName());
-            if(StringUtils.isNotEmpty(functionName)){
-                mapping.put("functionName",functionName);
+            mapping.put("worker", taskComponent.workerName());
+            mapping.put("method", methodWrapper.getMethod().getName());
+            if (StringUtils.isNotEmpty(functionName)) {
+                mapping.put("functionName", functionName);
             }
-            if(StringUtils.isNotEmpty(desc)){
-                mapping.put("desc",desc);
+            if (StringUtils.isNotEmpty(desc)) {
+                mapping.put("desc", desc);
             }
             // 改造获取入参,请求参数
             allMapping.put(taskComponent.name() + "@" + taskServiceName, mapping);
@@ -123,7 +107,10 @@ public class AnalysisClass {
     }
 
 
-    private List<Method> filterTaskServiceMethods(Method[] taskServiceMethods, Class<?> targetClass, boolean scanSuper) {
+
+
+    private List<Method> filterTaskServiceMethods(Method[] taskServiceMethods, Class<?> targetClass,
+                                                  boolean scanSuper) {
         if (ArrayUtils.isEmpty(taskServiceMethods)) {
             return Lists.newArrayList();
         }

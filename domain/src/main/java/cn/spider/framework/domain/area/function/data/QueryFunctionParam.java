@@ -36,4 +36,9 @@ public class QueryFunctionParam {
      * 域id
      */
     private String areaId;
+
+    /**
+     * 逐渐id查询
+     */
+    private String id;
 }

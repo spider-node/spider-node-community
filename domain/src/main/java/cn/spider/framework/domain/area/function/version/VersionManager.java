@@ -62,6 +62,7 @@ public class VersionManager {
         }
         functionVersionModel.setResultMapping(row.getString("result_mapping"));
         functionVersionModel.setStatus(VersionStatus.valueOf(row.getString("status")));
+        functionVersionModel.setRunMapping(row.getString("run_mapping"));
         return functionVersionModel;
     };
 

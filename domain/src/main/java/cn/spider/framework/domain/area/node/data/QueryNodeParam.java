@@ -20,6 +20,8 @@ public class QueryNodeParam {
 
     private String areaName;
 
+    private String id;
+
     /**
      * 状态
      */

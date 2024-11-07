@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @Import({EventConfig.class, MysqlConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.domain.area.*"})
-@MapperScan(value = {"cn.spider.framework.domain.area.flowdata.mapper","cn.spider.framework.domain.area.sondomain.mapper","cn.spider.framework.domain.area.datasource.mapper"})
+@MapperScan(value = {"cn.spider.framework.domain.area.flowdata.mapper","cn.spider.framework.domain.area.sondomain.mapper","cn.spider.framework.domain.area.datasource.mapper","cn.spider.framework.domain.area.function.mapper"})
 public class DomainConfig {
 
     @Bean
