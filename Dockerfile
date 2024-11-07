@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8
 RUN mkdir /usr/local/spider-node/
 COPY start/target/spider-node-2.0.0.tar.gz /usr/local/spider-node/
 WORKDIR /usr/local/spider-node/
