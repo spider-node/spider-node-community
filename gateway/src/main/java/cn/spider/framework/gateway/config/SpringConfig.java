@@ -11,7 +11,6 @@ import cn.spider.framework.gateway.GatewayVerticle;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -100,26 +99,25 @@ public class SpringConfig {
 
     @Bean
     public SpiderServerHandler buildSpiderServerHandler(ContainerService containerService,
-                                                        FlowService flowService,
-                                                        BusinessService businessService,
-                                                        LogInterface logInterface,
-                                                        LeaderHeartService leaderHeartService,
-                                                        BrokerInfoService brokerInfoService,
-                                                        AreaInterface areaInterface,
-                                                        FunctionInterface functionInterface,
-                                                        NodeInterface nodeInterface,
-                                                        VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
-                                                        Vertx vertx, EventManager eventManager, DataFlowInterface dataFlowInterface) {
+                               FlowService flowService,
+                               BusinessService businessService,
+                               LogInterface logInterface,
+                               BrokerInfoService brokerInfoService,
+                               AreaInterface areaInterface,
+                               FunctionInterface functionInterface,
+                               NodeInterface nodeInterface,
+                               VersionInterface versionInterface,
+                               Vertx vertx,
+                               EventManager eventManager, DataFlowInterface dataFlowInterface,AiTaskInterface aiTaskInterface) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
                 logInterface,
-                leaderHeartService,
                 brokerInfoService,
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface,paramRefreshInterface,vertx,eventManager,dataFlowInterface);
+                versionInterface,vertx,eventManager,dataFlowInterface,aiTaskInterface);
     }
 
     @Bean
@@ -152,8 +150,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx){
-        return ParamRefreshInterface.createProxy(vertx,ParamRefreshInterface.ADDRESS);
+    public AiTaskInterface buildAiTaskInterface(Vertx vertx){
+        return AiTaskInterface.createProxy(vertx,AiTaskInterface.ADDRESS);
     }
 
 }

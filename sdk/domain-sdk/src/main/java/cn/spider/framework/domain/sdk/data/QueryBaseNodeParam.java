@@ -11,6 +11,11 @@ public class QueryBaseNodeParam {
      */
     private String taskService;
 
+    /**
+     * 版本
+     */
+    private String version;
+
     public String getTaskComponent() {
         return taskComponent;
     }
@@ -25,5 +30,13 @@ public class QueryBaseNodeParam {
 
     public void setTaskService(String taskService) {
         this.taskService = taskService;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

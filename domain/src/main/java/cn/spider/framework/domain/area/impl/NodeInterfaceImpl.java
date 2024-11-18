@@ -1,13 +1,14 @@
 package cn.spider.framework.domain.area.impl;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.data.*;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunction;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
-import cn.spider.framework.domain.sdk.data.NodeParamConfigModel;
-import cn.spider.framework.domain.sdk.data.NodeParamConfigResult;
-import cn.spider.framework.domain.sdk.data.QueryBaseNodeParam;
-import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
+import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.param.result.build.model.ReportParamInfo;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * @BelongsProject: spider-node
@@ -40,10 +42,13 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private HostPluginInterface hostPluginInterface;
 
-    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface) {
+    private Executor spiderBusinessPool;
+
+    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
         this.hostPluginInterface = hostPluginInterface;
+        this.spiderBusinessPool = spiderBusinessPool;
     }
 
     @Override
@@ -124,15 +129,9 @@ public class NodeInterfaceImpl implements NodeInterface {
      */
     @Override
     public Future<JsonObject> queryBaseNodes(JsonObject data) {
-        Promise<JsonObject> promise = Promise.promise();
         QueryBaseNodeParam param = data.mapTo(QueryBaseNodeParam.class);
-        nodeManger.queryNodeByComTaskService(param.getTaskComponent(), param.getTaskService())
-                .onSuccess(suss -> {
-                    promise.complete(JsonObject.mapFrom(suss));
-                }).onFailure(fail -> {
-                    promise.fail(fail);
-                });
-        return promise.future();
+        FunctionInfo spiderAreaFunctionVersion = nodeManger.queryNodeVersion(param.getTaskComponent(), param.getTaskService(), param.getVersion());
+        return Future.succeededFuture(JsonObject.mapFrom(spiderAreaFunctionVersion));
     }
 
 
@@ -145,7 +144,7 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<Void> refreshParam(JsonObject param) {
         try {
-            RefreshAreaParam areaParam = JSON.parseObject(param.toString(), RefreshAreaParam.class);
+            ReportParamInfo areaParam = param.mapTo(ReportParamInfo.class);
             nodeManger.refreshNodeParam(areaParam);
             return Future.succeededFuture();
         } catch (Exception e) {
@@ -220,5 +219,53 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<JsonObject> querySonAreaBaseInfo(JsonObject param) {
         return pluginManager.querySonBaseInfo(param);
+    }
+
+    @Override
+    public Future<JsonObject> queryDomainFunction(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                QueryDomainFunctionParam queryDomainFunctionParam = param.mapTo(QueryDomainFunctionParam.class);
+                QueryDomainFunctionResult result = nodeManger.queryDomainFunction(queryDomainFunctionParam);
+                promise.complete(JsonObject.mapFrom(result));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error("queryDomainFunction error",e);
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> updateDomainFunction(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                SpiderAreaFunction spiderAreaFunction = param.mapTo(SpiderAreaFunction.class);
+                nodeManger.upsertDomainFunction(spiderAreaFunction);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+                log.info(ExceptionMessage.getStackTrace(e));
+            }
+        });
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> queryDomainFunctionVersion(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                QueryDomainFunctionVersionResult result = nodeManger.queryDomainFunctionVersion(param.mapTo(QueryDomainFunctionVersionParam.class));
+                promise.complete(JsonObject.mapFrom(result));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error("queryDomainFunctionVersion error",e);
+            }
+        });
+        return promise.future();
     }
 }

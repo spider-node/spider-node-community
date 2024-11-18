@@ -4,10 +4,18 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.FunctionStartStopEventData;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.domain.area.datasource.entity.AreaDatasourceInfo;
 import cn.spider.framework.domain.area.function.data.*;
+import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
+import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
 import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -39,6 +47,10 @@ public class FunctionManger {
 
     private VersionManager versionManager;
 
+    private ISpiderBusinessFunctionService spiderBusinessFunctionService;
+
+    private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
+
     private RowMapper<FunctionModel> ROW_BUSINESS = row -> {
         FunctionModel businessFunctions = new FunctionModel();
         businessFunctions.setId(row.getString("id"));
@@ -52,10 +64,12 @@ public class FunctionManger {
         return businessFunctions;
     };
 
-    public FunctionManger(MySQLPool client, EventManager eventManager,VersionManager versionManager) {
+    public FunctionManger(MySQLPool client, EventManager eventManager,VersionManager versionManager,ISpiderBusinessFunctionService spiderBusinessFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
         this.client = client;
         this.eventManager = eventManager;
         this.versionManager = versionManager;
+        this.spiderBusinessFunctionService = spiderBusinessFunctionService;
+        this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
     }
 
     /**
@@ -232,4 +246,31 @@ public class FunctionManger {
                 });
         return promise.future();
     }
+
+    public QueryBusinessFunctionResult queryBusinessFunction(QueryBusinessFunctionParam param) {
+        Page<SpiderBusinessFunction> rowPage = new Page(param.getPage(), param.getSize());
+        LambdaQueryWrapper<SpiderBusinessFunction> queryWrapper = new LambdaQueryWrapper<SpiderBusinessFunction>()
+                .eq(StringUtils.isNotEmpty(param.getAreaId()), SpiderBusinessFunction::getAreaId, param.getAreaId())
+                .likeRight(StringUtils.isNotEmpty(param.getFunctionName()), SpiderBusinessFunction::getFunctionName, param.getFunctionName());
+        IPage page = spiderBusinessFunctionService.page(rowPage, queryWrapper);
+        return new QueryBusinessFunctionResult(page.getRecords(), page.getTotal());
+    }
+
+    public void upsertBusinessFunctionV2(SpiderBusinessFunction param) {
+        if(StringUtils.isEmpty(param.getId())){
+            param.setId(UUID.randomUUID().toString());
+            spiderBusinessFunctionService.save(param);
+            return;
+        }
+        spiderBusinessFunctionService.updateById(param);
+    }
+
+    public void upsertDomainVersion(SpiderAreaFunctionVersion param) {
+        if(StringUtils.isEmpty(param.getId())){
+            param.setId(UUID.randomUUID().toString());
+            spiderAreaFunctionVersionService.save(param);
+        }
+        spiderAreaFunctionVersionService.updateById(param);
+    }
+
 }

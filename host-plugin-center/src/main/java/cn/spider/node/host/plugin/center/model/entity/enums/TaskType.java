@@ -4,4 +4,5 @@ public enum TaskType {
     // INSTALL/UNINSTALL/DELETE_HOST
     INSTALL,
     UNINSTALL,
+
 }

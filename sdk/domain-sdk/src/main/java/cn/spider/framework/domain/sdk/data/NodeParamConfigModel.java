@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.util.List;
 
 public class NodeParamConfigModel implements Serializable {
-    private List<NodeParamConfig> nodeParamConfigs;
+    private List<NodeParamConfig> nodeParamInfoList;
 
-    public List<NodeParamConfig> getNodeParamConfigs() {
-        return nodeParamConfigs;
+    public List<NodeParamConfig> getNodeParamInfoList() {
+        return nodeParamInfoList;
     }
 
-    public void setNodeParamConfigs(List<NodeParamConfig> nodeParamConfigs) {
-        this.nodeParamConfigs = nodeParamConfigs;
+    public void setNodeParamInfoList(List<NodeParamConfig> nodeParamInfoList) {
+        this.nodeParamInfoList = nodeParamInfoList;
     }
 }

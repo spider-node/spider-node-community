@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 public class AreaModel {
     /**
-     * 领域id
+     * 领域id@Data
      */
     private String id;
 

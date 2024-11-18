@@ -38,6 +38,11 @@ public interface AreaInterface {
      */
     Future<Void> insertArea(JsonObject data);
 
+    /**
+     * 新增area
+     */
+    Future<Void> upsertAreaV2(JsonObject data);
+
 
     /**
      * 新增area
@@ -87,11 +92,25 @@ public interface AreaInterface {
     Future<JsonObject> queryDatasource(JsonObject data);
 
     /**
+     * 查询数据源
+     */
+    Future<JsonObject> queryDatasourcePage(JsonObject data);
+
+    /**
      * 查询表信息
      */
     Future<JsonObject> queryTableInfo(JsonObject data);
 
+    /**
+     * 新增或者修改子域
+     */
+    Future<Void> upsertDatasource(JsonObject data);
 
+
+    /**
+     * 查询表信息
+     */
+    Future<JsonObject> querySonDomainVersion(JsonObject data);
 
 
 }

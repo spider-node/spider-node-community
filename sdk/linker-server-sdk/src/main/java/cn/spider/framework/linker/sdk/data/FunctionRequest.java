@@ -38,6 +38,9 @@ public class FunctionRequest {
      */
     private Map<String,Object> param;
 
+    /**
+     * 版本
+     */
     private String version;
 
     // 应用类型

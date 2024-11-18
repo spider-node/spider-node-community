@@ -20,6 +20,8 @@ public class WriteBackParam {
      */
     private String taskService;
 
+    private String version;
+
     /**
      * 返回的参数
      */
@@ -55,5 +57,13 @@ public class WriteBackParam {
 
     public void setResult(JsonObject result) {
         this.result = result;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

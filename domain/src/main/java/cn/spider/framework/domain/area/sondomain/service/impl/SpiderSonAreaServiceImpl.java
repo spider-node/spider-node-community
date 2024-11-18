@@ -1,6 +1,6 @@
 package cn.spider.framework.domain.area.sondomain.service.impl;
 
-import cn.spider.framework.domain.area.sondomain.QuerySonAreaInfoParam;
+import cn.spider.framework.domain.area.sondomain.entity.QuerySonAreaInfoParam;
 import cn.spider.framework.domain.area.sondomain.entity.*;
 import cn.spider.framework.domain.area.sondomain.mapper.SpiderSonAreaMapper;
 import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
@@ -14,10 +14,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -80,18 +77,15 @@ public class SpiderSonAreaServiceImpl extends ServiceImpl<SpiderSonAreaMapper, S
     @Override
     public QuerySonAreaInfoResult querySonAreaInfos(QuerySonAreaInfoParam param) {
         LambdaQueryWrapper queryWrapper = new LambdaQueryWrapper<SpiderSonArea>()
-                .eq(StringUtils.isNotEmpty(param.getTableName()),SpiderSonArea :: getTableName,param.getTableName())
-                .eq(StringUtils.isNotEmpty(param.getDatasource()),SpiderSonArea :: getDatasource,param.getDatasource())
-                .eq(StringUtils.isNotEmpty(param.getSonAreaName()),SpiderSonArea :: getSonAreaName,param.getSonAreaName())
-                .eq(SpiderSonArea :: getAreaId,param.getAreaId());
+                .eq(Objects.nonNull(param.getId()),SpiderSonArea::getId,param.getId())
+                .likeRight(StringUtils.isNotEmpty(param.getTableName()),SpiderSonArea :: getTableName,param.getTableName())
+                .likeRight(StringUtils.isNotEmpty(param.getAreaName()),SpiderSonArea :: getAreaName,param.getAreaName())
+                .likeRight(StringUtils.isNotEmpty(param.getDatasource()),SpiderSonArea :: getDatasource,param.getDatasource())
+                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()),SpiderSonArea :: getSonAreaName,param.getSonAreaName())
+                .eq(StringUtils.isNotEmpty(param.getAreaId()),SpiderSonArea :: getAreaId,param.getAreaId());
         Page<SpiderSonArea> rowPage = new Page(param.getPage(), param.getSize());
         super.baseMapper.selectPage(rowPage,queryWrapper);
         List<SpiderSonArea> spiderSonAreas = rowPage.getRecords();
         return new QuerySonAreaInfoResult(spiderSonAreas,rowPage.getTotal());
-    }
-
-    @Override
-    public QuerySonAreaBaseResult querySonAreaBaseVersionInfo(QuerySonAreaBaseParam param) {
-        return null;
     }
 }

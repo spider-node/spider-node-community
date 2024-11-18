@@ -3,13 +3,18 @@ package cn.spider.framework.domain.area.impl;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
+import cn.spider.framework.domain.area.data.QueryDomainResult;
 import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.datasource.data.QueryDatasourceParam;
 import cn.spider.framework.domain.area.datasource.data.QueryDatasourceResult;
 import cn.spider.framework.domain.area.datasource.data.QueryTableInfoParam;
 import cn.spider.framework.domain.area.datasource.data.QueryTableInfoResult;
-import cn.spider.framework.domain.area.sondomain.QuerySonAreaInfoParam;
+import cn.spider.framework.domain.area.datasource.entity.AreaDatasourceInfo;
+import cn.spider.framework.domain.area.domain.entity.SpiderArea;
+import cn.spider.framework.domain.area.domain.service.ISpiderAreaService;
+import cn.spider.framework.domain.area.sondomain.entity.QuerySonAreaInfoParam;
 import cn.spider.framework.domain.area.sondomain.entity.*;
+import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
 import cn.spider.framework.domain.sdk.data.RefreshSdkParam;
 import cn.spider.framework.domain.sdk.data.SdkInfo;
@@ -17,15 +22,22 @@ import cn.spider.framework.domain.sdk.data.SdkUrlQueryResult;
 import cn.spider.framework.domain.sdk.data.UploadSdkParam;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Executor;
 
+@Slf4j
 public class AreaImpl implements AreaInterface {
 
     private AreaManger areaManger;
@@ -34,10 +46,19 @@ public class AreaImpl implements AreaInterface {
 
     private DatasourceManager datasourceManager;
 
-    public AreaImpl(AreaManger areaManger,ISpiderSonAreaService spiderSonAreaService,DatasourceManager datasourceManager) {
+    private ISpiderAreaService spiderAreaService;
+
+    private Executor spiderBusinessPool;
+
+    private IAreaDomainBaseInfoService areaDomainBaseInfoService;
+
+    public AreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService, DatasourceManager datasourceManager, Executor spiderBusinessPool, ISpiderAreaService spiderAreaService,IAreaDomainBaseInfoService areaDomainBaseInfoService) {
         this.areaManger = areaManger;
         this.spiderSonAreaService = spiderSonAreaService;
         this.datasourceManager = datasourceManager;
+        this.spiderBusinessPool = spiderBusinessPool;
+        this.spiderAreaService = spiderAreaService;
+        this.areaDomainBaseInfoService = areaDomainBaseInfoService;
     }
 
     /**
@@ -72,7 +93,34 @@ public class AreaImpl implements AreaInterface {
      */
     @Override
     public Future<Void> insertArea(JsonObject data) {
-        return areaManger.createArea(JSON.parseObject(data.toString(),AreaModel.class));
+        return areaManger.createArea(JSON.parseObject(data.toString(), AreaModel.class));
+    }
+
+    /**
+     * 新增修改领域信息
+     *
+     * @param data 领域信息
+     * @return Future
+     */
+    @Override
+    public Future<Void> upsertAreaV2(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
+        SpiderArea area = data.mapTo(SpiderArea.class);
+        spiderBusinessPool.execute(() -> {
+            try {
+                if (StringUtils.isEmpty(area.getId())) {
+                    area.setId(UUID.randomUUID().toString());
+                    spiderAreaService.save(area);
+                    promise.complete();
+                    return;
+                }
+                spiderAreaService.updateById(area);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+        return promise.future();
     }
 
     @Override
@@ -83,11 +131,15 @@ public class AreaImpl implements AreaInterface {
     @Override
     public Future<JsonObject> queryArea(JsonObject data) {
         Promise<JsonObject> result = Promise.promise();
-        areaManger.queryAreaModel(data.mapTo(QueryAreaModel.class)).onSuccess(suss -> {
-            List<AreaModel> areaModels = suss;
-            result.complete(new JsonObject().put("areaModes", new JsonArray(JSON.toJSONString(areaModels))));
-        }).onFailure(fail -> {
-            result.fail(fail);
+        spiderBusinessPool.execute(() -> {
+            QueryAreaModel queryAreaModel = data.mapTo(QueryAreaModel.class);
+            Page<SpiderArea> rowPage = new Page(queryAreaModel.getPage(), queryAreaModel.getSize());
+            LambdaQueryWrapper<SpiderArea> queryWrapper = new LambdaQueryWrapper<SpiderArea>()
+                    .eq(StringUtils.isNotEmpty(queryAreaModel.getId()), SpiderArea::getId, queryAreaModel.getId())
+                    .likeRight(StringUtils.isNotEmpty(queryAreaModel.getAreaName()), SpiderArea::getAreaName, queryAreaModel.getAreaName());
+            IPage page = spiderAreaService.page(rowPage, queryWrapper);
+            QueryDomainResult queryDomainResult = new QueryDomainResult(page.getRecords(), page.getTotal());
+            result.complete(JsonObject.mapFrom(queryDomainResult));
         });
         return result.future();
     }
@@ -96,11 +148,11 @@ public class AreaImpl implements AreaInterface {
     public Future<JsonObject> queryAreaSdk() {
         Promise<JsonObject> promise = Promise.promise();
         Future<Set<SdkInfo>> sdkUrlFuture = areaManger.querySdkUrl();
-        sdkUrlFuture.onSuccess(suss->{
+        sdkUrlFuture.onSuccess(suss -> {
             SdkUrlQueryResult sdkUrlQueryResult = new SdkUrlQueryResult();
             sdkUrlQueryResult.setSdkInfos(Lists.newArrayList(suss));
             promise.complete(JsonObject.mapFrom(sdkUrlQueryResult));
-        }).onFailure(fail->{
+        }).onFailure(fail -> {
             promise.fail(fail);
         });
         return promise.future();
@@ -116,23 +168,40 @@ public class AreaImpl implements AreaInterface {
     @Override
     public Future<JsonObject> querySonBase(JsonObject data) {
         QuerySonBaseParam param = data.mapTo(QuerySonBaseParam.class);
-        List<SpiderSonArea> spiderSonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId,param.getSonIds()).list();
+        List<SpiderSonArea> spiderSonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId, param.getSonIds()).list();
         QuerySonBaseResult result = new QuerySonBaseResult(spiderSonAreas);
         return Future.succeededFuture(JsonObject.mapFrom(result));
     }
 
     @Override
     public Future<JsonObject> querySonAreaInfos(JsonObject data) {
-        QuerySonAreaInfoParam querySonAreaInfoParam = data.mapTo(QuerySonAreaInfoParam.class);
-        QuerySonAreaInfoResult querySonAreaInfoResult = spiderSonAreaService.querySonAreaInfos(querySonAreaInfoParam);
-        return Future.succeededFuture(JsonObject.mapFrom(querySonAreaInfoResult));
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                QuerySonAreaInfoParam querySonAreaInfoParam = data.mapTo(QuerySonAreaInfoParam.class);
+                QuerySonAreaInfoResult querySonAreaInfoResult = spiderSonAreaService.querySonAreaInfos(querySonAreaInfoParam);
+                promise.complete(JsonObject.mapFrom(querySonAreaInfoResult));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+
+        });
+        return promise.future();
     }
 
     @Override
     public Future<Void> upsertSonAreaInfo(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
         SpiderSonArea sonArea = data.mapTo(SpiderSonArea.class);
-        spiderSonAreaService.saveOrUpdate(sonArea);
-        return Future.succeededFuture();
+        spiderBusinessPool.execute(() -> {
+            try {
+                spiderSonAreaService.saveOrUpdate(sonArea);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+        return promise.future();
     }
 
     @Override
@@ -143,10 +212,51 @@ public class AreaImpl implements AreaInterface {
     }
 
     @Override
+    public Future<JsonObject> queryDatasourcePage(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        QueryDatasourceParam param = data.mapTo(QueryDatasourceParam.class);
+        spiderBusinessPool.execute(() -> {
+            try {
+                QueryDatasourceResult datasourceResult = datasourceManager.queryDatasourceResultPage(param);
+                promise.complete(JsonObject.mapFrom(datasourceResult));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
     public Future<JsonObject> queryTableInfo(JsonObject data) {
         QueryTableInfoParam param = data.mapTo(QueryTableInfoParam.class);
         QueryTableInfoResult result = datasourceManager.queryTableInfos(param);
         return Future.succeededFuture(JsonObject.mapFrom(result));
+    }
+
+    @Override
+    public Future<Void> upsertDatasource(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            datasourceManager.upsertDatasource(data.mapTo(AreaDatasourceInfo.class));
+            promise.complete();
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> querySonDomainVersion(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                QuerySonAreaVersionParam param = data.mapTo(QuerySonAreaVersionParam.class);
+                QuerySonAreaVersionResult result = areaDomainBaseInfoService.querySonAreaVersion(param);
+                promise.complete(JsonObject.mapFrom(result));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error("querySonDomainVersion error",e);
+            }
+        });
+        return promise.future();
     }
 
 }

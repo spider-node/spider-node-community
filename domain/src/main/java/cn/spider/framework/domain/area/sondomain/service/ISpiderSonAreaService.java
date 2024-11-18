@@ -1,8 +1,7 @@
 package cn.spider.framework.domain.area.sondomain.service;
 
-import cn.spider.framework.domain.area.sondomain.QuerySonAreaInfoParam;
+import cn.spider.framework.domain.area.sondomain.entity.QuerySonAreaInfoParam;
 import cn.spider.framework.domain.area.sondomain.entity.*;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -17,7 +16,4 @@ public interface ISpiderSonAreaService extends IService<SpiderSonArea> {
     QuerySonAreaResult querySonAreaBase(QuerySonAreaParam param);
 
     QuerySonAreaInfoResult querySonAreaInfos(QuerySonAreaInfoParam param);
-
-
-    QuerySonAreaBaseResult querySonAreaBaseVersionInfo(QuerySonAreaBaseParam param);
 }

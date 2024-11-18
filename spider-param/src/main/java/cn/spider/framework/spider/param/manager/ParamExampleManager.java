@@ -3,10 +3,9 @@ package cn.spider.framework.spider.param.manager;
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.db.util.RocksdbUtil;
-import cn.spider.framework.domain.sdk.data.NodeParamConfig;
-import cn.spider.framework.domain.sdk.data.NodeParamConfigModel;
-import cn.spider.framework.domain.sdk.data.QueryBaseNodeParam;
+import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.param.result.build.NodeField;
 import cn.spider.framework.spider.param.ParamVerticle;
 import cn.spider.framework.spider.param.data.NodeParamMapping;
 import cn.spider.framework.spider.param.example.ParamExample;
@@ -61,25 +60,25 @@ public class ParamExampleManager {
             .build();
 
 
-    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam,Map<String, Object> conversionParam) {
+    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam,Map<String, Object> conversionParam,String version) {
         Promise<JsonObject> promise = Promise.promise();
         // 基于taskComponent+taskService 获取到参数列表
-        queryNodeParamMapping(taskComponent, taskService)
+        queryNodeParamMapping(taskComponent, taskService, version)
                 .onSuccess(suss -> {
                     NodeParamMapping nodeParamMapping = suss;
-                    NodeParamConfigModel nodeParamConfigList = JSON.parseObject(nodeParamMapping.getParamMapping().toString(), NodeParamConfigModel.class);
+                    ParamPack paramPack = nodeParamMapping.getRunMapping();
                     Map<String, String> paramCache = new HashMap<>();
                     JsonObject result = new JsonObject();
                     JsonObject param = new JsonObject();
                     ParamExample paramExample = buildParamExample(requestId);
                     result.put(Constant.TASK_METHOD, nodeParamMapping.getTaskMethod());
                     result.put(Constant.WORKER_ID, nodeParamMapping.getWorkerId());
-                    if (CollectionUtils.isEmpty(nodeParamConfigList.getNodeParamConfigs())) {
+                    if (CollectionUtils.isEmpty(paramPack.getInputParamDefs())) {
                         promise.complete(result);
                         return;
                     }
-                    nodeParamConfigList.getNodeParamConfigs().forEach(item -> {
-                        NodeParamConfig paramConfig = item;
+                    paramPack.getInputParamDefs().forEach(item -> {
+                        NodeField paramConfig = item;
                         String targetName = paramConfig.getTargetName();
                         if (Objects.nonNull(paramsMapping) && paramsMapping.containsKey(targetName)) {
                             targetName = paramsMapping.get(targetName);
@@ -268,7 +267,7 @@ public class ParamExampleManager {
     }
 
     // 查询节点的入参信息
-    public Future<NodeParamMapping> queryNodeParamMapping(String taskComponent, String taskService) {
+    public Future<NodeParamMapping> queryNodeParamMapping(String taskComponent, String taskService,String version) {
         String key = taskComponent + taskService;
         NodeParamMapping nodeParamMapping = cache.getIfPresent(key);
         if (Objects.nonNull(nodeParamMapping)) {
@@ -278,18 +277,17 @@ public class ParamExampleManager {
         QueryBaseNodeParam param = new QueryBaseNodeParam();
         param.setTaskComponent(taskComponent);
         param.setTaskService(taskService);
+        param.setVersion(version);
         nodeInterface.queryBaseNodes(JsonObject.mapFrom(param))
                 .onSuccess(suss -> {
-                    JsonObject node = suss;
-                    JsonObject paramMapping = node.getJsonObject(Constant.PARAM_MAPPING);
-                    JsonObject resultMapping = node.getJsonObject(Constant.RESULT_MAPPING);
+                    FunctionInfo functionInfo = suss.mapTo(FunctionInfo.class);
                     NodeParamMapping nodeParamMappings = new NodeParamMapping();
-                    nodeParamMappings.setParamMapping(paramMapping);
-                    nodeParamMappings.setResultMapping(resultMapping);
-                    nodeParamMappings.setTaskMethod(node.getString(Constant.TASK_METHOD));
+                    nodeParamMappings.setRunMapping(functionInfo.getRunMapping());
+                    nodeParamMappings.setResultMapping(functionInfo.getResultMapping());
+                    nodeParamMappings.setTaskMethod(functionInfo.getTaskMethod());
                     nodeParamMappings.setTaskComponent(taskComponent);
                     nodeParamMappings.setTaskService(taskService);
-                    nodeParamMappings.setWorkerId(node.getString(Constant.WORKER_ID));
+                    nodeParamMappings.setWorkerId(functionInfo.getWorkerId());
                     promise.complete(nodeParamMappings);
                     cache.put(key, nodeParamMappings);
                 }).onFailure(fail -> {
@@ -301,18 +299,17 @@ public class ParamExampleManager {
     /**
      * 在参数中新增参数
      */
-    public Future<Void> notifyResult(String taskComponent, String taskService, String requestId, JsonObject result) {
+    public Future<Void> notifyResult(String taskComponent, String taskService, String requestId, JsonObject result,String version) {
         Promise<Void> promise = Promise.promise();
         ParamExample paramExample = buildParamExample(requestId);
-        queryNodeParamMapping(taskComponent, taskService)
+        queryNodeParamMapping(taskComponent, taskService,version)
                 .onSuccess(suss -> {
                     NodeParamMapping nodeParamMapping = suss;
-                    JsonObject resultMapping = nodeParamMapping.getResultMapping();
                     // 获取参数的值映射
-                    NodeParamConfigModel nodeParamConfigList = JSON.parseObject(resultMapping.toString(),NodeParamConfigModel.class);
+                    ParamPack resultMapping = nodeParamMapping.getResultMapping();
                     Map<String, String> paramCache = new HashMap<>();
-                    nodeParamConfigList.getNodeParamConfigs().forEach(item -> {
-                        NodeParamConfig paramConfig = item;
+                    resultMapping.getInputParamDefs().forEach(item -> {
+                        NodeField paramConfig = item;
                         Map<String, Object> resultMap = result.getMap();
                         // 当获取到的值为空的情况下，直接不进行设置
                         if (!resultMap.containsKey(paramConfig.getFieldName())) {

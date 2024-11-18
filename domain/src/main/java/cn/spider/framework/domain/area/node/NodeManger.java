@@ -5,17 +5,22 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
-import cn.spider.framework.domain.area.data.QueryParamConfigParam;
-import cn.spider.framework.domain.area.function.data.FunctionModel;
-import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
-import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
-import cn.spider.framework.domain.area.node.data.Node;
-import cn.spider.framework.domain.area.node.data.QueryNodeParam;
+import cn.spider.framework.domain.area.node.data.*;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import cn.spider.framework.domain.area.node.data.enums.ServiceTaskType;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunction;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionService;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
+import cn.spider.framework.domain.sdk.data.FunctionInfo;
+import cn.spider.framework.domain.sdk.data.ParamPack;
 import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
-import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
-import com.alibaba.fastjson.JSON;
+import cn.spider.framework.param.result.build.model.NodeParamInfo;
+import cn.spider.framework.param.result.build.model.NodeParamInfoBath;
+import cn.spider.framework.param.result.build.model.ReportParamInfo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -29,6 +34,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -46,9 +53,15 @@ public class NodeManger {
 
     private AreaManger areaManger;
 
-    public NodeManger(MySQLPool client, AreaManger areaManger) {
+    private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
+
+    private ISpiderAreaFunctionService spiderAreaFunctionService;
+
+    public NodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
         this.client = client;
         this.areaManger = areaManger;
+        this.spiderAreaFunctionService = spiderAreaFunctionService;
+        this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
     }
 
     private RowMapper<Node> ROW_BUSINESS = row -> {
@@ -82,7 +95,7 @@ public class NodeManger {
         QueryAreaModel queryAreaModel = new QueryAreaModel();
         queryAreaModel.setPage(1);
         queryAreaModel.setSize(10);
-        queryAreaModel.setId(node.getAreaId());
+        // queryAreaModel.setId(node.getAreaId());
         areaManger.queryAreaModel(queryAreaModel).onSuccess(suss -> {
             List<AreaModel> areaModels = suss;
             AreaModel areaModel = areaModels.get(0);
@@ -164,7 +177,7 @@ public class NodeManger {
     private String buildQuerySql(QueryNodeParam param) {
         StringBuilder querySql = new StringBuilder();
         querySql.append("select * from spider_area_function where 1=1 ");
-        if(StringUtils.isNotEmpty(param.getId())){
+        if (StringUtils.isNotEmpty(param.getId())) {
             querySql.append(" and id = #{id}");
         }
         if (StringUtils.isNotEmpty(param.getName())) {
@@ -224,45 +237,68 @@ public class NodeManger {
     /**
      * 批量更新域的参数信息
      */
-    public void refreshNodeParam(RefreshAreaParam areaParam) {
-        List<RefreshAreaModel> areaModelList = areaParam.getAreaModelList();
+    public void refreshNodeParam(ReportParamInfo areaParam) {
+        List<NodeParamInfoBath> areaModelList = areaParam.getNodeParamInfoBathList();
         if (CollectionUtils.isEmpty(areaModelList)) {
             return;
         }
-        for (RefreshAreaModel refreshAreaModel : areaModelList) {
-            queryNodeByComTaskService(refreshAreaModel.getTaskComponent(), refreshAreaModel.getTaskService())
-                    .onSuccess(suss -> {
-                        if (Objects.isNull(suss)) {
-                            // 进行新增
-                            Node node = new Node();
-                            node.setResultMapping(JsonObject.mapFrom(refreshAreaModel.getParmMap().get("result")));
-                            node.setParamMapping(JsonObject.mapFrom(refreshAreaModel.getParmMap().get("param")));
-                            node.setAreaId(refreshAreaModel.getAreaId());
-                            node.setStatus(NodeStatus.START);
-                            node.setServiceTaskType(ServiceTaskType.NORMAL);
-                            node.setTaskComponent(refreshAreaModel.getTaskComponent());
-                            node.setTaskService(refreshAreaModel.getTaskService());
-                            if (refreshAreaModel.getParmMap().containsKey("functionName")) {
-                                node.setName((String) refreshAreaModel.getParmMap().get("functionName"));
-                            }
-                            if (refreshAreaModel.getParmMap().containsKey("desc")) {
-                                node.setDesc((String) refreshAreaModel.getParmMap().get("desc"));
-                            }
-                            node.setWorkerId((String) refreshAreaModel.getParmMap().get("worker"));
-                            node.setTaskMethod((String) refreshAreaModel.getParmMap().get("method"));
-                            createNode(node);
-                            return;
-                        }
-                        updateNodeInfo(refreshAreaModel);
-                    }).onFailure(fail -> {
-                        log.error("新增失败{}", ExceptionMessage.getStackTrace(fail));
-                    });
-
-
+        for (NodeParamInfoBath areaModel : areaModelList) {
+            // 获取areaModel.getNodeParamInfoList()中的taskId转成set
+            Set<String> taskIds = areaModel.getNodeParamInfoList().stream().map(NodeParamInfo::getTaskId).collect(Collectors.toSet());
+            //使用spiderAreaFunctionVersionService查询出所有 id = taskId的数据
+            List<SpiderAreaFunctionVersion> spiderAreaFunctionVersions = spiderAreaFunctionVersionService.lambdaQuery().in(SpiderAreaFunctionVersion::getId, taskIds).list();
+            // 把spiderAreaFunctionVersions转成map id 为key value为SpiderAreaFunctionVersion
+            Map<String, SpiderAreaFunctionVersion> spiderAreaFunctionVersionMap = spiderAreaFunctionVersions
+                    .stream()
+                    .collect(Collectors.toMap(SpiderAreaFunctionVersion::getId, Function.identity()));
+            // 获取areaModel.getNodeParamInfoList()中的taskServervice 转成set
+            Set<String> taskServices = areaModel.getNodeParamInfoList().stream().map(NodeParamInfo::getTaskService).collect(Collectors.toSet());
+            // 获取areaModel.getNodeParamInfoList()中的taskComponent 转成set
+            Set<String> taskComponents = areaModel.getNodeParamInfoList().stream().map(NodeParamInfo::getTaskComponent).collect(Collectors.toSet());
+            // 查询出所有的taskService 和 taskComponent的 spiderAreaFunction
+            List<SpiderAreaFunction> spiderAreaFunctions = spiderAreaFunctionService.lambdaQuery().in(SpiderAreaFunction::getTaskService, taskServices).in(SpiderAreaFunction::getTaskComponent, taskComponents).list();
+            // 把spiderAreaFunctions转成map taskComponent+taskServer为key value为SpiderAreaFunction
+            Map<String, SpiderAreaFunction> spiderAreaFunctionMap = spiderAreaFunctions
+                    .stream()
+                    .collect(Collectors.toMap(item -> item.getTaskComponent() + item.getTaskService(), Function.identity()));
+            List<SpiderAreaFunctionVersion> updateList = new ArrayList<>();
+            for (NodeParamInfo nodeParamInfo : areaModel.getNodeParamInfoList()) {
+                String key = nodeParamInfo.getTaskComponent() + nodeParamInfo.getTaskService();
+                SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionMap.get(nodeParamInfo.getTaskId());
+                if (!spiderAreaFunctionMap.containsKey(key)) {
+                    spiderAreaFunctionService.lambdaUpdate()
+                            .set(SpiderAreaFunction::getTaskService, nodeParamInfo.getTaskService())
+                            .set(SpiderAreaFunction::getTaskComponent, nodeParamInfo.getTaskComponent())
+                            .set(SpiderAreaFunction::getTaskMethod, nodeParamInfo.getMethod())
+                            .set(SpiderAreaFunction::getWorkerType, areaModel.getWorkerType().name())
+                            .eq(SpiderAreaFunction::getId, functionVersion.getDomainFunctionId())
+                            .eq(SpiderAreaFunction::getStatus, NodeStatus.START.name())
+                            .update();
+                }
+                functionVersion.setVersionDesc(nodeParamInfo.getDesc());
+                functionVersion.setVersion(nodeParamInfo.getVersion());
+                functionVersion.setRunMapping(new ParamPack(nodeParamInfo.getOutputParamDefs()));
+                functionVersion.setResultMapping(new ParamPack(nodeParamInfo.getInputParamDefs()));
+                functionVersion.setStatus(NodeStatus.START.name());
+                updateList.add(functionVersion);
+            }
+            spiderAreaFunctionVersionService.updateBatchById(updateList);
         }
     }
 
-    public void updateNodeInfo(RefreshAreaModel refreshAreaModel){
+    public FunctionInfo queryNodeVersion(String taskComponent, String taskService, String version) {
+        // 通过 taskComponent 和 taskService 使用spiderAreaFunctionService 查询一条功能信息
+        SpiderAreaFunction spiderAreaFunction = spiderAreaFunctionService.lambdaQuery()
+                .eq(SpiderAreaFunction::getTaskComponent, taskComponent)
+                .eq(SpiderAreaFunction::getTaskService, taskService).one();
+        SpiderAreaFunctionVersion spiderAreaFunctionVersion = spiderAreaFunctionVersionService.lambdaQuery()
+                .eq(SpiderAreaFunctionVersion::getDomainFunctionId, spiderAreaFunction.getId())
+                .eq(SpiderAreaFunctionVersion::getVersion, version).one();
+        return new FunctionInfo(spiderAreaFunctionVersion.getVersion(), spiderAreaFunctionVersion.getResultMapping(), spiderAreaFunctionVersion.getRunMapping(), spiderAreaFunction.getTaskMethod(), spiderAreaFunction.getWorkerId());
+
+    }
+
+    public void updateNodeInfo(RefreshAreaModel refreshAreaModel) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(Constant.TASK_COMPONENT, refreshAreaModel.getTaskComponent());
         parameters.put(Constant.TASK_SERVICE, refreshAreaModel.getTaskService());
@@ -294,5 +330,54 @@ public class NodeManger {
                 .onFailure(fail -> {
                     log.error("更新失败{}", ExceptionMessage.getStackTrace(fail));
                 });
+    }
+
+    // 新增功能节点信息
+    public void upsertDomainFunction(SpiderAreaFunction spiderAreaFunction) {
+        if (StringUtils.isEmpty(spiderAreaFunction.getId())) {
+            spiderAreaFunction.setId(UUID.randomUUID().toString());
+            spiderAreaFunctionService.save(spiderAreaFunction);
+            return;
+        }
+        spiderAreaFunctionService.updateById(spiderAreaFunction);
+    }
+
+    // 新增版本信息
+    public void upsertDomainFunctionVersion(SpiderAreaFunctionVersion spiderAreaFunctionVersion) {
+        spiderAreaFunctionVersionService.saveOrUpdate(spiderAreaFunctionVersion);
+    }
+
+    // 新增case
+    public void updateCase(String versionId, List<String> cases) {
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
+        if (Objects.isNull(functionVersion.getTestCase()) || CollectionUtils.isEmpty(functionVersion.getTestCase().getCases())) {
+            TestCase testCase = new TestCase();
+            testCase.setCases(cases);
+            functionVersion.setTestCase(testCase);
+            spiderAreaFunctionVersionService.updateById(functionVersion);
+            return;
+        }
+        functionVersion.getTestCase().getCases().addAll(cases);
+        spiderAreaFunctionVersionService.updateById(functionVersion);
+    }
+
+    public QueryDomainFunctionResult queryDomainFunction(QueryDomainFunctionParam param) {
+        Page<SpiderAreaFunction> rowPage = new Page(param.getPage(), param.getSize());
+        LambdaQueryWrapper<SpiderAreaFunction> queryWrapper = new LambdaQueryWrapper<SpiderAreaFunction>()
+                .likeRight(StringUtils.isNotEmpty(param.getName()), SpiderAreaFunction::getName, param.getName())
+                .likeRight(StringUtils.isNotEmpty(param.getAreaName()), SpiderAreaFunction::getAreaName, param.getAreaName())
+                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderAreaFunction::getSonDomainName, param.getSonAreaName());
+
+        IPage page = spiderAreaFunctionService.page(rowPage, queryWrapper);
+        return new QueryDomainFunctionResult(page.getRecords(), page.getTotal());
+    }
+
+    // 查询版本
+    public QueryDomainFunctionVersionResult queryDomainFunctionVersion(QueryDomainFunctionVersionParam param) {
+        List<SpiderAreaFunctionVersion> functionVersions = spiderAreaFunctionVersionService.lambdaQuery()
+                .eq(StringUtils.isNotEmpty(param.getDomainFunctionId()), SpiderAreaFunctionVersion::getDomainFunctionId, param.getDomainFunctionId())
+                .likeRight(StringUtils.isNotEmpty(param.getSonDomainVersion()), SpiderAreaFunctionVersion::getSonDomainVersion, param.getSonDomainVersion())
+                .list();
+        return new QueryDomainFunctionVersionResult(functionVersions);
     }
 }

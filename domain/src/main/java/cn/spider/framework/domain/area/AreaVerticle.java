@@ -58,7 +58,6 @@ public class AreaVerticle extends AbstractVerticle {
         // FunctionInterface
         FunctionInterface functionInterface = this.factory.getBean(FunctionInterface.class);
 
-
         MessageConsumer<JsonObject> functionConsumer = this.binder.setAddress(FunctionInterface.ADDRESS)
                 .register(FunctionInterface.class, functionInterface);
 
@@ -80,6 +79,11 @@ public class AreaVerticle extends AbstractVerticle {
         MessageConsumer<JsonObject> dataFlowConsumer = this.binder.setAddress(DataFlowInterface.ADDRESS)
                 .register(DataFlowInterface.class, dataFlowInterface);
 
+        AiTaskInterface aiTaskInterface = this.factory.getBean(AiTaskInterface.class);
+
+        MessageConsumer<JsonObject> aiTaskConsumer = this.binder.setAddress(AiTaskInterface.ADDRESS)
+                .register(AiTaskInterface.class, aiTaskInterface);
+
         this.containerConsumers.add(dataFlowConsumer);
 
         this.containerConsumers.add(versionConsumer);
@@ -87,6 +91,8 @@ public class AreaVerticle extends AbstractVerticle {
         this.containerConsumers.add(nodeConsumer);
 
         this.containerConsumers.add(workerConsumer);
+
+        this.containerConsumers.add(aiTaskConsumer);
         log.info("domain-start-suss");
         startPromise.complete();
     }

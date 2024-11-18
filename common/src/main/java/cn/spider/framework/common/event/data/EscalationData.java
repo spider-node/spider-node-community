@@ -12,7 +12,7 @@ public class EscalationData extends EventData {
     /**
      * 上报的领域信息
      */
-    private RefreshAreaParam refreshAreaParam;
+    private JsonObject refreshAreaParam;
 
     /**
      * 上报类型
@@ -34,11 +34,11 @@ public class EscalationData extends EventData {
         this.functionEscalationType = functionEscalationType;
     }
 
-    public RefreshAreaParam getRefreshAreaParam() {
+    public JsonObject getRefreshAreaParam() {
         return refreshAreaParam;
     }
 
-    public void setRefreshAreaParam(RefreshAreaParam refreshAreaParam) {
+    public void setRefreshAreaParam(JsonObject refreshAreaParam) {
         this.refreshAreaParam = refreshAreaParam;
     }
 }

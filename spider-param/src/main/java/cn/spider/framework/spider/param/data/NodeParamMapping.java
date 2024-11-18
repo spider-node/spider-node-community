@@ -1,18 +1,19 @@
 package cn.spider.framework.spider.param.data;
+import cn.spider.framework.domain.sdk.data.ParamPack;
 import io.vertx.core.json.JsonObject;
 import lombok.Data;
 
 @Data
 public class NodeParamMapping {
     /**
-     * 入参
+     * 返回的字段信息
      */
-    private JsonObject paramMapping;
+    private ParamPack resultMapping;
 
     /**
-     * 返回参数
+     * 执行参数
      */
-    private JsonObject resultMapping;
+    private ParamPack runMapping;
 
     /**
      * 调用远程服务的名称

@@ -91,6 +91,11 @@ public class AreaDomainBaseInfo {
     private String sonAreaName;
 
     /**
+     * 子域id
+     */
+    private Integer sonAreaId;
+
+    /**
      * 领域id
      */
     private String areaId;
@@ -242,5 +247,13 @@ public class AreaDomainBaseInfo {
 
     public void setAreaName(String areaName) {
         this.areaName = areaName;
+    }
+
+    public Integer getSonAreaId() {
+        return sonAreaId;
+    }
+
+    public void setSonAreaId(Integer somAreaId) {
+        this.sonAreaId = somAreaId;
     }
 }

@@ -2,9 +2,6 @@ package cn.spider.framework.area.method.param;
 
 import cn.spider.framework.area.method.param.config.SpiderConfig;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
-import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -38,10 +35,6 @@ public class MainVerticle extends AbstractVerticle {
     // 进行接口发布
     this.binder = new ServiceBinder(vertx);
 
-    ParamRefreshInterface paramRefreshInterface = this.factory.getBean(ParamRefreshInterface.class);
-    MessageConsumer<JsonObject> paramRefreshConsumer = this.binder.setAddress(ParamRefreshInterface.ADDRESS)
-            .register(ParamRefreshInterface.class, paramRefreshInterface);
-    this.containerConsumers.add(paramRefreshConsumer);
     startPromise.complete();
   }
 

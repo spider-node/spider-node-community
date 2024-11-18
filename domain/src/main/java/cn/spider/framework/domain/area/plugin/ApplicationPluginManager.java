@@ -101,11 +101,7 @@ public class ApplicationPluginManager {
             areaDocInfo.setSonAreaInfos(Lists.newArrayList(initAreaBaseInfo.getSonArea()));
             areaDocInfo.setSonAreaCodeBases(Lists.newArrayList(initAreaBaseInfo.getAreaDomainInfo()));
             log.info("初始化后产生的数据 {}", JSON.toJSONString(areaDocInfo));
-            agentClient.initAiRag(JsonObject.mapFrom(areaDocInfo)).onSuccess(ragSuss -> {
-                promise.complete();
-            }).onFailure(ragFail -> {
-                promise.fail(ragFail);
-            });
+            promise.complete();
         }).onFailure(initFail -> {
             promise.fail(initFail);
         });

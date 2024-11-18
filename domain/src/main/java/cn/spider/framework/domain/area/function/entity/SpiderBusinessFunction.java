@@ -1,8 +1,10 @@
 package cn.spider.framework.domain.area.function.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>
@@ -35,6 +37,7 @@ public class SpiderBusinessFunction implements Serializable {
     /**
      * 领域描述
      */
+    @TableField("`desc`")
     private String desc;
 
     /**
@@ -55,7 +58,7 @@ public class SpiderBusinessFunction implements Serializable {
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
     public String getId() {
         return id;
@@ -113,25 +116,11 @@ public class SpiderBusinessFunction implements Serializable {
         this.areaId = areaId;
     }
 
-    public LocalDateTime getCreateTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(LocalDateTime createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
-    }
-
-    @Override
-    public String toString() {
-        return "SpiderBusinessFunction{" +
-            "id = " + id +
-            ", functionName = " + functionName +
-            ", serviceName = " + serviceName +
-            ", desc = " + desc +
-            ", director = " + director +
-            ", status = " + status +
-            ", areaId = " + areaId +
-            ", createTime = " + createTime +
-        "}";
     }
 }

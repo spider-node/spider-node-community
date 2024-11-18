@@ -659,6 +659,7 @@ public class FlowExampleManager {
             writeBackParam.setTaskComponent(serviceTask.getTaskComponent());
             writeBackParam.setTaskService(serviceTask.getTaskService());
             writeBackParam.setRequestId(example.getRequestId());
+            writeBackParam.setVersion(serviceTask.getVersion());
             paramInterface.writeBack(JsonObject.mapFrom(writeBackParam)).onSuccess(suss -> {
                 promise.complete();
             }).onFailure(fail -> {

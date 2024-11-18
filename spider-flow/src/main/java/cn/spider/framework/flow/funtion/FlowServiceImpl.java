@@ -18,6 +18,8 @@ import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.engine.facade.ReqBuilder;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
+import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
+import cn.spider.framework.flow.funtion.data.SimpleStartParam;
 import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.flow.util.SnowflakeIdGenerator;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
@@ -54,6 +56,9 @@ public class FlowServiceImpl implements FlowService {
 
     @Resource
     private FunctionInterface functionInterface;
+
+    @Resource
+    private SchedulerManager schedulerManager;
 
     private final String REQUEST_PARAM_NAME = "param";
 
@@ -249,6 +254,12 @@ public class FlowServiceImpl implements FlowService {
         JsonObject result = new JsonObject();
         result.put("size", exampleSize);
         return Future.succeededFuture(result);
+    }
+
+    @Override
+    public Future<JsonObject> simpleStartNode(JsonObject data) {
+        SimpleStartParam simpleStartParam = data.mapTo(SimpleStartParam.class);
+        return schedulerManager.simpleInvoke(simpleStartParam.getParamMap(),simpleStartParam.getWorkerName(),simpleStartParam.getMethod(),simpleStartParam.getTaskService(),simpleStartParam.getTaskComponent(),simpleStartParam.getVersion());
     }
 
     private String buildRequestId() {

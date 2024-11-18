@@ -133,6 +133,12 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
      */
     private Integer delayTime;
 
+    private String version;
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     public void setConversionParam(String conversionParam) {
         this.conversionParam = StringUtils.isEmpty(conversionParam) ? new HashMap<>() :JSON.parseObject(conversionParam).getInnerMap();
     }
@@ -176,6 +182,11 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
 
     public Map<String, Object> getConversionParam() {
         return conversionParam;
+    }
+
+    @Override
+    public String getVersion() {
+        return this.version;
     }
 
     public Integer getPollCount() {

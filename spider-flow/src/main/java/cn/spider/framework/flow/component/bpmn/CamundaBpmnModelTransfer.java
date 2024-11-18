@@ -245,6 +245,9 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
         // 设置转换参数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.CONVERSION_PARAM).ifPresent(serviceTaskImpl::setConversionParam);
 
+        // 设置转换参数
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.VERSION).ifPresent(serviceTaskImpl::setVersion);
+
         // 设置指定参数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.APPOINT).ifPresent(serviceTaskImpl::setAppointParam);
 

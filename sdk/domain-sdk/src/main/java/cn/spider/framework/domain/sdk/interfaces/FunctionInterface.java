@@ -56,4 +56,21 @@ public interface FunctionInterface {
     Future<JsonObject> queryRunHistoryElementData(JsonObject param);
 
 
+    /**
+     * 基于requestId
+     * @param param
+     * @return
+     */
+    Future<JsonObject> queryBusinessFunctionV2(JsonObject param);
+
+    Future<Void> upsertBusinessFunctionV2(JsonObject param);
+
+    /**
+     * 新增修改 领域功能的版本信息
+     * @param param 版本对象
+     * @return 空的Future
+     */
+    Future<Void> upsertDomainVersion(JsonObject param);
+
+
 }

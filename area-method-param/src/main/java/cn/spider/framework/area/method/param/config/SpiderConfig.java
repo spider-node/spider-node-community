@@ -2,11 +2,9 @@ package cn.spider.framework.area.method.param.config;
 
 import cn.spider.framework.area.method.param.MainVerticle;
 import cn.spider.framework.area.method.param.analysis.ParamRefreshManager;
-import cn.spider.framework.area.method.param.impl.ParamRefreshInterfaceImpl;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
-import cn.spider.framework.param.result.build.analysis.AnalysisClass;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
+import cn.spider.framework.param.result.build.analysis.SpiderPluginManager;
 import io.vertx.core.Vertx;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -22,11 +20,6 @@ public class SpiderConfig {
     }
 
     @Bean
-    public AnalysisClass buildAnalysisClass() {
-        return new AnalysisClass();
-    }
-
-    @Bean
     public NodeInterface buildNodeInterface(Vertx vertx) {
         return NodeInterface.createProxy(vertx,NodeInterface.ADDRESS);
     }
@@ -38,13 +31,7 @@ public class SpiderConfig {
 
 
     @Bean
-    public ParamRefreshManager buildParamRefreshManager(AnalysisClass analysisClass,NodeInterface nodeInterface,AreaInterface areaInterface){
-        return new ParamRefreshManager(analysisClass,nodeInterface,areaInterface);
+    public ParamRefreshManager buildParamRefreshManager(NodeInterface nodeInterface, AreaInterface areaInterface){
+        return new ParamRefreshManager(nodeInterface,areaInterface);
     }
-
-    @Bean
-    public ParamRefreshInterface buildParamRefreshInterface(ParamRefreshManager paramRefreshManager){
-        return new ParamRefreshInterfaceImpl(paramRefreshManager);
-    }
-
 }

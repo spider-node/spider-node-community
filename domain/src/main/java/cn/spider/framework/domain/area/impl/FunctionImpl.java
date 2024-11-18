@@ -1,8 +1,11 @@
 package cn.spider.framework.domain.area.impl;
 
 import cn.spider.framework.common.config.Constant;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.data.*;
+import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
 import cn.spider.framework.domain.sdk.data.FlowElementModel;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -16,6 +19,7 @@ import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -24,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +39,7 @@ import java.util.stream.Collectors;
  * @Description: 功能的实现类
  * @Version: 1.0
  */
-
+@Slf4j
 public class FunctionImpl implements FunctionInterface {
 
 
@@ -42,9 +47,12 @@ public class FunctionImpl implements FunctionInterface {
 
     private LogInterface logInterface;
 
-    public FunctionImpl(FunctionManger functionManger,LogInterface logInterface) {
+    private Executor spiderBusinessPool;
+
+    public FunctionImpl(FunctionManger functionManger, LogInterface logInterface, Executor spiderBusinessPool) {
         this.functionManger = functionManger;
         this.logInterface = logInterface;
+        this.spiderBusinessPool = spiderBusinessPool;
     }
 
     /**
@@ -161,6 +169,53 @@ public class FunctionImpl implements FunctionInterface {
                 }).onFailure(fail -> {
                     promise.fail(fail);
                 });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> queryBusinessFunctionV2(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                QueryBusinessFunctionParam queryBusinessFunctionParam = param.mapTo(QueryBusinessFunctionParam.class);
+                QueryBusinessFunctionResult businessFunctionResult = functionManger.queryBusinessFunction(queryBusinessFunctionParam);
+                promise.complete(JsonObject.mapFrom(businessFunctionResult));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.info(ExceptionMessage.getStackTrace(e));
+
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> upsertBusinessFunctionV2(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                functionManger.upsertBusinessFunctionV2(param.mapTo(SpiderBusinessFunction.class));
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+                log.info(ExceptionMessage.getStackTrace(e));
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> upsertDomainVersion(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                functionManger.upsertDomainVersion(param.mapTo(SpiderAreaFunctionVersion.class));
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+                log.info(ExceptionMessage.getStackTrace(e));
+            }
+        });
         return promise.future();
     }
 }

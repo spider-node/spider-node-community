@@ -61,12 +61,7 @@ public class SchedulerManager {
 
     }
 
-    public void invoke(Method method, Map<String, Object> paramMap, ServiceTask serviceTask) throws InstantiationException, IllegalAccessException {
-
-    }
-
-
-    public void invokeNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName, String methodName, FlowExample example,Promise<Object> promise,String requestId) {
+    public void invokeNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName, String methodName, FlowExample example, Promise<Object> promise, String requestId) {
         EndElementExampleData elementExampleData = EndElementExampleData.builder()
                 .requestParam(JSON.toJSONString(paramMap))
                 .requestId(requestId)
@@ -78,7 +73,7 @@ public class SchedulerManager {
             eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
             promise.complete();
         }
-        LinkerServerRequest linkerServerRequest = buildRequestEntityNew(paramMap, serviceTask,workerName,methodName,example);
+        LinkerServerRequest linkerServerRequest = buildRequestEntityNew(paramMap, serviceTask, workerName, methodName, example);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
         // 提交执行请求
         Future<JsonObject> result = linkerService.submittals(request);
@@ -94,7 +89,7 @@ public class SchedulerManager {
                 }
             } else {
                 if (!serviceTask.queryIsAsync()) {
-                    log.error("执行失败原因为 {}",linkerServerResponse.getExceptional());
+                    log.error("执行失败原因为 {}", linkerServerResponse.getExceptional());
                     elementExampleData.setStatus(ElementStatus.FAIL);
                     elementExampleData.setException(linkerServerResponse.getExceptional());
                     eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
@@ -106,13 +101,20 @@ public class SchedulerManager {
             // 通知失败
             if (!serviceTask.queryIsAsync()) {
                 promise.fail(fail);
-                log.error("执行失败原因为 {}",ExceptionMessage.getStackTrace(fail));
+                log.error("执行失败原因为 {}", ExceptionMessage.getStackTrace(fail));
                 elementExampleData.setStatus(ElementStatus.FAIL);
                 elementExampleData.setException(ExceptionMessage.getStackTrace(fail));
                 // 发送执行失败的数据
                 eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);
             }
         });
+    }
+
+    public Future<JsonObject> simpleInvoke(Map<String, Object> paramMap, String workerName, String method, String taskComponent, String taskService, String version) {
+        LinkerServerRequest linkerServerRequest = simpleBuildRequestEntity(paramMap, workerName, method, taskComponent, taskService, version);
+        JsonObject request = JsonObject.mapFrom(linkerServerRequest);
+        // 提交执行请求
+        return linkerService.submittals(request);
     }
 
     private LinkerServerRequest buildRequestEntity(Map<String, Object> paramMap, Method method, ServiceTask serviceTask, String workerName) {
@@ -134,7 +136,7 @@ public class SchedulerManager {
     }
 
 
-    private LinkerServerRequest buildRequestEntityNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName,String method,FlowExample example) {
+    private LinkerServerRequest buildRequestEntityNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName, String method, FlowExample example) {
         // 参数中，移除末尾的 Promise<Object> promise
         String componentName = serviceTask.getTaskComponent();
         LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
@@ -146,6 +148,7 @@ public class SchedulerManager {
         functionRequest.setParam(paramMap);
         functionRequest.setXid(serviceTask.getXid());
         functionRequest.setBranchId(serviceTask.getBranchId());
+        functionRequest.setVersion(serviceTask.getVersion());
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
         linkerServerRequest.setFunctionRequest(functionRequest);
         linkerServerRequest.setParentRequestId(example.getParentRequestId());
@@ -153,6 +156,22 @@ public class SchedulerManager {
         linkerServerRequest.setNowNodeId(serviceTask.getId());
         linkerServerRequest.setRetryType(example.getRunType());
         return linkerServerRequest;
+    }
+
+    private LinkerServerRequest simpleBuildRequestEntity(Map<String, Object> paramMap, String workerName, String method, String taskComponent, String taskService, String version) {
+        LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
+        FunctionRequest functionRequest = new FunctionRequest();
+        functionRequest.setComponentName(taskComponent);
+        functionRequest.setMethodName(method);
+        functionRequest.setServiceName(taskService);
+        functionRequest.setWorkerName(workerName);
+        functionRequest.setParam(paramMap);
+        functionRequest.setVersion(version);
+        linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
+        linkerServerRequest.setFunctionRequest(functionRequest);
+        linkerServerRequest.setRetryType("ACTUAL");
+        return linkerServerRequest;
+
     }
 
     public String queryWorkerName(String componentName) {

@@ -15,6 +15,10 @@ public class QueryRequestParam {
      */
     private String taskService;
     /**
+     * version
+     */
+    private String version;
+    /**
      * 请求id
      */
     private String requestId;
@@ -80,5 +84,13 @@ public class QueryRequestParam {
 
     public void setAppointParam(Map<String, Object> appointParam) {
         this.appointParam = appointParam;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

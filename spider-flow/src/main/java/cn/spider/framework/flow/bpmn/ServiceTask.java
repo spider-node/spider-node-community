@@ -142,6 +142,8 @@ public interface ServiceTask extends Task {
 
     Map<String, Object> getConversionParam();
 
+    String getVersion();
+
     /**
      * 获取Service Task 构造器
      *

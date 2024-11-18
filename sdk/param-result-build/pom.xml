@@ -55,32 +55,10 @@
             <artifactId>annotation</artifactId>
             <version>2.0.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-service-proxy</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-codegen</artifactId>
-            <version>${vertx.version}</version>
-            <classifier>processor</classifier>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessors>
-                        <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
-                    </annotationProcessors>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

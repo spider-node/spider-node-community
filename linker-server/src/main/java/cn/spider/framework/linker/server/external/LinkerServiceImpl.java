@@ -155,7 +155,7 @@ public class LinkerServiceImpl implements LinkerService {
             ClientInfo clientInfo = null;
             try {
                 functionRequest.setVersion(versionSuss);
-                clientInfo = workerRegisterManager.queryClientInfo(functionRequest.getComponentName(), functionRequest.getServiceName(), functionRequest.getVersion(), functionRequest.getWorkerName());
+                clientInfo = workerRegisterManager.queryClientInfo(functionRequest.getComponentName(), functionRequest.getServiceName(), functionRequest.getVersion(), functionRequest.getWorkerName(),functionRequest.getProviderType());
             } catch (Exception e) {
                 promise.fail(e);
                 return;

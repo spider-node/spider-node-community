@@ -1,10 +1,14 @@
-package cn.spider.framework.domain.area.sondomain;
+package cn.spider.framework.domain.area.sondomain.entity;
 
 public class QuerySonAreaInfoParam {
+
+    private Integer id;
     /**
      * 子域的名称
      */
     private String sonAreaName;
+
+    private String areaName;
 
     /**
      * 表名称
@@ -68,5 +72,21 @@ public class QuerySonAreaInfoParam {
 
     public void setDatasource(String datasource) {
         this.datasource = datasource;
+    }
+
+    public String getAreaName() {
+        return areaName;
+    }
+
+    public void setAreaName(String areaName) {
+        this.areaName = areaName;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 }

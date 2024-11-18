@@ -13,7 +13,6 @@ import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -46,8 +45,6 @@ public class SpiderServerHandler {
 
     private LogInterface logInterface;
 
-    private LeaderHeartService leaderHeartService;
-
     private BrokerInfoService brokerInfoService;
 
     private String clusterMode;
@@ -60,42 +57,38 @@ public class SpiderServerHandler {
 
     private VersionInterface versionInterface;
 
-    private Vertx vertx;
-
     private Boolean isUseSpiderNewStart;
-
-    private ParamRefreshInterface paramRefreshInterface;
 
     private EventManager eventManager;
 
     private DataFlowInterface dataFlowInterface;
 
+    private AiTaskInterface aiTaskInterface;
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
                                LogInterface logInterface,
-                               LeaderHeartService leaderHeartService,
                                BrokerInfoService brokerInfoService,
                                AreaInterface areaInterface,
                                FunctionInterface functionInterface,
                                NodeInterface nodeInterface,
-                               VersionInterface versionInterface, ParamRefreshInterface paramRefreshInterface,
+                               VersionInterface versionInterface,
                                Vertx vertx,
-                               EventManager eventManager, DataFlowInterface dataFlowInterface) {
+                               EventManager eventManager, DataFlowInterface dataFlowInterface, AiTaskInterface aiTaskInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
         this.logInterface = logInterface;
-        this.leaderHeartService = leaderHeartService;
         this.brokerInfoService = brokerInfoService;
         this.areaInterface = areaInterface;
         this.versionInterface = versionInterface;
         this.functionInterface = functionInterface;
         this.nodeInterface = nodeInterface;
         this.isUseSpiderNewStart = BrokerInfoUtil.queryStartSpiderNode(vertx);
-        this.paramRefreshInterface = paramRefreshInterface;
         this.eventManager = eventManager;
         this.dataFlowInterface = dataFlowInterface;
+        this.aiTaskInterface = aiTaskInterface;
     }
 
     public void init(Router router) {
@@ -148,9 +141,6 @@ public class SpiderServerHandler {
 
         stopStartVersion();
 
-        // 刷新-sdk
-        refreshMethodRunParam();
-
         queryNodeConfig();
 
         retryStartFlow();
@@ -179,26 +169,18 @@ public class SpiderServerHandler {
         upsertSonAreaInfo();
         queryDatasource();
         queryTables();
-    }
-
-    public void refreshMethodRunParam() {
-        router.post("/refresh/method/param")
-                .handler(ctx -> {
-                    HttpServerResponse response = ctx.response();
-                    response.putHeader("content-type", "application/json");
-                    try {
-                        JsonObject param = ctx.getBodyAsJson();
-                        log.info("请求参数为 {}", param.toString());
-                        paramRefreshInterface.refreshMethod(param).onSuccess(suss -> {
-                            response.end(ResponseData.suss());
-                        }).onFailure(fail -> {
-                            response.end(ResponseData.fail(fail));
-                        });
-                    } catch (Exception e) {
-                        log.error("查询失败", ExceptionMessage.getStackTrace(e));
-                        response.end(ResponseData.fail(e));
-                    }
-                });
+        singleStartFlow();
+        upsertDomain();
+        queryDatasourcePage();
+        upsertDatasource();
+        queryBusinessFunctionV2();
+        upsertBusinessFunctionV2();
+        querySonDomainFunction();
+        upsertDomainFunction();
+        queryDomainFunctionVersion();
+        querySonDomainVersion();
+        upsertDomainFunctionVersion();
+        createCoder();
     }
 
     public void selectBpmn() {
@@ -958,7 +940,7 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     log.info("上报的数据为 {}", param.toString());
-                    EscalationData escalationData = JSON.parseObject(param.toString(), EscalationData.class);
+                    EscalationData escalationData = param.mapTo(EscalationData.class);
                     eventManager.sendMessage(EventType.ESCALATION_AREA_INFO, escalationData);
                     // 刷新数据
                     nodeInterface.refreshParam(JsonObject.mapFrom(escalationData.getRefreshAreaParam())).onSuccess(suss -> {
@@ -980,6 +962,8 @@ public class SpiderServerHandler {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
+                        log.error("初始化失败 {}", fail);
+
                     });
                 });
     }
@@ -1160,4 +1144,182 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void singleStartFlow() {
+        router.post("/single_start_node")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    flowService.simpleStartNode(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void upsertDomain() {
+        router.post("/upsert_domain")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.upsertAreaV2(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+    // queryDatasourcePage
+
+    /**
+     * 查询数据源分页
+     */
+    private void queryDatasourcePage() {
+        router.post("/query_datasource_page")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.queryDatasourcePage(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void upsertDatasource() {
+        router.post("/upsert/datasource")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.upsertDatasource(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryBusinessFunctionV2() {
+        router.post("/query_business_function_v2")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    functionInterface.queryBusinessFunctionV2(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void upsertBusinessFunctionV2() {
+        router.post("/upsert_business_function_v2")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    functionInterface.upsertBusinessFunctionV2(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void querySonDomainFunction() {
+        router.post("/query/domain_function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.queryDomainFunction(param).onSuccess(suss -> {
+                        // 进行部署
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void upsertDomainFunction() {
+        router.post("/upsert/domain_function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.updateDomainFunction(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryDomainFunctionVersion() {
+        router.post("/query/domain_function_version")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.queryDomainFunctionVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void querySonDomainVersion() {
+        router.post("/query/son_domain_version")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.querySonDomainVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+
+    }
+
+    private void upsertDomainFunctionVersion() {
+        router.post("/upsert/domain_function_version")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    functionInterface.upsertDomainVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void createCoder() {
+        router.post("/create_coder")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.createCoder(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
 }

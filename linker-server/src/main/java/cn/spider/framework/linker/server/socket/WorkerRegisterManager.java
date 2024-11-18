@@ -9,9 +9,13 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
 import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
+import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import cn.spider.framework.linker.server.socket.data.HostApplication;
+import cn.spider.framework.param.result.build.model.NodeParamInfo;
+import cn.spider.framework.param.result.build.model.NodeParamInfoBath;
+import cn.spider.framework.param.result.build.model.ReportParamInfo;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -161,34 +165,53 @@ public class WorkerRegisterManager {
      * @param refreshAreaParam 领域信息
      * @param ip               宿主机的ip
      */
-    public void escalationAreaInfo(RefreshAreaParam refreshAreaParam, String ip, FunctionEscalationType functionEscalationType) {
-        if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getAreaModelList())) {
+    public void escalationAreaInfo(ReportParamInfo refreshAreaParam, String ip, FunctionEscalationType functionEscalationType) {
+        if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getNodeParamInfoBathList())) {
             return;
         }
         switch (functionEscalationType) {
             case DEPLOY:
-                List<RefreshAreaModel> areaModels = refreshAreaParam.getAreaModelList();
-                for (RefreshAreaModel areaModel : areaModels) {
+                List<NodeParamInfoBath> areaModels = refreshAreaParam.getNodeParamInfoBathList();
+                for (NodeParamInfoBath areaModel : areaModels) {
                     // 上线
                     // 发送上线的 事件
-                    hostWorkerRegisterManager.registerFunction(ip, areaModel.getTaskComponent(), areaModel.getTaskService(), areaModel.getVersion());
+                    List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
+                    for(NodeParamInfo nodeParamInfo: nodeParamInfos){
+                        hostWorkerRegisterManager.registerFunction(ip, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion());
+                    }
                 }
                 break;
             case UNLOCK:
-                for (RefreshAreaModel areaModel : refreshAreaParam.getAreaModelList()) {
+                for (NodeParamInfoBath areaModel : refreshAreaParam.getNodeParamInfoBathList()) {
                     // 下线
                     // 发送下线的事件
-                    hostWorkerRegisterManager.cancelFunction(ip, areaModel.getTaskComponent(), areaModel.getTaskService(), areaModel.getVersion());
+                    List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
+                    for(NodeParamInfo nodeParamInfo: nodeParamInfos){
+                        hostWorkerRegisterManager.cancelFunction(ip, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion());
+                    }
                 }
                 break;
         }
 
     }
 
-    public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName) {
-        if (StringUtils.isEmpty(workerName)) {
-            return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
+    /**
+     * 获取宿主应用/服务的client
+     * @param taskComponent 组件
+     * @param taskService 组件方法
+     * @param version 版本
+     * @param workerName 提供能力的服务
+     * @param providerType 服务类型
+     * @return grpc的通道
+     */
+    public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName, ApplicationProviderType providerType) {
+        switch (providerType){
+            case SPIDER_HOST_APPLICATION:
+                return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
+            case SERVICE_APPLICATION:
+                return clientRegisterCenter.queryClientInfo(workerName);
         }
-        return clientRegisterCenter.queryClientInfo(workerName);
+        return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
+
     }
 }

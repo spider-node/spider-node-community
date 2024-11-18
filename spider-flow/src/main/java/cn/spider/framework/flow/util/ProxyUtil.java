@@ -82,7 +82,7 @@ public class ProxyUtil {
     }
 
     public static void invokeMethod(StoryBus storyBus, MethodWrapper methodWrapper, ServiceTask serviceTask, Supplier<Map<String, Object>> paramsSupplier) {
-        try {
+       /* try {
             KvScope newKvScope = new KvScope(methodWrapper.getKvScope());
             newKvScope.setBusinessId(storyBus.getBusinessId());
             KvThreadLocal.setKvScope(newKvScope);
@@ -91,7 +91,7 @@ public class ProxyUtil {
             if(Objects.isNull(schedulerManager)){
                 schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
             }
-            schedulerManager.invoke(method, paramMap, serviceTask);
+           // schedulerManager.invoke(method, paramMap, serviceTask);
             // 后续改造- 因为不需要返回数据
         } catch (Throwable e) {
             log.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));
@@ -110,7 +110,7 @@ public class ProxyUtil {
             throw businessException;
         } finally {
             KvThreadLocal.clear();
-        }
+        }*/
     }
 
     public static void invokeMethodNew(ServiceTask serviceTask, JsonObject param,String methodName,String workerName) {

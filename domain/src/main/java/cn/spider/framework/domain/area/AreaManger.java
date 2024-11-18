@@ -1,14 +1,12 @@
 package cn.spider.framework.domain.area;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
 import cn.spider.framework.domain.area.data.enums.SdkStatus;
 import cn.spider.framework.domain.sdk.data.RefreshSdkParam;
 import cn.spider.framework.domain.sdk.data.SdkInfo;
 import cn.spider.framework.domain.sdk.data.UploadSdkParam;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -35,14 +33,9 @@ public class AreaManger {
 
     private MySQLPool client;
 
-    private ContainerService containerService;
 
-    private ParamRefreshInterface paramRefreshInterface;
-
-    public AreaManger(MySQLPool client, ContainerService containerService, ParamRefreshInterface paramRefreshInterface) {
+    public AreaManger(MySQLPool client) {
         this.client = client;
-        this.containerService = containerService;
-        this.paramRefreshInterface = paramRefreshInterface;
     }
 
     private RowMapper<AreaModel> ROW_BUSINESS = row -> {
@@ -121,17 +114,6 @@ public class AreaManger {
         if (StringUtils.isNotEmpty(areaModel.getAreaName())) {
             sql.append(" and area_name = #{areaName}");
         }
-        if(StringUtils.isNotEmpty(areaModel.getId())){
-            sql.append(" and id = #{id}");
-        }
-
-        if(StringUtils.isNotEmpty(areaModel.getSdkUrl())){
-            sql.append(" and sdk_url = #{sdkUrl}");
-        }
-
-        if(StringUtils.isNotEmpty(areaModel.getClassPath())){
-            sql.append(" and scan_class_path = #{classPath}");
-        }
 
         sql.append(" order by create_time limit #{page},#{size}");
         JsonObject params = JsonObject.mapFrom(areaModel);
@@ -205,11 +187,11 @@ public class AreaManger {
                             .put("classPath", areaModel.getScanClassPath())
                             .put("url", areaModel.getSdkUrl());
                     // 去刷新 -- 数据
-                    paramRefreshInterface.refreshMethod(refSdkJson).onSuccess(suss->{
+                   /* paramRefreshInterface.refreshMethod(refSdkJson).onSuccess(suss->{
                         promise.complete();
                     }).onFailure(fail->{
                         promise.fail(fail);
-                    });
+                    });*/
                 }).onFailure(fail -> {
                     log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);

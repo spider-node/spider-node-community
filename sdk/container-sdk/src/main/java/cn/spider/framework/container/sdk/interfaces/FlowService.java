@@ -39,4 +39,8 @@ public interface FlowService {
      */
     Future<JsonObject> queryRunNumber();
 
+    /**
+     * 执行单节点功能
+     */
+    Future<JsonObject> simpleStartNode(JsonObject data);
 }

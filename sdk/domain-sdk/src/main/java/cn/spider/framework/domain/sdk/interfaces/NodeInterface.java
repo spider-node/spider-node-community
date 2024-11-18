@@ -59,4 +59,15 @@ public interface NodeInterface {
     Future<Void> initRag();
 
     Future<JsonObject> querySonAreaBaseInfo(JsonObject param);
+
+    Future<JsonObject> queryDomainFunction(JsonObject param);
+
+    // 基础信息初始化与新增
+    Future<Void> updateDomainFunction(JsonObject param);
+
+    // 查询版本信息
+    Future<JsonObject> queryDomainFunctionVersion(JsonObject param);
+
+
+
 }

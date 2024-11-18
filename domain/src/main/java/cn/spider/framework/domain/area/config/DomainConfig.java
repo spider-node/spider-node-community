@@ -9,18 +9,25 @@ import cn.spider.framework.domain.area.AreaVerticle;
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
 import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.datasource.service.IAreaDatasourceInfoService;
+import cn.spider.framework.domain.area.domain.service.ISpiderAreaService;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.function.FunctionManger;
+import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.impl.*;
 import cn.spider.framework.domain.area.node.NodeManger;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionService;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
+import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
+import cn.spider.framework.domain.area.task.AiTaskInterfaceImpl;
+import cn.spider.framework.domain.area.task.TaskManager;
+import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
-import cn.spider.framework.param.result.build.interfaces.ParamRefreshInterface;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
@@ -61,7 +68,13 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @Import({EventConfig.class, MysqlConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.domain.area.*"})
-@MapperScan(value = {"cn.spider.framework.domain.area.flowdata.mapper","cn.spider.framework.domain.area.sondomain.mapper","cn.spider.framework.domain.area.datasource.mapper","cn.spider.framework.domain.area.function.mapper"})
+@MapperScan(value = {"cn.spider.framework.domain.area.flowdata.mapper",
+        "cn.spider.framework.domain.area.sondomain.mapper",
+        "cn.spider.framework.domain.area.datasource.mapper",
+        "cn.spider.framework.domain.area.function.mapper",
+        "cn.spider.framework.domain.area.node.mapper",
+        "cn.spider.framework.domain.area.task.mapper",
+        "cn.spider.framework.domain.area.domain.mapper"})
 public class DomainConfig {
 
     @Bean
@@ -70,8 +83,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public FunctionManger buildFunctionManger(MySQLPool client, EventManager eventManager, VersionManager versionManager) {
-        return new FunctionManger(client, eventManager, versionManager);
+    public FunctionManger buildFunctionManger(MySQLPool client, EventManager eventManager, VersionManager versionManager, ISpiderBusinessFunctionService spiderBusinessFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+        return new FunctionManger(client, eventManager, versionManager,spiderBusinessFunctionService,spiderAreaFunctionVersionService);
     }
 
     @Bean
@@ -80,18 +93,13 @@ public class DomainConfig {
     }
 
     @Bean
-    public AreaManger buildAreaManger(MySQLPool client, ContainerService containerService, ParamRefreshInterface paramRefreshInterface) {
-        return new AreaManger(client, containerService, paramRefreshInterface);
+    public AreaManger buildAreaManger(MySQLPool client) {
+        return new AreaManger(client);
     }
 
     @Bean
-    public ParamRefreshInterface buildParamRefreshInterface(Vertx vertx) {
-        return ParamRefreshInterface.createProxy(vertx, ParamRefreshInterface.ADDRESS);
-    }
-
-    @Bean
-    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger) {
-        return new NodeManger(client, areaManger);
+    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService);
     }
 
     @Bean
@@ -105,13 +113,13 @@ public class DomainConfig {
     }
 
     @Bean
-    public AreaInterface buildAreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService,DatasourceManager datasourceManager) {
-        return new AreaImpl(areaManger,spiderSonAreaService,datasourceManager);
+    public AreaInterface buildAreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService, DatasourceManager datasourceManager, Executor spiderBusinessPool, ISpiderAreaService spiderAreaService, IAreaDomainBaseInfoService areaDomainBaseInfoService) {
+        return new AreaImpl(areaManger,spiderSonAreaService,datasourceManager,spiderBusinessPool,spiderAreaService,areaDomainBaseInfoService);
     }
 
     @Bean
-    public FunctionInterface buildFunctionImpl(FunctionManger functionManger, LogInterface logInterface) {
-        return new FunctionImpl(functionManger, logInterface);
+    public FunctionInterface buildFunctionImpl(FunctionManger functionManger, LogInterface logInterface,Executor spiderBusinessPool) {
+        return new FunctionImpl(functionManger, logInterface,spiderBusinessPool);
     }
 
     @Bean
@@ -126,8 +134,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface) {
-        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface);
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool) {
+        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool);
     }
 
     @Bean
@@ -263,9 +271,45 @@ public class DomainConfig {
         return executor;
     }
 
+    @Bean(name = "spiderBusinessPool")
+    public Executor businessExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        //核心线程池大小
+        executor.setCorePoolSize(2);
+        //最大线程数
+        executor.setMaxPoolSize(4);
+        //队列容量
+        executor.setQueueCapacity(20);
+        //活跃时间
+        executor.setKeepAliveSeconds(200);
+        //线程名字前缀
+        executor.setThreadNamePrefix("spider-pool-delete-rocksdb-");
+        // 拒绝直接报错
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+        // 等待所有任务结束后再关闭线程池
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
+    }
+
     @Bean
     public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService){
         return new DatasourceManager(datasourceInfoService);
+    }
+
+    @Bean
+    public AiTaskInterfaceImpl buildAiTask(TaskManager taskManager, Executor spiderBusinessPool){
+        return new AiTaskInterfaceImpl(taskManager,spiderBusinessPool);
+    }
+
+    @Bean
+    public TaskManager buildTaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
+                       ISpiderAreaFunctionService spiderAreaFunctionService,
+                       ISpiderSonAreaService spiderSonAreaService,
+                       IAreaDomainBaseInfoService baseInfoService,
+                       ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
+                       AgentVertxClient agentVertxClient){
+        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient);
     }
 
 }

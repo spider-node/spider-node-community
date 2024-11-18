@@ -47,7 +47,9 @@ public class ParamFunctionImpl implements ParamInterface {
             QueryRequestParam queryRequestParam = param.mapTo(QueryRequestParam.class);
             paramExampleManager.get(queryRequestParam.getTaskComponent(), queryRequestParam.getTaskService(),
                     queryRequestParam.getRequestId(),
-                    queryRequestParam.getParamsMapping(), queryRequestParam.getAppointParam(),queryRequestParam.getConversionParam()).onSuccess(suss -> {
+                    queryRequestParam.getParamsMapping(),
+                    queryRequestParam.getAppointParam(),
+                    queryRequestParam.getConversionParam(),queryRequestParam.getVersion()).onSuccess(suss -> {
                 promise.complete(suss);
             }).onFailure(fail -> {
                 promise.fail(fail);
@@ -67,7 +69,7 @@ public class ParamFunctionImpl implements ParamInterface {
                 return;
             }
             paramExampleManager.notifyResult(writeBackParam.getTaskComponent(),
-                    writeBackParam.getTaskService(), writeBackParam.getRequestId(), new JsonObject(writeBackParam.getResult().toString())).onSuccess(suss -> {
+                    writeBackParam.getTaskService(), writeBackParam.getRequestId(), new JsonObject(writeBackParam.getResult().toString()),writeBackParam.getVersion()).onSuccess(suss -> {
                 promise.complete();
             }).onFailure(fail -> {
                 promise.fail(fail);

@@ -40,6 +40,8 @@ public class AgentVertxClient {
     // 卸载的url
     private String unInstallPlugin;
 
+    private String coderApi;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
@@ -50,6 +52,7 @@ public class AgentVertxClient {
         this.querySonAreaBaseInfo = "/areaDomain/query_base_info";
         this.installPlugin = "/installBiz";
         this.unInstallPlugin = "/uninstallBiz";
+        this.coderApi = "/ai_code_automatic_V2";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");
@@ -83,6 +86,10 @@ public class AgentVertxClient {
 
     public Future<JsonObject> initAiRag(JsonObject param) {
         return send(param, this.initAiRagUrl, this.aiCodePort, this.aiCodeHost);
+    }
+
+    public Future<JsonObject> createCoder(JsonObject param){
+        return send(param, this.coderApi, this.aiCodePort, this.aiCodeHost);
     }
 
     public Future<Void> installPlugin(Set<String> applicationIps, JsonObject pluginParam) {

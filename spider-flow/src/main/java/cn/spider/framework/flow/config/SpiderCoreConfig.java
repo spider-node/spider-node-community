@@ -201,11 +201,11 @@ public class SpiderCoreConfig {
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //核心线程池大小
-        executor.setCorePoolSize(8);
+        executor.setCorePoolSize(2);
         //最大线程数
-        executor.setMaxPoolSize(16);
+        executor.setMaxPoolSize(4);
         //队列容量
-        executor.setQueueCapacity(200);
+        executor.setQueueCapacity(20);
         //活跃时间
         executor.setKeepAliveSeconds(200);
         //线程名字前缀
