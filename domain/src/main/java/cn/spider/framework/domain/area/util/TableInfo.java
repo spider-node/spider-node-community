@@ -1,7 +1,5 @@
 package cn.spider.framework.domain.area.util;
 
-import sun.dc.pr.PRError;
-
 public class TableInfo {
 
     /**
