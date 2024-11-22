@@ -27,10 +27,6 @@ public class NodeParamInfoBath {
 
     private WorkerType workerType;
 
-    public NodeParamInfoBath(List<NodeParamInfo> nodeParamInfoList) {
-        this.nodeParamInfoList = nodeParamInfoList;
-    }
-
     public List<NodeParamInfo> getNodeParamInfoList() {
         return nodeParamInfoList;
     }

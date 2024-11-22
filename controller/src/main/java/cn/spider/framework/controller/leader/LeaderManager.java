@@ -12,6 +12,7 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.LeaderService;
 import cn.spider.framework.controller.BrokerRoleManager;
 import cn.spider.framework.controller.ControllerVerticle;
+import cn.spider.framework.controller.broker.BrokerManager;
 import cn.spider.framework.controller.data.RegisterLeaderRequest;
 import cn.spider.framework.controller.follower.FollowerManager;
 import cn.spider.framework.controller.impl.LeaderHeartServiceImpl;
@@ -60,7 +61,6 @@ public class LeaderManager {
     private Integer transcriptNum;
 
     private ServiceBinder binder;
-
     /**
      * 保存 follower
      */
@@ -79,7 +79,7 @@ public class LeaderManager {
 
     private MessageConsumer<JsonObject> leaderConsumer;
 
-    private LeaderService leaderService;
+    private BrokerManager brokerManager;
 
     public String getBrokerName() {
         return brokerName;
@@ -89,7 +89,7 @@ public class LeaderManager {
         return brokerIp;
     }
 
-    public LeaderManager(EventManager eventManager, Vertx vertx, ControllerTimer timer, BrokerRoleManager brokerRoleManager) {
+    public LeaderManager(EventManager eventManager, Vertx vertx, ControllerTimer timer, BrokerRoleManager brokerRoleManager,BrokerManager brokerManager) {
         this.followerMap = Maps.newHashMap();
         this.eventManager = eventManager;
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
@@ -102,16 +102,17 @@ public class LeaderManager {
         this.transcriptRelationMap = Maps.newHashMap();
         this.vertx = vertx;
         this.brokerRoleManager = brokerRoleManager;
-        String leaderServiceAddr = this.brokerName + LeaderService.ADDRESS;
-        this.leaderService = LeaderService.createProxy(vertx, leaderServiceAddr);
+        this.brokerManager = brokerManager;
     }
 
     public List<BrokerClientInfo> queryFollowerInfo() {
         return this.followerMap.values().stream().collect(Collectors.toList());
     }
 
-    public void init() {
+    public void startLeader() {
         log.info("发布监听接口的ip {}", this.brokerIp);
+        // 启动leader需要的系统角色
+        brokerManager.setupLeaderRole();
         // 发起接口监听
         log.info("服务器启动成功");
         // 通知 集群各个节点，我是leader
@@ -119,9 +120,9 @@ public class LeaderManager {
         // 注册 -leader
         registerLeaderHeartConsumer();
         // 注册延迟。通知大家，我是leader
-       // this.timer.notifyMeIsLeader();
+        this.timer.notifyMeIsLeader();
         // leader跟大家通信
-        //this.timer.leaderCommunicationFollower();
+        this.timer.leaderCommunicationFollower();
         // 设置本届点为leader
         brokerRoleManager.setUp(BrokerRole.LEADER);
     }
@@ -132,25 +133,26 @@ public class LeaderManager {
     public void stop() {
         this.followerMap.clear();
         this.followerHeartServiceMap.clear();
+        // 卸载leader拥有的系统角色
+        this.brokerManager.destroySystemLeaderRole();
+        // 卸载leader提供的service能力
         if (Objects.nonNull(this.leaderConsumer)) {
             // 卸载该服务提供的能力
             leaderConsumer.unregister();
         }
-        //this.timer.cancelMeIsLeader();
-        //this.timer.cancelCommunicationFollower();
+        this.timer.cancelMeIsLeader();
+        this.timer.cancelCommunicationFollower();
     }
 
     /**
-     * 降级为follower
+     * 降级为follower 有可能我假死,被被人抢了leader的位置
      */
     public void reduceFollower() {
         FollowerManager followerManager = ControllerVerticle.factory.getBean(FollowerManager.class);
         // 移除本身具备的能力
         this.stop();
-        // 降级
-        this.leaderService.relegation();
         // 初始化follower的能力
-        followerManager.init();
+        followerManager.startFollower();
     }
 
 
@@ -294,6 +296,7 @@ public class LeaderManager {
      * 通知follower我是leader
      */
     public void notifyFollowerMyIsLeader() {
+        // 注册一个定时任务，定时触发告诉大家我是leader
         NotifyLeaderCommissionData commissionData = NotifyLeaderCommissionData.builder()
                 .brokerName(this.brokerName)
                 .brokerIp(this.brokerIp)

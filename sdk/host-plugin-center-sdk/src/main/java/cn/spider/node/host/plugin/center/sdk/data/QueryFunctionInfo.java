@@ -12,6 +12,16 @@ public class QueryFunctionInfo {
      */
     private String taskService;
 
+    private String domainFunctionVersionId;
+
+    public String getDomainFunctionVersionId() {
+        return domainFunctionVersionId;
+    }
+
+    public void setDomainFunctionVersionId(String domainFunctionVersionId) {
+        this.domainFunctionVersionId = domainFunctionVersionId;
+    }
+
     public String getTaskComponent() {
         return taskComponent;
     }

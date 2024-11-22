@@ -31,7 +31,7 @@ public class RoleManager {
         this.vertx = vertx;
     }
 
-    public void start(){
+    public void start() {
         loadConfig(this.vertx);
         SharedData sharedData = this.vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
@@ -44,7 +44,7 @@ public class RoleManager {
 
     private void loadConfig(Vertx vertx) {
         Map<String, String> spiderConf = PropertyReader.GetAllProperties("spiderConf.properties");
-        switch (spiderConf.get("environment")){
+        switch (spiderConf.get("environment")) {
             case "dev":
                 spiderConf.putAll(PropertyReader.GetAllProperties("spiderConf-dev.properties"));
                 break;
@@ -86,48 +86,6 @@ public class RoleManager {
             }
         }
         log.info("broker-name {} ip {}", localMap.get("broker-name"), localMap.get("broker-ip"));
-
-        String[] roles = roleConfig.split(",");
-        for (String role : roles) {
-            switch (role) {
-                case "gateway":
-                    localMap.put("gateway", "1");
-                    break;
-                case "broker":
-                    localMap.put("flow-node", "1");
-                    localMap.put("scheduler", "1");
-                    localMap.put("transaction", "1");
-                    localMap.put("controller", "1");
-                    localMap.put("area", "1");
-                    localMap.put("param", "1");
-                    localMap.put("refresh", "1");
-                    localMap.put("log", "1");
-                    localMap.put("host_application","1");
-                    break;
-                case "ui":
-                    localMap.put("ui", "1");
-                    break;
-            }
-        }
-    }
-
-    /**
-     * 启动各个角色
-     *
-     * @param path
-     * @param role
-     * @param vertx
-     * @param
-     */
-    private void startRole(String path, String role, Vertx vertx, DeploymentOptions deployOptions) {
-        vertx.deployVerticle(path, deployOptions, res1 -> {
-            if (res1.succeeded()) {
-                log.info("角色 {} 启动成功", role);
-            } else {
-                log.info("角色 {} 启动失败,原因为 {}", role, ExceptionMessage.getStackTrace(res1.cause()));
-            }
-        });
-
     }
 
     private void startRole(Vertx vertx) {
@@ -145,58 +103,11 @@ public class RoleManager {
         String controllerPath = "cn.spider.framework.controller.ControllerVerticle";
         vertx.deployVerticle(controllerPath, deployOptions, res1 -> {
             if (res1.succeeded()) {
-                for (String role : localMap.keySet()) {
-                    switch (role) {
-                        case "ui":
-                            String ui = "com.flow.cloud.start.ui.SpiderUiVerticle";
-                            startRole(ui, role, vertx, deployOptions);
-                            break;
-                        case "gateway":
-                            // 启动网关
-                            String gateway = "cn.spider.framework.gateway.GatewayVerticle";
-                            startRole(gateway, role, vertx, deployOptions);
-                            break;
-                        case "flow-node":
-                            String flowNode = "cn.spider.framework.flow.SpiderCoreVerticle";
-                            startRole(flowNode, role, vertx, deployOptions);
-                            break;
-                        case "scheduler":
-                            String linkerServer = "cn.spider.framework.linker.server.LinkerMainVerticle";
-                            startRole(linkerServer, role, vertx, deployOptions);
-                            break;
-                        case "transaction":
-                            String transactionCore = "cn.spider.framework.transaction.server.TransactionServerVerticle";
-                            startRole(transactionCore, role, vertx, deployOptions);
-                            break;
-                        case "log":
-                            String logPath = "cn.spider.framework.spider.log.es.LogVerticle";
-                            startRole(logPath, role, vertx, deployOptions);
-                            break;
-                        case "area":
-                            String areaPatch = "cn.spider.framework.domain.area.AreaVerticle";
-                            startRole(areaPatch, role, vertx, deployOptions);
-                            break;
-                        case "param":
-                            String paramPatch = "cn.spider.framework.spider.param.ParamVerticle";
-                            startRole(paramPatch, role, vertx, deployOptions);
-                            break;
-                        case "refresh":
-                            String refresh = "cn.spider.framework.area.method.param.MainVerticle";
-                            startRole(refresh, role, vertx, deployOptions);
-                            break;
-
-                        case "host_application":
-                            String hostApplicationPath = "cn.spider.node.host.plugin.center.MainVerticle";
-                            startRole(hostApplicationPath, role, vertx, deployOptions);
-                            break;
-                    }
-                }
+                log.info("controller启动成功");
             } else {
-                log.info("启动失败");
+                log.info("启动失败 {}",ExceptionMessage.getStackTrace(res1.cause()));
             }
         });
-
-
 
 
     }

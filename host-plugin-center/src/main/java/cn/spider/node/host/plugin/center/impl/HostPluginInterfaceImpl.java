@@ -62,14 +62,14 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
 
     @Override
     public Future<JsonObject> queryHostPluginInfo(JsonObject data) {
-
+        // 查询代码信息
         return null;
     }
 
     @Override
     public Future<JsonObject> queryFunctionVersion(JsonObject data) {
-        QueryFunctionInfo queryFunctionInfo = new QueryFunctionInfo();
-        AreaDomainFunctionInfo functionInfo = hostApplicationManager.queryFunctionInfo(queryFunctionInfo.getTaskComponent(), queryFunctionInfo.getTaskService());
+        QueryFunctionInfo queryFunctionInfo = data.mapTo(QueryFunctionInfo.class);
+        AreaDomainFunctionInfo functionInfo = hostApplicationManager.queryFunctionInfo(queryFunctionInfo.getTaskComponent(), queryFunctionInfo.getTaskService(),queryFunctionInfo.getDomainFunctionVersionId());
         return Future.succeededFuture(JsonObject.mapFrom(functionInfo));
     }
 }

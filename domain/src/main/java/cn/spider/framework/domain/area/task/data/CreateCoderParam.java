@@ -23,6 +23,11 @@ public class CreateCoderParam {
      */
     private Integer baseInfoId;
 
+    /**
+     * 领域功能版本的id
+     */
+    private String domainFunctionVersionId;
+
 
     public CreateCoderParam(String projectName, JsonObject sonDomainInfo, String datasourceId, List<String> businessRequirements) {
         this.projectName = projectName;
@@ -77,5 +82,13 @@ public class CreateCoderParam {
 
     public void setBaseInfoId(Integer baseInfoId) {
         this.baseInfoId = baseInfoId;
+    }
+
+    public String getDomainFunctionVersionId() {
+        return domainFunctionVersionId;
+    }
+
+    public void setDomainFunctionVersionId(String domainFunctionVersionId) {
+        this.domainFunctionVersionId = domainFunctionVersionId;
     }
 }

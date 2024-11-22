@@ -98,8 +98,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
-        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService);
+    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService) {
+        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService,spiderDomainFunctionTaskService);
     }
 
     @Bean

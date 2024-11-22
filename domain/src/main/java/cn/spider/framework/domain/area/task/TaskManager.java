@@ -83,6 +83,7 @@ public class TaskManager {
         // 发起跟ai交互
         createCoderParam.setTaskId(domainFunctionTask.getId());
         createCoderParam.setBaseInfoId(areaDomainBaseInfo.getId());
+        createCoderParam.setDomainFunctionVersionId(functionVersion.getDomainFunctionId());
         log.info("create_coder_info", JSON.toJSONString(createCoderParam));
         agentVertxClient.createCoder(JsonObject.mapFrom(createCoderParam));
     }

@@ -15,6 +15,7 @@ import cn.spider.node.host.plugin.center.model.service.ISpiderPluginDeployInfoSe
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -43,7 +44,10 @@ public class HostApplicationManager {
         SpiderHostApplication hostApplication = SpiderHostApplication.builder()
                 .ip(ip)
                 .build();
-
+        SpiderHostApplication hostApplication1 = hostApplicationService.lambdaQuery().eq(SpiderHostApplication::getIp, ip).one();
+        if (Objects.nonNull(hostApplication1)) {
+            return;
+        }
         try {
             hostApplicationService.save(hostApplication);
         } catch (Exception e) {
@@ -112,12 +116,13 @@ public class HostApplicationManager {
         taskService.saveBatch(tasks);
     }
 
-    public AreaDomainFunctionInfo queryFunctionInfo(String taskComponent, String taskService) {
+    public AreaDomainFunctionInfo queryFunctionInfo(String taskComponent, String taskService,String domainFunctionVersionId) {
         AreaDomainFunctionInfo functionInfo = infoService.lambdaQuery()
-                .eq(AreaDomainFunctionInfo :: getTaskComponent,taskComponent)
-                .eq(AreaDomainFunctionInfo :: getTaskService,taskService)
-                .orderByDesc(AreaDomainFunctionInfo :: getId).last("limit 1").one();
-        if(Objects.isNull(functionInfo)){
+                .eq(StringUtils.isNotEmpty(taskComponent),AreaDomainFunctionInfo::getTaskComponent, taskComponent)
+                .eq(StringUtils.isNotEmpty(taskService),AreaDomainFunctionInfo::getTaskService, taskService)
+                .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, domainFunctionVersionId)
+                .one();
+        if (Objects.isNull(functionInfo)) {
             return null;
         }
         return functionInfo;

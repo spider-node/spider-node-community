@@ -53,4 +53,6 @@ public interface HostPluginInterface {
      * @return 功能信息
      */
     Future<JsonObject> queryFunctionVersion(JsonObject data);
+
+
 }

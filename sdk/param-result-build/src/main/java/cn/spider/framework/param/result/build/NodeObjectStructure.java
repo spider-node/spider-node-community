@@ -11,6 +11,9 @@ public class NodeObjectStructure {
         this.fieldName = fieldName;
     }
 
+    public NodeObjectStructure() {
+    }
+
     public String getParamType() {
         return paramType;
     }

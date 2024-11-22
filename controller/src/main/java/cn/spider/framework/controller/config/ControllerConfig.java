@@ -5,9 +5,7 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.controller.BrokerRoleManager;
 import cn.spider.framework.controller.ControllerVerticle;
 import cn.spider.framework.controller.broker.BrokerManager;
-import cn.spider.framework.controller.consumer.AcceptLeaderInfoHandler;
-import cn.spider.framework.controller.consumer.BrokerInfoAsyncHandler;
-import cn.spider.framework.controller.consumer.CerebralFissureHandler;
+import cn.spider.framework.controller.broker.SystemRoleManager;
 import cn.spider.framework.controller.election.ElectionLeader;
 import cn.spider.framework.controller.follower.FollowerManager;
 import cn.spider.framework.controller.impl.BrokerHeartServiceImpl;
@@ -24,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.net.NetServer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -36,6 +35,7 @@ import org.springframework.context.annotation.Import;
  * @Version: 1.0
  */
 @Import({EventConfig.class, DbRocksConfig.class})
+@ComponentScan("cn.spider.framework.controller.*")
 @Configuration
 public class ControllerConfig {
     @Bean
@@ -43,17 +43,18 @@ public class ControllerConfig {
         return ControllerVerticle.clusterVertx;
     }
 
+    @Bean
     public FollowerManager buildFollowerManager(Vertx vertx,
                                                 LeaderHeartService leaderHeartService,
                                                 BrokerRoleManager brokerRoleManager,
                                                 ControllerTimer timer,
-                                                EventBus eventBus,
-                                                EventManager eventManager) {
-        return new FollowerManager(vertx, leaderHeartService, brokerRoleManager, timer, eventBus, eventManager);
+                                                EventBus eventBus,BrokerManager brokerManager) {
+        return new FollowerManager(vertx, leaderHeartService, brokerRoleManager, timer, eventBus,brokerManager);
     }
 
-    public LeaderManager buildLeaderManager(EventManager eventManager, Vertx vertx, ControllerTimer timer, BrokerRoleManager brokerRoleManager) {
-        return new LeaderManager(eventManager, vertx, timer, brokerRoleManager);
+    @Bean
+    public LeaderManager buildLeaderManager(EventManager eventManager, Vertx vertx, ControllerTimer timer, BrokerRoleManager brokerRoleManager, BrokerManager brokerManager) {
+        return new LeaderManager(eventManager, vertx, timer, brokerRoleManager, brokerManager);
     }
 
     @Bean
@@ -63,14 +64,10 @@ public class ControllerConfig {
     }
 
 
-
+    @Bean
     public ElectionLeader buildElectionLeader(Vertx vertx,
-                                             // FollowerManager followerManager,
-                                              //LeaderManager leaderManager,
-                                              // LeaderHeartService leaderHeartService,
-                                              BrokerRoleManager brokerRoleManager
-    ) {
-        return new ElectionLeader(vertx, brokerRoleManager);
+                                              LeaderManager leaderManager) {
+        return new ElectionLeader(vertx, leaderManager);
     }
 
     @Bean
@@ -90,8 +87,8 @@ public class ControllerConfig {
     }
 
     @Bean
-    public ControllerTimer buildControllerTimer(Vertx vertx,BrokerManager brokerManager) {
-        return new ControllerTimer(vertx,brokerManager);
+    public ControllerTimer buildControllerTimer(Vertx vertx, BrokerManager brokerManager) {
+        return new ControllerTimer(vertx, brokerManager);
     }
 
     @Bean
@@ -99,38 +96,23 @@ public class ControllerConfig {
         return vertx.eventBus();
     }
 
-
     @Bean
-    public CerebralFissureHandler buildCerebralFissureHandler(EventBus eventBus, BrokerRoleManager brokerRoleManager) {
-        return new CerebralFissureHandler(eventBus, brokerRoleManager);
+    public BrokerManager buildBrokerManager(SystemRoleManager systemRoleManager) {
+        return new BrokerManager(systemRoleManager);
     }
 
     @Bean
-    public AcceptLeaderInfoHandler buildAcceptLeaderInfoHandler(EventBus eventBus,
-                                                                EventManager eventManager,
-                                                                BrokerRoleManager brokerRoleManager,
-                                                                Vertx vertx) {
-        return new AcceptLeaderInfoHandler(eventBus, eventManager, brokerRoleManager, vertx);
-
+    public SystemRoleManager buildSystemRoleManager(Vertx vertx) {
+        return new SystemRoleManager(vertx);
     }
 
     @Bean
-    public BrokerManager buildBrokerManager(Vertx vertx, EventManager eventManager){
-        return new BrokerManager(vertx,eventManager);
-    }
-
-    @Bean
-    public BrokerHeartService buildBrokerHeartService(){
+    public BrokerHeartService buildBrokerHeartService() {
         return new BrokerHeartServiceImpl();
     }
 
     @Bean
-    public BrokerInfoAsyncHandler buildBrokerInfoAsyncHandler(EventBus eventBus, BrokerManager brokerManager, Vertx vertx){
-        return new BrokerInfoAsyncHandler(eventBus,brokerManager,vertx);
-    }
-
-    @Bean
-    public BrokerInfoService buildBrokerInfoService(BrokerManager brokerManager){
+    public BrokerInfoService buildBrokerInfoService(BrokerManager brokerManager) {
         return new BrokerInfoServiceImpl(brokerManager);
     }
 

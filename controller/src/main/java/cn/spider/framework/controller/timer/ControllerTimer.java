@@ -20,7 +20,7 @@ import java.util.Objects;
 public class ControllerTimer {
     private Vertx vertx;
 
-   /* private FollowerManager followerManager;
+    private FollowerManager followerManager;
 
     private LeaderManager leaderManager;
 
@@ -28,7 +28,7 @@ public class ControllerTimer {
 
     private Long leaderPollId;
 
-    private Long leaderCommunicationId;*/
+    private Long leaderCommunicationId;
 
     /**
      * broker管理者
@@ -41,9 +41,9 @@ public class ControllerTimer {
     }
 
     /**
-     * 轮询去探访leader
+     * 定时上报给leader 后续增加自己的执行实例情况（比如，当前有多少实例正在执行）
      */
-    /*public void registerFollowerVisitLeader() {
+    public void registerFollowerVisitLeader() {
         if (Objects.isNull(followerManager)) {
             this.followerManager = ControllerVerticle.factory.getBean(FollowerManager.class);
         }
@@ -53,9 +53,9 @@ public class ControllerTimer {
         });
     }
 
-    *//**
+    /**
      * 当本节点升级leader之后，撤销
-     *//*
+     */
     public void cancelFollowerVisit() {
         if (Objects.isNull(this.followerVisitId)) {
             return;
@@ -63,9 +63,9 @@ public class ControllerTimer {
         this.vertx.cancelTimer(followerVisitId);
     }
 
-    *//***
+    /***
      * 定时发事件告诉大家，我是leader
-     *//*
+     */
     public void notifyMeIsLeader() {
         this.leaderPollId = this.vertx.setPeriodic(10 * 1000, handler -> {
             // 查询leader的信息
@@ -78,9 +78,9 @@ public class ControllerTimer {
     }
 
 
-    *//**
+    /**
      * 当本节点降级之后，撤销consumer
-     *//*
+     */
     public void cancelMeIsLeader() {
         if (Objects.isNull(this.leaderPollId)) {
             return;
@@ -88,9 +88,9 @@ public class ControllerTimer {
         this.vertx.cancelTimer(leaderPollId);
     }
 
-    *//**
-     *
-     *//*
+    /**
+     * leader跟follower进行心跳
+     */
     public void leaderCommunicationFollower() {
         this.leaderCommunicationId = this.vertx.setPeriodic(5000, handler -> {
             if (Objects.isNull(this.leaderManager)) {
@@ -105,17 +105,16 @@ public class ControllerTimer {
             return;
         }
         this.vertx.cancelTimer(this.leaderCommunicationId);
-    }*/
+    }
 
     public void monitorBroker() {
         this.vertx.setPeriodic(20 * 1000, handler -> {
-            this.brokerManager.monitorBroker();
         });
     }
 
     public void sendBrokerInfo() {
         this.vertx.setPeriodic(15 * 1000, handler -> {
-            this.brokerManager.sendBrokerInfo();
+            //this.brokerManager.sendBrokerInfo();
         });
     }
 }

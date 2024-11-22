@@ -65,7 +65,8 @@ public class SpiderStart {
         zkConfig.put("zookeeperHosts", config.get("zk-addr"));
         zkConfig.put("rootPath", "spider.node");
         zkConfig.put("retry", new JsonObject()
-                .put("initialSleepTime", 3000)
+                .put("initialSleepTime", 2000)
+                .put("sessionTimeoutMs",6000)
                 .put("maxTimes", 3));
 
         return new ZookeeperClusterManager(zkConfig);

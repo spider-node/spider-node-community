@@ -114,4 +114,8 @@ public class AreaDomainFunctionInfo implements Serializable {
      * 部署的实例数量
      */
     private Integer instanceNum;
+    /**
+     * 领域功能版本id
+     */
+    private String domainFunctionVersionId;
 }

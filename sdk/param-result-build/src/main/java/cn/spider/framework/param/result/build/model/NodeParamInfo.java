@@ -75,6 +75,10 @@ public class NodeParamInfo {
         this.sonAreaId = subDomainId;
     }
 
+    public NodeParamInfo(){
+
+    }
+
     public List<NodeField> getInputParamDefs() {
         return inputParamDefs;
     }

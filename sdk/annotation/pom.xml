@@ -59,7 +59,6 @@
             <version>2.0.0</version>
         </dependency>
 
-
     </dependencies>
 
     <issueManagement>
@@ -127,7 +126,20 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--maven插件-->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
@@ -152,6 +164,7 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
+
 
 
 </project>

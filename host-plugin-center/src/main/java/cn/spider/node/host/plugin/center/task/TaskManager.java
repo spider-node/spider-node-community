@@ -81,9 +81,10 @@ public class TaskManager {
         // 获取倒-已经部署的ip
         Set<String> ips = spiderPluginDeployInfos.stream().map(SpiderPluginDeployInfo::getIp).collect(Collectors.toSet());
         // 获取倒可部署的ip
-        SpiderHostApplication hostApplication = hostApplicationService.lambdaQuery()
+        List<SpiderHostApplication> hostApplications = hostApplicationService.lambdaQuery()
                 .gt(SpiderHostApplication::getId, 0)
-                .ne(CollectionUtils.isNotEmpty(ips), SpiderHostApplication::getIp, ips).last("limit 1").one();
+                .list();
+        SpiderHostApplication hostApplication = hostApplications.stream().filter(host -> !ips.contains(host.getIp())).findFirst().orElse(null);
         if (Objects.isNull(hostApplication)) {
             log.info("没有获取到宿主应用");
             return;

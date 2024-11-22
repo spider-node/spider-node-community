@@ -1,9 +1,8 @@
 package cn.spider.framework.linker.server.consumer;
 import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.EscalationData;
-import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
+import cn.spider.framework.param.result.build.enventData.EscalationData;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.eventbus.EventBus;
@@ -30,7 +29,7 @@ public class EscalationHandler {
         consumer.handler(message -> {
             log.info("上报领域信息了 {}",message.body());
             EscalationData data = JSON.parseObject(message.body(), EscalationData.class);
-            ReportParamInfo refreshAreaParam = JSON.parseObject(data.getRefreshAreaParam().toString(),ReportParamInfo.class);
+            ReportParamInfo refreshAreaParam = JSON.parseObject(JSON.toJSONString(data.getRefreshAreaParam()),ReportParamInfo.class);
             workerRegisterManager.escalationAreaInfo(refreshAreaParam,data.getIp(), FunctionEscalationType.valueOf(data.getFunctionEscalationType()));
         });
     }

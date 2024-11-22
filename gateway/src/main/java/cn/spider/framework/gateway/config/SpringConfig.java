@@ -1,4 +1,5 @@
 package cn.spider.framework.gateway.config;
+
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
@@ -11,6 +12,7 @@ import cn.spider.framework.gateway.GatewayVerticle;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -93,22 +95,24 @@ public class SpringConfig {
     }
 
     @Bean
-    public DataFlowInterface buildDataFlowInterface(Vertx vertx){
-        return DataFlowInterface.createProxy(vertx,DataFlowInterface.ADDRESS);
+    public DataFlowInterface buildDataFlowInterface(Vertx vertx) {
+        return DataFlowInterface.createProxy(vertx, DataFlowInterface.ADDRESS);
     }
 
     @Bean
     public SpiderServerHandler buildSpiderServerHandler(ContainerService containerService,
-                               FlowService flowService,
-                               BusinessService businessService,
-                               LogInterface logInterface,
-                               BrokerInfoService brokerInfoService,
-                               AreaInterface areaInterface,
-                               FunctionInterface functionInterface,
-                               NodeInterface nodeInterface,
-                               VersionInterface versionInterface,
-                               Vertx vertx,
-                               EventManager eventManager, DataFlowInterface dataFlowInterface,AiTaskInterface aiTaskInterface) {
+                                                        FlowService flowService,
+                                                        BusinessService businessService,
+                                                        LogInterface logInterface,
+                                                        BrokerInfoService brokerInfoService,
+                                                        AreaInterface areaInterface,
+                                                        FunctionInterface functionInterface,
+                                                        NodeInterface nodeInterface,
+                                                        VersionInterface versionInterface,
+                                                        Vertx vertx,
+                                                        EventManager eventManager,
+                                                        DataFlowInterface dataFlowInterface,
+                                                        AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -117,41 +121,46 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface,vertx,eventManager,dataFlowInterface,aiTaskInterface);
+                versionInterface, vertx, eventManager, dataFlowInterface, aiTaskInterface,hostPluginInterface);
     }
 
     @Bean
-    public FileHandler buildFileHandler(Vertx vertx){
+    public HostPluginInterface buildHostPluginInterface(Vertx vertx) {
+        return HostPluginInterface.createProxy(vertx, HostPluginInterface.ADDRESS);
+    }
+
+    @Bean
+    public FileHandler buildFileHandler(Vertx vertx) {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         String bpmnPatch = localMap.get("bpmn_path");
         String sdkPatch = localMap.get("sdk_path");
-        return new FileHandler(bpmnPatch,sdkPatch,vertx);
+        return new FileHandler(bpmnPatch, sdkPatch, vertx);
     }
 
     @Bean
-    public AreaInterface buildAreaInterface(Vertx vertx){
-        return AreaInterface.createProxy(vertx,AreaInterface.ADDRESS);
+    public AreaInterface buildAreaInterface(Vertx vertx) {
+        return AreaInterface.createProxy(vertx, AreaInterface.ADDRESS);
     }
 
     @Bean
-    public FunctionInterface buildFunctionInterface(Vertx vertx){
-        return FunctionInterface.createProxy(vertx,FunctionInterface.ADDRESS);
+    public FunctionInterface buildFunctionInterface(Vertx vertx) {
+        return FunctionInterface.createProxy(vertx, FunctionInterface.ADDRESS);
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(Vertx vertx){
-        return NodeInterface.createProxy(vertx,NodeInterface.ADDRESS);
+    public NodeInterface buildNodeInterface(Vertx vertx) {
+        return NodeInterface.createProxy(vertx, NodeInterface.ADDRESS);
     }
 
     @Bean
-    public VersionInterface buildVersionInterface(Vertx vertx){
-        return VersionInterface.createProxy(vertx,VersionInterface.ADDRESS);
+    public VersionInterface buildVersionInterface(Vertx vertx) {
+        return VersionInterface.createProxy(vertx, VersionInterface.ADDRESS);
     }
 
     @Bean
-    public AiTaskInterface buildAiTaskInterface(Vertx vertx){
-        return AiTaskInterface.createProxy(vertx,AiTaskInterface.ADDRESS);
+    public AiTaskInterface buildAiTaskInterface(Vertx vertx) {
+        return AiTaskInterface.createProxy(vertx, AiTaskInterface.ADDRESS);
     }
 
 }

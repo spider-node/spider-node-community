@@ -2,8 +2,6 @@
     <formats>
         <!--支持 zip，tar，tar.gz，tar.bz2，jar，dir，war 等 -->
         <format>tar.gz</format>
-        <format>zip</format>
-        <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>

@@ -2,18 +2,17 @@ package cn.spider.framework.gateway.api.function;
 
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.EscalationData;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.BrokerInfoService;
-import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
-import com.alibaba.fastjson.JSON;
+import cn.spider.framework.param.result.build.enventData.EscalationData;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
@@ -22,7 +21,6 @@ import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RRateLimiter;
 
 /**
  * @BelongsProject: spider-node
@@ -65,6 +63,8 @@ public class SpiderServerHandler {
 
     private AiTaskInterface aiTaskInterface;
 
+    private HostPluginInterface hostPluginInterface;
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
@@ -75,7 +75,8 @@ public class SpiderServerHandler {
                                NodeInterface nodeInterface,
                                VersionInterface versionInterface,
                                Vertx vertx,
-                               EventManager eventManager, DataFlowInterface dataFlowInterface, AiTaskInterface aiTaskInterface) {
+                               EventManager eventManager, DataFlowInterface dataFlowInterface,
+                               AiTaskInterface aiTaskInterface,HostPluginInterface hostPluginInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -89,6 +90,7 @@ public class SpiderServerHandler {
         this.eventManager = eventManager;
         this.dataFlowInterface = dataFlowInterface;
         this.aiTaskInterface = aiTaskInterface;
+        this.hostPluginInterface = hostPluginInterface;
     }
 
     public void init(Router router) {
@@ -181,6 +183,7 @@ public class SpiderServerHandler {
         querySonDomainVersion();
         upsertDomainFunctionVersion();
         createCoder();
+        queryFunctionCode();
     }
 
     public void selectBpmn() {
@@ -1317,6 +1320,20 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     aiTaskInterface.createCoder(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryFunctionCode() {
+        router.post("/query_function_code")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    hostPluginInterface.queryFunctionVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });

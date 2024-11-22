@@ -16,6 +16,9 @@ public class NodeField {
         this.fieldType = fieldType;
     }
 
+    public NodeField() {
+    }
+
     public String getFieldName() {
         return fieldName;
     }

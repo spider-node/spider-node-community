@@ -10,6 +10,7 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.LeaderService;
 import cn.spider.framework.controller.BrokerRoleManager;
 import cn.spider.framework.controller.ControllerVerticle;
+import cn.spider.framework.controller.broker.BrokerManager;
 import cn.spider.framework.controller.impl.FollowerHeartServiceImpl;
 import cn.spider.framework.controller.leader.Leader;
 import cn.spider.framework.controller.leader.LeaderManager;
@@ -49,9 +50,6 @@ import java.util.concurrent.TimeUnit;
 public class FollowerManager {
 
     private Leader leader;
-
-    private NetClient client;
-
     private String followerName;
 
     private String followerIp;
@@ -60,11 +58,6 @@ public class FollowerManager {
 
     // 监听leader创建事件
     private MessageConsumer<String> consumerLeaderCreate;
-
-    private LeaderService leaderService;
-
-    private Vertx vertx;
-
     private ServiceBinder binder;
 
     private MessageConsumer<JsonObject> followerHeartConsumer;
@@ -73,60 +66,68 @@ public class FollowerManager {
 
     private BrokerRoleManager brokerRoleManager;
 
+    private BrokerManager brokerManager;
+
     private ControllerTimer timer;
 
-    private EventManager eventManager;
-
+    private Boolean isStart;
 
     public FollowerManager(Vertx vertx,
                            LeaderHeartService leaderHeartService,
                            BrokerRoleManager brokerRoleManager,
                            ControllerTimer timer,
-                           EventBus eventBus,
-                           EventManager eventManager) {
-        NetClientOptions options = new NetClientOptions()
-                .setLogActivity(true)
-                .setConnectTimeout(10000);
-        this.client = vertx.createNetClient(options);
+                           EventBus eventBus,BrokerManager brokerManager) {
         this.followerIp = BrokerInfoUtil.queryBrokerIp(vertx);
         this.followerName = BrokerInfoUtil.queryBrokerName(vertx);
-        this.vertx = vertx;
         this.eventBus = eventBus;
         this.timer = timer;
-        this.eventManager = eventManager;
-        String leaderServiceAddr = this.followerName + LeaderService.ADDRESS;
-        this.leaderService = LeaderService.createProxy(vertx, leaderServiceAddr);
         this.binder = new ServiceBinder(vertx);
         this.leaderHeartService = leaderHeartService;
         this.brokerRoleManager = brokerRoleManager;
+        this.isStart = false;
+        this.brokerManager = brokerManager;
     }
 
+    /**
+     * 容器初始化完成之后初始化的内容
+     */
     public void init() {
+        // 基础需要启动的系统角色
+        brokerManager.startBrokerBaseSystemRole();
+        // 注册对leader事件的监听
         informLeaderConsumer();
+    }
+
+    public void startFollower() {
+        if (this.isStart) {
+            return;
+        }
         log.info("follower-init {}", this.followerIp);
         // 告知本节点为FOLLOWER
         brokerRoleManager.setUp(BrokerRole.FOLLOWER);
         // 获取leader信息
         leaderConnect();
-        //// 向leader上报
-       // timer.registerFollowerVisitLeader();
-        // 注册
+        // 注册 跟leader通信
+        timer.registerFollowerVisitLeader();
+        // 注册 FollowerHeartService服务
         String followerHeartAddr = this.followerName + FollowerHeartService.ADDRESS;
         FollowerHeartService followerHeartService = new FollowerHeartServiceImpl();
         this.followerHeartConsumer = this.binder.setAddress(followerHeartAddr)
                 .register(FollowerHeartService.class, followerHeartService);
+        // 设置follower的启动为true
+        this.isStart = true;
     }
 
+    /**
+     * 调用该方法说明已经放弃了 follower已经升级为leader
+     */
     public void stop() {
-        //this.timer.cancelFollowerVisit();
-        // 取消监听
-        this.consumerLeaderCreate.unregister();
-        this.leader = Leader.builder()
-                .brokerName(this.followerName)
-                .brokerIp(this.followerIp)
-                .build();
-        // 卸载
+        // 撤销上报到leader信息
+        timer.cancelFollowerVisit();
+        // 卸载 followerHeartConsumer的服务
         this.followerHeartConsumer.unregister();
+        // 重新定义-follower为false，为了下次可能升级为leader
+        this.isStart = false;
     }
 
     /**
@@ -140,6 +141,7 @@ public class FollowerManager {
             if (StringUtils.equals(brokerName, this.followerName)) {
                 return;
             }
+            startFollower();
             //log.info("接受到leader的信息为 {}", message.body());
             NotifyLeaderCommissionData commissionData = JSON.parseObject(message.body(), NotifyLeaderCommissionData.class);
             if (Objects.nonNull(this.leader) && this.leader.getBrokerIp().equals(commissionData.getBrokerIp())) {
@@ -150,6 +152,10 @@ public class FollowerManager {
                     .brokerName(commissionData.getBrokerName())
                     .build();
         });
+    }
+
+    public void unregisterInformLeaderConsumer() {
+        this.consumerLeaderCreate.unregister();
     }
 
     public void leaderConnect() {
@@ -184,53 +190,12 @@ public class FollowerManager {
                 });
     }
 
-
-    /**
-     * 监听关闭-说明leader断开
-     */
-    public void monitorSocket() {
-        // 监听客户端的退出连接
-        leader.getSocket().closeHandler(close -> {
-            log.info("leader-断开 {}", leader.getBrokerIp());
-            leader.setSocket(null);
-            // leader已经断开
-            campaignLeader();
-        });
-    }
-
-    /**
-     * 重新选举leader
-     */
     public void campaignLeader() {
 
     }
 
-    public void upgradeLeader() {
-        try {
-            log.info("竞争leader-suss {}", followerIp);
-            // 直接设置- 晋升为leader
-            // 启动当前节点的leader角色
-            LeaderManager leaderManager = ControllerVerticle.factory.getBean(LeaderManager.class);
-            leaderManager.init();
-            brokerRoleManager.setUp(BrokerRole.LEADER);
-            // 关闭follower信息
-            this.stop();
-            log.info("竞争leader-释放锁 {}", followerIp);
-        } catch (BeansException e) {
-            log.info("竞争leader-fail {}", ExceptionMessage.getStackTrace(e));
-            log.info("竞争leader-释放锁 {}", followerIp);
-            return;
-        }
-        Future<Void> upgrade = leaderService.upgrade();
-        upgrade.onSuccess(upgradeSuss -> {
-            log.info("重置leader-suss-broker {}", BrokerInfoUtil.queryBrokerName(vertx));
-        }).onFailure(fail -> {
-            log.error("重置leader-fail {}", ExceptionMessage.getStackTrace(fail));
-        });
-    }
-
-    public String queryLeaderInfo(){
-        if(Objects.isNull(this.leader)){
+    public String queryLeaderInfo() {
+        if (Objects.isNull(this.leader)) {
             return null;
         }
         return this.leader.getBrokerName();

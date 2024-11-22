@@ -12,6 +12,7 @@ import cn.spider.framework.domain.area.node.entity.SpiderAreaFunction;
 import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
 import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionService;
 import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
+import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import cn.spider.framework.domain.sdk.data.FunctionInfo;
 import cn.spider.framework.domain.sdk.data.ParamPack;
 import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
@@ -32,6 +33,7 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionTask;
 
 import java.util.*;
 import java.util.function.Function;
@@ -57,11 +59,14 @@ public class NodeManger {
 
     private ISpiderAreaFunctionService spiderAreaFunctionService;
 
-    public NodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+    private ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService;
+
+    public NodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService) {
         this.client = client;
         this.areaManger = areaManger;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
+        this.spiderDomainFunctionTaskService = spiderDomainFunctionTaskService;
     }
 
     private RowMapper<Node> ROW_BUSINESS = row -> {
@@ -244,9 +249,18 @@ public class NodeManger {
         }
         for (NodeParamInfoBath areaModel : areaModelList) {
             // 获取areaModel.getNodeParamInfoList()中的taskId转成set
-            Set<String> taskIds = areaModel.getNodeParamInfoList().stream().map(NodeParamInfo::getTaskId).collect(Collectors.toSet());
-            //使用spiderAreaFunctionVersionService查询出所有 id = taskId的数据
-            List<SpiderAreaFunctionVersion> spiderAreaFunctionVersions = spiderAreaFunctionVersionService.lambdaQuery().in(SpiderAreaFunctionVersion::getId, taskIds).list();
+            // 把areaModel.getNodeParamInfoList() 转成map taskId为key,并且把taskId转为Integer作为key
+            Set<Integer> taskIds = areaModel.getNodeParamInfoList().stream().map(item-> Integer.parseInt(item.getTaskId())).collect(Collectors.toSet());
+            List<SpiderDomainFunctionTask> spiderDomainFunctionTasks = spiderDomainFunctionTaskService.lambdaQuery().in(SpiderDomainFunctionTask::getId, taskIds).list();
+            // 基于domainFunctionVersionId为可以spiderDomainFunctionTasks转map
+            Map<Integer, SpiderDomainFunctionTask> spiderDomainFunctionTaskMap = spiderDomainFunctionTasks
+                    .stream()
+                    .collect(Collectors.toMap(SpiderDomainFunctionTask::getId, Function.identity()));
+
+            // 获取spiderDomainFunctionTasks中的 domainFunctionVersionId
+            Set<String> domainFunctionVersionIds = spiderDomainFunctionTasks.stream().map(SpiderDomainFunctionTask::getDomainFunctionVersionId).collect(Collectors.toSet());
+            // 获取获取spiderDomainFunctionTasks中的对应的domainFunctionId
+            List<SpiderAreaFunctionVersion> spiderAreaFunctionVersions = spiderAreaFunctionVersionService.lambdaQuery().in(SpiderAreaFunctionVersion::getId, domainFunctionVersionIds).list();
             // 把spiderAreaFunctionVersions转成map id 为key value为SpiderAreaFunctionVersion
             Map<String, SpiderAreaFunctionVersion> spiderAreaFunctionVersionMap = spiderAreaFunctionVersions
                     .stream()
@@ -264,15 +278,15 @@ public class NodeManger {
             List<SpiderAreaFunctionVersion> updateList = new ArrayList<>();
             for (NodeParamInfo nodeParamInfo : areaModel.getNodeParamInfoList()) {
                 String key = nodeParamInfo.getTaskComponent() + nodeParamInfo.getTaskService();
-                SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionMap.get(nodeParamInfo.getTaskId());
+                SpiderDomainFunctionTask task = spiderDomainFunctionTaskMap.get(Integer.parseInt(nodeParamInfo.getTaskId()));
+                SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionMap.get(task.getDomainFunctionVersionId());
                 if (!spiderAreaFunctionMap.containsKey(key)) {
                     spiderAreaFunctionService.lambdaUpdate()
                             .set(SpiderAreaFunction::getTaskService, nodeParamInfo.getTaskService())
                             .set(SpiderAreaFunction::getTaskComponent, nodeParamInfo.getTaskComponent())
                             .set(SpiderAreaFunction::getTaskMethod, nodeParamInfo.getMethod())
-                            .set(SpiderAreaFunction::getWorkerType, areaModel.getWorkerType().name())
+                            //.set(SpiderAreaFunction::getWorkerType, areaModel.getWorkerType().name())
                             .eq(SpiderAreaFunction::getId, functionVersion.getDomainFunctionId())
-                            .eq(SpiderAreaFunction::getStatus, NodeStatus.START.name())
                             .update();
                 }
                 functionVersion.setVersionDesc(nodeParamInfo.getDesc());

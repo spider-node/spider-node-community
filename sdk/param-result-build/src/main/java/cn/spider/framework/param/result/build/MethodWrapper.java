@@ -154,9 +154,8 @@ public class MethodWrapper {
             }
 
             List<ParamInjectDef> injectDefList = getFieldInjectDefs(p.getType());
-            boolean isSpringInitialization = ElementParserUtil.isSpringInitialization(p.getType());
             if (annOptional.isPresent() || CollectionUtils.isNotEmpty(injectDefList)
-                    || p.getType().isPrimitive() || isSpringInitialization) {
+                    || p.getType().isPrimitive()) {
                 boolean needInject = !annOptional.isPresent() || GlobalConstant.STORY_DATA_SCOPE.contains(annOptional.get().getScopeDataEnum());
                 ParamInjectDef injectDef = new ParamInjectDef(needInject, p.getType(), parameterNames[i], annOptional.orElse(null));
                 injectDef.setFieldInjectDefList(injectDefList);
@@ -166,15 +165,19 @@ public class MethodWrapper {
                 injectDefs[i] = injectDef;
             }
         }
-        this.paramInjectDefs = Collections.unmodifiableList(Arrays.asList(injectDefs));
-
+        for(int i = 0; i < injectDefs.length; i++){
+            ParamInjectDef injectDef = injectDefs[i];
+            if(injectDef.notNeedInject()){
+                continue;
+            }
+            this.paramInjectDefs = injectDef.getFieldInjectDefList();
+        }
     }
 
     private List<ParamInjectDef> getFieldInjectDefs(Class<?> clazz) {
         if (clazz.isPrimitive()) {
             return null;
         }
-
         return ElementParserUtil.getFieldInjectDefList(clazz);
     }
 

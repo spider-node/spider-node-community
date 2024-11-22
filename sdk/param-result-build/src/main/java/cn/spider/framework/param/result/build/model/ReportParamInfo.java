@@ -5,10 +5,6 @@ import java.util.List;
 public class ReportParamInfo {
     private List<NodeParamInfoBath> nodeParamInfoBathList;
 
-    public ReportParamInfo(List<NodeParamInfoBath> nodeParamInfoBathList) {
-        this.nodeParamInfoBathList = nodeParamInfoBathList;
-    }
-
     public List<NodeParamInfoBath> getNodeParamInfoBathList() {
         return nodeParamInfoBathList;
     }

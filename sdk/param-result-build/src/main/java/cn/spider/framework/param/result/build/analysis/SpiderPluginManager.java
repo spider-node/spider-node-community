@@ -65,7 +65,8 @@ public class SpiderPluginManager {
             nodeParamInfos.addAll(nodeParamInfoBath.getNodeParamInfoList());
         });
         try {
-            this.nodeParamInfoBath = new NodeParamInfoBath(nodeParamInfos);
+            this.nodeParamInfoBath = new NodeParamInfoBath();
+            this.nodeParamInfoBath.setNodeParamInfoList(nodeParamInfos);
             nodeParamInfoBath.setTaskId(this.taskId);
             nodeParamInfoBath.setPluginKey(PluginKeyUtil.buildPluginKey(this.bizName, this.version));
         } catch (Exception e) {
@@ -104,7 +105,9 @@ public class SpiderPluginManager {
             SpiderPlugin spiderPlugin = new SpiderPlugin(method, target, key, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getMethod());
             methodMap.put(spiderPlugin.getKey(), spiderPlugin);
         });
-        return new NodeParamInfoBath(nodeParamInfos);
+        NodeParamInfoBath nodeParamInfoBath = new NodeParamInfoBath();
+        nodeParamInfoBath.setNodeParamInfoList(nodeParamInfos);
+        return nodeParamInfoBath;
     }
 
     private List<NodeField> convertInputParam(List<ParamInjectDef> params) {
