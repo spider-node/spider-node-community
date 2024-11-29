@@ -19,9 +19,12 @@ import cn.spider.framework.domain.sdk.data.RefreshAreaModel;
 import cn.spider.framework.param.result.build.model.NodeParamInfo;
 import cn.spider.framework.param.result.build.model.NodeParamInfoBath;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
+import cn.spider.node.host.plugin.center.sdk.data.CheckDeployParam;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -61,12 +64,15 @@ public class NodeManger {
 
     private ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService;
 
-    public NodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService) {
+    private HostPluginInterface hostPluginInterface;
+
+    public NodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService, ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService, HostPluginInterface hostPluginInterface) {
         this.client = client;
         this.areaManger = areaManger;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
         this.spiderDomainFunctionTaskService = spiderDomainFunctionTaskService;
+        this.hostPluginInterface = hostPluginInterface;
     }
 
     private RowMapper<Node> ROW_BUSINESS = row -> {
@@ -92,7 +98,7 @@ public class NodeManger {
 
     // 新增节点
     public Future<Void> createNode(Node node) {
-        node.setStatus(NodeStatus.START);
+        node.setStatus(NodeStatus.INIT);
         Promise<Void> promise = Promise.promise();
         StringBuilder sql = new StringBuilder();
         node.setId(UUID.randomUUID().toString());
@@ -250,7 +256,7 @@ public class NodeManger {
         for (NodeParamInfoBath areaModel : areaModelList) {
             // 获取areaModel.getNodeParamInfoList()中的taskId转成set
             // 把areaModel.getNodeParamInfoList() 转成map taskId为key,并且把taskId转为Integer作为key
-            Set<Integer> taskIds = areaModel.getNodeParamInfoList().stream().map(item-> Integer.parseInt(item.getTaskId())).collect(Collectors.toSet());
+            Set<Integer> taskIds = areaModel.getNodeParamInfoList().stream().map(item -> Integer.parseInt(item.getTaskId())).collect(Collectors.toSet());
             List<SpiderDomainFunctionTask> spiderDomainFunctionTasks = spiderDomainFunctionTaskService.lambdaQuery().in(SpiderDomainFunctionTask::getId, taskIds).list();
             // 基于domainFunctionVersionId为可以spiderDomainFunctionTasks转map
             Map<Integer, SpiderDomainFunctionTask> spiderDomainFunctionTaskMap = spiderDomainFunctionTasks
@@ -293,7 +299,7 @@ public class NodeManger {
                 functionVersion.setVersion(nodeParamInfo.getVersion());
                 functionVersion.setRunMapping(new ParamPack(nodeParamInfo.getOutputParamDefs()));
                 functionVersion.setResultMapping(new ParamPack(nodeParamInfo.getInputParamDefs()));
-                functionVersion.setStatus(NodeStatus.START.name());
+                functionVersion.setStatus(NodeStatus.DEPLOY);
                 updateList.add(functionVersion);
             }
             spiderAreaFunctionVersionService.updateBatchById(updateList);
@@ -393,5 +399,27 @@ public class NodeManger {
                 .likeRight(StringUtils.isNotEmpty(param.getSonDomainVersion()), SpiderAreaFunctionVersion::getSonDomainVersion, param.getSonDomainVersion())
                 .list();
         return new QueryDomainFunctionVersionResult(functionVersions);
+    }
+
+    public Future<Void> checkDeployInfo() {
+        Promise<Void> promise = Promise.promise();
+        // 查询出版本信息
+        List<SpiderAreaFunctionVersion> functionVersions = spiderAreaFunctionVersionService.lambdaQuery()
+                .select(SpiderAreaFunctionVersion::getId, SpiderAreaFunctionVersion::getDomainFunctionId, SpiderAreaFunctionVersion::getStatus)
+                .in(SpiderAreaFunctionVersion::getStatus, ImmutableSet.of(NodeStatus.COMPILE.name(), NodeStatus.DEPLOY.name()))
+                .list();
+        if (CollectionUtils.isEmpty(functionVersions)) {
+            return Future.succeededFuture();
+        }
+        // 获取出 functionVersions中的id
+        Set<String> ids = functionVersions.stream().map(SpiderAreaFunctionVersion::getId).collect(Collectors.toSet());
+        CheckDeployParam checkDeployParam = new CheckDeployParam();
+        checkDeployParam.setDomainVersionIds(ids);
+        hostPluginInterface.checkDeployInfo(JsonObject.mapFrom(checkDeployParam)).onSuccess(suss -> {
+            promise.complete();
+        }).onFailure(fail -> {
+            promise.fail(fail);
+        });
+        return promise.future();
     }
 }

@@ -15,7 +15,19 @@ public interface AiTaskInterface {
         return new AiTaskInterfaceVertxEBProxy(vertx, address);
     }
 
+    /**
+     * 发起代码生成的任务
+     * @param param 参数
+     * @return 返回一个空的future 这是个异步的任务
+     */
     Future<Void> createCoder(JsonObject param);
+
+    /**
+     * 发起 用例测试
+     * @param param 用例的参数
+     * @return 返回一个空的Future 这是个异步的任务
+     */
+    Future<Void> startTestCase(JsonObject param);
 
 
 }

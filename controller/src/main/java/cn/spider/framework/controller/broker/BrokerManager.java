@@ -8,6 +8,7 @@ import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.controller.broker.data.BrokerInfo;
 import cn.spider.framework.controller.sdk.data.SpiderServerInfo;
 import cn.spider.framework.controller.sdk.interfaces.BrokerHeartService;
+import com.google.common.collect.Lists;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +33,30 @@ public class BrokerManager {
 
     private SystemRoleManager systemRoleManager;
 
+    /**
+     * broker的brokerName
+     */
+    private String brokerName;
 
-    public BrokerManager(SystemRoleManager systemRoleManager) {
+    /**
+     * broker的brokerIp
+     */
+    private String brokerIp;
+
+
+    public BrokerManager(SystemRoleManager systemRoleManager,Vertx vertx) {
         this.brokerRole = BrokerRole.FOLLOWER;
         this.systemRoleManager = systemRoleManager;
+        this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
+        this.brokerIp = BrokerInfoUtil.queryBrokerIp(vertx);
+
     }
 
     public List<SpiderServerInfo> queryBrokerInfo() {
-        return null;
+        SpiderServerInfo spiderServerInfo = new SpiderServerInfo();
+        spiderServerInfo.setBrokerIp(this.brokerIp);
+        spiderServerInfo.setBrokerName(this.brokerName);
+        return Lists.newArrayList(spiderServerInfo);
     }
 
     /**

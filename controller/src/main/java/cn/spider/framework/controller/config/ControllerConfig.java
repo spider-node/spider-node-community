@@ -97,8 +97,8 @@ public class ControllerConfig {
     }
 
     @Bean
-    public BrokerManager buildBrokerManager(SystemRoleManager systemRoleManager) {
-        return new BrokerManager(systemRoleManager);
+    public BrokerManager buildBrokerManager(SystemRoleManager systemRoleManager,Vertx vertx) {
+        return new BrokerManager(systemRoleManager,vertx);
     }
 
     @Bean

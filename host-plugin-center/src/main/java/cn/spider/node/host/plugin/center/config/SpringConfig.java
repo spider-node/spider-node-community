@@ -21,10 +21,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.node.host.plugin.center.*"})
@@ -130,5 +133,26 @@ public class SpringConfig {
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         Integer hostApplicationPort = Integer.parseInt(localMap.get("host_application_port"));
         return new HostApplicationClient(webClient,hostApplicationPort);
+    }
+
+    @Bean(name = "spiderBusinessPool")
+    public Executor businessExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        //核心线程池大小
+        executor.setCorePoolSize(2);
+        //最大线程数
+        executor.setMaxPoolSize(4);
+        //队列容量
+        executor.setQueueCapacity(20);
+        //活跃时间
+        executor.setKeepAliveSeconds(200);
+        //线程名字前缀
+        executor.setThreadNamePrefix("spider-pool-delete-rocksdb-");
+        // 拒绝直接报错
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+        // 等待所有任务结束后再关闭线程池
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
     }
 }

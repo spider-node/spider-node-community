@@ -22,9 +22,12 @@ public class SystemTimer {
     }
 
     public void delayLoadResource() {
-        vertx.setTimer(5000, id -> {
+        vertx.setTimer(5* 1000, id -> {
             try {
-                startEventFactory.initBpmn();
+                startEventFactory.initBpmn().onFailure(fail->{
+                    log.info("init-bpmn-fail {}", ExceptionMessage.getStackTrace(fail));
+                    delayLoadResource();
+                });
                 initLoaderClassService.init();
             } catch (Exception e) {
                 delayLoadResource();

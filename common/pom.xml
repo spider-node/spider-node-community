@@ -27,13 +27,13 @@
         <dependency.junit.version>4.13.2</dependency.junit.version>
         <jakarta.el.version>3.0.3</jakarta.el.version>
         <dependency.collections.version>3.2.2</dependency.collections.version>
-        <dependency.spring.version>5.3.31</dependency.spring.version>
+        <dependency.spring.version>5.3.23</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gpg.executable>gpg2</gpg.executable>
         <gpg.passphrase>aB.967426</gpg.passphrase>
-        <vertx.version>4.3.7</vertx.version>
+        <vertx.version>4.4.9</vertx.version>
     </properties>
 
     <dependencies>
@@ -215,12 +215,50 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
             <version>3.12.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-transport-native-kqueue</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-transport-native-epoll</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-buffer</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-transport</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-resolver-dns</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-handler</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.8.1</version>
+            <version>3.14.9</version>
         </dependency>
     </dependencies>
 

@@ -58,4 +58,9 @@ public class SpiderPluginDeployInfo {
      * 状态
      */
     private PluginStatus status;
+
+    /**
+     * 领域功能的版本id
+     */
+    private String domainFunctionVersionId;
 }

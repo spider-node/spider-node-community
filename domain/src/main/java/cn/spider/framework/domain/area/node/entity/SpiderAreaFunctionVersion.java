@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.node.entity;
 
 import cn.spider.framework.domain.area.node.TestCase;
 import cn.spider.framework.domain.area.node.data.FunctionFunctional;
+import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import cn.spider.framework.domain.sdk.data.ParamPack;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -19,8 +20,8 @@ import java.util.Date;
  * @author dds
  * @since 2024-11-10
  */
-@TableName(value = "spider_area_function_version", autoResultMap = true)
 
+@TableName(value = "spider_area_function_version", autoResultMap = true)
 public class SpiderAreaFunctionVersion{
 
     private String id;
@@ -72,7 +73,7 @@ public class SpiderAreaFunctionVersion{
     /**
      * 状态
      */
-    private String status;
+    private NodeStatus status;
 
     /**
      * 子域版本
@@ -80,9 +81,22 @@ public class SpiderAreaFunctionVersion{
     private String sonDomainVersion;
 
     /**
+     * 部署数量
+     */
+    private Integer predictDeployNum;
+
+    /**
      * 创建时间
      */
     private Date createTime;
+
+    public Integer getPredictDeployNum() {
+        return predictDeployNum;
+    }
+
+    public void setPredictDeployNum(Integer predictDeployNum) {
+        this.predictDeployNum = predictDeployNum;
+    }
 
     public String getDomainFunctionId() {
         return domainFunctionId;
@@ -133,11 +147,11 @@ public class SpiderAreaFunctionVersion{
         this.runMapping = runMapping;
     }
 
-    public String getStatus() {
+    public NodeStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(NodeStatus status) {
         this.status = status;
     }
 

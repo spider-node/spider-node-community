@@ -25,6 +25,7 @@ import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.resource.service.ServiceNodeResource;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
+import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
@@ -119,12 +120,12 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     private Integer verifyMonitorInterval;
 
     // 字段隐射
-    private Map<String,String> fieldMapping;
+    private Map<String, String> fieldMapping;
 
     // 回溯到对于的节点
     private String backId;
 
-    private Map<String,Object> appointParam;
+    private Map<String, Object> appointParam;
 
     private Map<String, Object> conversionParam;
 
@@ -135,12 +136,27 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
 
     private String version;
 
+    /**
+     * 应用类型
+     */
+    private ApplicationProviderType providerType;
+
+    public void setProviderType(String providerType) {
+        this.providerType = ApplicationProviderType.valueOf(providerType);
+    }
+
+    public ApplicationProviderType queryProviderType() {
+        return this.providerType;
+    }
+
+
+
     public void setVersion(String version) {
         this.version = version;
     }
 
     public void setConversionParam(String conversionParam) {
-        this.conversionParam = StringUtils.isEmpty(conversionParam) ? new HashMap<>() :JSON.parseObject(conversionParam).getInnerMap();
+        this.conversionParam = StringUtils.isEmpty(conversionParam) ? new HashMap<>() : JSON.parseObject(conversionParam).getInnerMap();
     }
 
     public String getBackId() {
@@ -164,19 +180,19 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     }
 
     public void setAppointParam(String appointParam) {
-        this.appointParam = StringUtils.isEmpty(appointParam) ? new HashMap<>() :JSON.parseObject(appointParam).getInnerMap();
+        this.appointParam = StringUtils.isEmpty(appointParam) ? new HashMap<>() : JSON.parseObject(appointParam).getInnerMap();
     }
 
     @Override
     public String queryConfigFieldName(String fieldName) {
-        if(Objects.nonNull(fieldMapping) && fieldMapping.containsKey(fieldName)){
+        if (Objects.nonNull(fieldMapping) && fieldMapping.containsKey(fieldName)) {
             return fieldMapping.get(fieldName);
         }
         return fieldName;
     }
 
     @Override
-    public Map<String,Object> obtainAppointParam() {
+    public Map<String, Object> obtainAppointParam() {
         return this.appointParam;
     }
 
@@ -214,14 +230,14 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     }
 
     public void setFieldMapping(String fieldMapping) {
-        if(StringUtils.isEmpty(fieldMapping)){
+        if (StringUtils.isEmpty(fieldMapping)) {
             this.fieldMapping = new HashMap<>();
             return;
         }
         JsonObject fieldJson = new JsonObject(fieldMapping);
-        Map<String,String> fieldMappings = new HashMap<>();
-        fieldJson.getMap().forEach((key,value)->{
-            fieldMappings.put(key,(String) value);
+        Map<String, String> fieldMappings = new HashMap<>();
+        fieldJson.getMap().forEach((key, value) -> {
+            fieldMappings.put(key, (String) value);
         });
         this.fieldMapping = fieldMappings;
     }

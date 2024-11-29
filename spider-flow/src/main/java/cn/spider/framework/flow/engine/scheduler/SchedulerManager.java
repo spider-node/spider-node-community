@@ -7,10 +7,9 @@ import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.enums.ElementStatus;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.container.sdk.data.SimpleStartResult;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.engine.example.data.FlowExample;
-import cn.spider.framework.flow.exception.ExceptionEnum;
-import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import com.alibaba.fastjson.JSON;
@@ -20,8 +19,6 @@ import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -110,11 +107,31 @@ public class SchedulerManager {
         });
     }
 
+
+
     public Future<JsonObject> simpleInvoke(Map<String, Object> paramMap, String workerName, String method, String taskComponent, String taskService, String version) {
+        Promise<JsonObject> promise = Promise.promise();
         LinkerServerRequest linkerServerRequest = simpleBuildRequestEntity(paramMap, workerName, method, taskComponent, taskService, version);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
         // 提交执行请求
-        return linkerService.submittals(request);
+        Future<JsonObject> result = linkerService.submittals(request);
+        result.onSuccess(suss->{
+            SimpleStartResult runResult = new SimpleStartResult();
+            LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject(Constant.DATA).toString(), LinkerServerResponse.class);
+            if (linkerServerResponse.getResultCode().equals(ResultCode.SUSS)) {
+                JsonObject resultObject = new JsonObject(linkerServerResponse.getResultData().toString());
+                runResult.setRunStatus(Boolean.TRUE);
+                runResult.setResultObject(resultObject);
+
+            } else {
+                runResult.setError(linkerServerResponse.getExceptional());
+                runResult.setRunStatus(Boolean.FALSE);
+            }
+            promise.complete(JsonObject.mapFrom(runResult));
+        }).onFailure(fail->{
+            promise.fail(fail);
+        });
+        return promise.future();
     }
 
     private LinkerServerRequest buildRequestEntity(Map<String, Object> paramMap, Method method, ServiceTask serviceTask, String workerName) {
@@ -149,6 +166,7 @@ public class SchedulerManager {
         functionRequest.setXid(serviceTask.getXid());
         functionRequest.setBranchId(serviceTask.getBranchId());
         functionRequest.setVersion(serviceTask.getVersion());
+        functionRequest.setProviderType(serviceTask.queryProviderType());
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
         linkerServerRequest.setFunctionRequest(functionRequest);
         linkerServerRequest.setParentRequestId(example.getParentRequestId());
@@ -167,6 +185,7 @@ public class SchedulerManager {
         functionRequest.setWorkerName(workerName);
         functionRequest.setParam(paramMap);
         functionRequest.setVersion(version);
+        functionRequest.setProviderType(ApplicationProviderType.SPIDER_HOST_APPLICATION);
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
         linkerServerRequest.setFunctionRequest(functionRequest);
         linkerServerRequest.setRetryType("ACTUAL");

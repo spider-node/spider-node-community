@@ -43,16 +43,7 @@ public class ElectionLeader {
                 .connectionTimeoutMs(3000)
                 .retryPolicy(new ExponentialBackoffRetry(1000, 3))
                 .build();
-        // 等待客户端连接成功
-        while (!client.getZookeeperClient().isConnected()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Waiting for ZooKeeper connection...");
-        }
-        System.out.println("Connected to ZooKeeper.");
+        this.client.start();
         this.leaderManager = leaderManager;
         this.latch = new LeaderLatch(client, ELECTION_LEADER);
         // 注册leader选举成功或者降级的监听器
@@ -66,16 +57,6 @@ public class ElectionLeader {
         try {
             log.info("发起选举");
             this.latch.start();
-            // 尝试获取领导权
-            try {
-                if (latch.await(30, TimeUnit.SECONDS)) { // 增加等待时间
-                    System.out.println("Leadership acquired.");
-                } else {
-                    System.out.println("Leadership not acquired.");
-                }
-            } catch (Exception e) {
-                System.err.println("Interrupted while waiting for leadership: " + e.getMessage());
-            }
         } catch (Exception e) {
             log.error("election error", ExceptionMessage.getStackTrace(e));
         }

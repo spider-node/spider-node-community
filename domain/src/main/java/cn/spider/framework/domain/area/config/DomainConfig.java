@@ -3,6 +3,7 @@ package cn.spider.framework.domain.area.config;
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
+import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.config.MysqlConfig;
 import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.AreaVerticle;
@@ -24,6 +25,8 @@ import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
 import cn.spider.framework.domain.area.task.AiTaskInterfaceImpl;
 import cn.spider.framework.domain.area.task.TaskManager;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
+import cn.spider.framework.domain.area.task.service.ISpiderTaskTestInfoService;
+import cn.spider.framework.domain.area.timer.CoderTimer;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.*;
@@ -32,6 +35,7 @@ import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
+import com.sun.org.apache.bcel.internal.generic.PUSH;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -98,8 +102,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService) {
-        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService,spiderDomainFunctionTaskService);
+    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,HostPluginInterface hostPluginInterface) {
+        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService,spiderDomainFunctionTaskService,hostPluginInterface);
     }
 
     @Bean
@@ -134,8 +138,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool) {
-        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool);
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool,spiderAreaFunctionVersionService);
     }
 
     @Bean
@@ -200,6 +204,11 @@ public class DomainConfig {
         factory.setPlugins(interceptor);
         // 可以在这里配置其他属性，如mapperLocations、configuration等
         return factory.getObject();
+    }
+
+    @Bean
+    public FlowService buildFlowService(Vertx vertx){
+        return FlowService.createProxy(vertx, FlowService.ADDRESS);
     }
 
     /**
@@ -298,8 +307,10 @@ public class DomainConfig {
     }
 
     @Bean
-    public AiTaskInterfaceImpl buildAiTask(TaskManager taskManager, Executor spiderBusinessPool){
-        return new AiTaskInterfaceImpl(taskManager,spiderBusinessPool);
+    public AiTaskInterfaceImpl buildAiTask(TaskManager taskManager, Executor spiderBusinessPool,
+                                           ISpiderTaskTestInfoService spiderTaskTestInfoService,
+                                           DatasourceManager datasourceManager){
+        return new AiTaskInterfaceImpl(taskManager,spiderBusinessPool,spiderTaskTestInfoService,datasourceManager);
     }
 
     @Bean
@@ -310,6 +321,11 @@ public class DomainConfig {
                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
                        AgentVertxClient agentVertxClient){
         return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient);
+    }
+
+    @Bean
+    public CoderTimer buildCoderTimer(Vertx vertx, ISpiderTaskTestInfoService taskTestInfoService,NodeManger nodeManger){
+        return new CoderTimer(vertx,taskTestInfoService,nodeManger);
     }
 
 }

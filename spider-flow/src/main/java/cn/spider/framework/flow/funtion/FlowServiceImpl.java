@@ -3,6 +3,7 @@ package cn.spider.framework.flow.funtion;
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.container.sdk.data.SimpleStartParam;
 import cn.spider.framework.container.sdk.data.StartFlowRequest;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -19,7 +20,6 @@ import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.engine.facade.ReqBuilder;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
-import cn.spider.framework.flow.funtion.data.SimpleStartParam;
 import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.flow.util.SnowflakeIdGenerator;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
@@ -259,7 +259,7 @@ public class FlowServiceImpl implements FlowService {
     @Override
     public Future<JsonObject> simpleStartNode(JsonObject data) {
         SimpleStartParam simpleStartParam = data.mapTo(SimpleStartParam.class);
-        return schedulerManager.simpleInvoke(simpleStartParam.getParamMap(),simpleStartParam.getWorkerName(),simpleStartParam.getMethod(),simpleStartParam.getTaskService(),simpleStartParam.getTaskComponent(),simpleStartParam.getVersion());
+        return schedulerManager.simpleInvoke(simpleStartParam.getParamMap(),simpleStartParam.getWorkerName(),simpleStartParam.getMethod(),simpleStartParam.getTaskComponent(),simpleStartParam.getTaskService(),simpleStartParam.getVersion());
     }
 
     private String buildRequestId() {

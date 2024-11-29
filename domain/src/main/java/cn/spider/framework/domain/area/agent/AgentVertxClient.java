@@ -52,7 +52,7 @@ public class AgentVertxClient {
         this.querySonAreaBaseInfo = "/areaDomain/query_base_info";
         this.installPlugin = "/installBiz";
         this.unInstallPlugin = "/uninstallBiz";
-        this.coderApi = "/ai_code_automatic_V2";
+        this.coderApi = "/ai_code_automatic";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");

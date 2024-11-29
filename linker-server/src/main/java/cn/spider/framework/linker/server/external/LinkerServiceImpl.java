@@ -59,13 +59,15 @@ public class LinkerServiceImpl implements LinkerService {
 
     private HostPluginInterface hostPluginInterface;
 
-    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx, FunctionInterface functionInterface) {
+    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx, FunctionInterface functionInterface,WorkerRegisterManager workerRegisterManager,HostPluginInterface hostPluginInterface) {
         this.clientRegisterCenter = clientRegisterCenter;
         String rpcType = BrokerInfoUtil.queryRpcType(vertx);
         this.isVertxRpc = rpcType.equals("vertxRpc");
         this.rpcTaskInterfaceMap = new HashMap<>();
         this.vertx = vertx;
         this.functionInterface = functionInterface;
+        this.workerRegisterManager = workerRegisterManager;
+        this.hostPluginInterface = hostPluginInterface;
     }
 
     /**

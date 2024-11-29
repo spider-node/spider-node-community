@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_NAME='start-1.0.2'
+SERVER_NAME='start-2.0.0'
 JAR_NAME="$SERVER_NAME.jar"
 cd `dirname $0`
 BIN_DIR=`pwd`

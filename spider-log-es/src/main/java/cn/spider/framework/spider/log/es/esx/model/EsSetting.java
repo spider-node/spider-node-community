@@ -4,7 +4,7 @@ import org.noear.snack.ONode;
 
 /**
  * @author noear
- * @since 1.0.2
+ * @since 2.0.0
  */
 public class EsSetting {
     private final ONode oNode;

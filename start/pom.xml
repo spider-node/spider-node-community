@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>cn.spider-node</groupId>
+       <groupId>cn.spider-node</groupId>
         <artifactId>spider-parent</artifactId>
         <version>2.0.0</version>
     </parent>
 
-    <groupId>cn.spider-node</groupId>
+   <groupId>cn.spider-node</groupId>
     <artifactId>start</artifactId>
     <version>2.0.0</version>
 
@@ -25,7 +25,7 @@
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
-        <vertx.version>4.3.7</vertx.version>
+        <vertx.version>4.4.9</vertx.version>
 
     </properties>
 
@@ -52,9 +52,16 @@
 
         <dependency>
             <groupId>io.vertx</groupId>
+            <artifactId>vertx-zookeeper</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
             <artifactId>vertx-hazelcast</artifactId>
             <version>${vertx.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>com.hazelcast</groupId>
@@ -76,63 +83,57 @@
 
         <!-- 网关依赖 -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>gateway</artifactId>
             <version>2.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jackson-core</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- 核心组件-流程的管控与监控 -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-flow</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-跟worker通信 -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>linker-server</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <!-- 核心组件-事务组件 -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>transaction-server</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-controller -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>controller</artifactId>
             <version>2.0.0</version>
         </dependency>
         <!-- 核心组件-领域功能 -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>domain</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-param</artifactId>
             <version>2.0.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>cn.spider-node</groupId>
+       <dependency>
+           <groupId>cn.spider-node</groupId>
             <artifactId>area-method-param</artifactId>
             <version>2.0.0</version>
         </dependency>
 
         <!-- 核心组件-log -->
         <dependency>
-            <groupId>cn.spider-node</groupId>
+           <groupId>cn.spider-node</groupId>
             <artifactId>spider-log-es</artifactId>
             <version>2.0.0</version>
             <!--<exclusions>
@@ -143,7 +144,7 @@
             </exclusions>-->
         </dependency>
 
-        <dependency>
+       <dependency>
             <groupId>cn.spider-node</groupId>
             <artifactId>host-plugin-center</artifactId>
             <version>2.0.0</version>
@@ -253,7 +254,10 @@
                     </excludes>
                 </configuration>
             </plugin>
+
         </plugins>
         <finalName>spider-node-2.0.0</finalName>
     </build>
+
+
 </project>

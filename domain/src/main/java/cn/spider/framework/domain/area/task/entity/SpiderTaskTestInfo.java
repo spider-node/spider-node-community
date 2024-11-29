@@ -1,9 +1,18 @@
 package cn.spider.framework.domain.area.task.entity;
 
+import cn.spider.framework.domain.area.task.data.CaseSqlModel;
+import cn.spider.framework.domain.area.task.data.MethodInputModel;
+import cn.spider.framework.domain.area.task.entity.enums.CaseExpect;
+import cn.spider.framework.domain.area.task.entity.enums.TestStatus;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -13,7 +22,7 @@ import java.io.Serializable;
  * @author dds
  * @since 2024-11-10
  */
-@TableName("spider_task_test_info")
+@TableName(value = "spider_task_test_info", autoResultMap = true)
 public class SpiderTaskTestInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -29,17 +38,14 @@ public class SpiderTaskTestInfo implements Serializable {
     /**
      * 入参
      */
-    private String caseInputParam;
+    @TableField(value = "case_input_param", typeHandler = FastjsonTypeHandler.class)
+    private MethodInputModel caseInputParam;
 
     /**
      * sql
      */
-    private String caseSql;
-
-    /**
-     * sql参数
-     */
-    private String caseSqlParam;
+    @TableField(value = "case_sql", typeHandler = FastjsonTypeHandler.class)
+    private CaseSqlModel caseSql;
 
     /**
      * 任务id
@@ -47,9 +53,14 @@ public class SpiderTaskTestInfo implements Serializable {
     private Integer taskId;
 
     /**
+     * 领域功能id
+     */
+    private String domainFunctionVersionId;
+
+    /**
      * PASS(通过)/REJECT(驳回)
      */
-    private String testStatus;
+    private TestStatus testStatus;
 
     /**
      * 异常
@@ -57,9 +68,33 @@ public class SpiderTaskTestInfo implements Serializable {
     private String error;
 
     /**
+     * 执行结果
+     */
+    @TableField(value = "run_result", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject runResult;
+
+    /**
      * 驳回原因
      */
     private String rejectReason;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 结果是否符号预期
+     */
+    private CaseExpect expect;
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
 
     public Integer getId() {
         return id;
@@ -77,28 +112,13 @@ public class SpiderTaskTestInfo implements Serializable {
         this.cases = cases;
     }
 
-    public String getCaseInputParam() {
-        return caseInputParam;
-    }
 
-    public void setCaseInputParam(String caseInputParam) {
-        this.caseInputParam = caseInputParam;
-    }
-
-    public String getCaseSql() {
+    public CaseSqlModel getCaseSql() {
         return caseSql;
     }
 
-    public void setCaseSql(String caseSql) {
+    public void setCaseSql(CaseSqlModel caseSql) {
         this.caseSql = caseSql;
-    }
-
-    public String getCaseSqlParam() {
-        return caseSqlParam;
-    }
-
-    public void setCaseSqlParam(String caseSqlParam) {
-        this.caseSqlParam = caseSqlParam;
     }
 
     public Integer getTaskId() {
@@ -109,11 +129,11 @@ public class SpiderTaskTestInfo implements Serializable {
         this.taskId = taskId;
     }
 
-    public String getTestStatus() {
+    public TestStatus getTestStatus() {
         return testStatus;
     }
 
-    public void setTestStatus(String testStatus) {
+    public void setTestStatus(TestStatus testStatus) {
         this.testStatus = testStatus;
     }
 
@@ -131,5 +151,37 @@ public class SpiderTaskTestInfo implements Serializable {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public MethodInputModel getCaseInputParam() {
+        return caseInputParam;
+    }
+
+    public void setCaseInputParam(MethodInputModel caseInputParam) {
+        this.caseInputParam = caseInputParam;
+    }
+
+    public String getDomainFunctionVersionId() {
+        return domainFunctionVersionId;
+    }
+
+    public void setDomainFunctionVersionId(String domainFunctionVersionId) {
+        this.domainFunctionVersionId = domainFunctionVersionId;
+    }
+
+    public JSONObject getRunResult() {
+        return runResult;
+    }
+
+    public void setRunResult(JSONObject runResult) {
+        this.runResult = runResult;
+    }
+
+    public CaseExpect getExpect() {
+        return expect;
+    }
+
+    public void setExpect(CaseExpect expect) {
+        this.expect = expect;
     }
 }

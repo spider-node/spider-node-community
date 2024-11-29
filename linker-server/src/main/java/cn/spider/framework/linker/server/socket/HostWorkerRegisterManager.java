@@ -86,7 +86,8 @@ public class HostWorkerRegisterManager {
         hostApplication.getFunctionInfo().put(functionKey, null);
     }
 
-    public HostApplication queryClientInfo(String taskComponent, String taskService, String version) {
+    // 根据String taskComponent, String taskService, String version 查询出 HostApplication
+    private List<HostApplication> queryHostApplication(String taskComponent, String taskService, String version) {
         String functionKey = TaskKeyUtil.buildTaskKey(taskComponent, taskService, version);
         List<HostApplication> hostApplications = new ArrayList<>();
         hostApplicationMap.forEach((key, value) -> {
@@ -94,6 +95,14 @@ public class HostWorkerRegisterManager {
                 hostApplications.add(value);
             }
         });
+        return hostApplications;
+    }
+
+
+
+
+    public HostApplication queryClientInfo(String taskComponent, String taskService, String version) {
+        List<HostApplication> hostApplications = queryHostApplication(taskComponent, taskService, version);
         if (CollectionUtils.isEmpty(hostApplications)) {
             return null;
         }

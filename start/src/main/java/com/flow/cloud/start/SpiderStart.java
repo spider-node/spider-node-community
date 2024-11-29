@@ -32,6 +32,7 @@ public class SpiderStart {
         }
         // 设置集群类型
         VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
+        options.setBlockedThreadCheckInterval(300 * 1000 * 10);
         options.setWorkerPoolSize(20);
         log.info("spider-start");
         // 加入集群

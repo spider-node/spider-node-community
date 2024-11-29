@@ -17,46 +17,26 @@ public class TaskTimer {
 
     private TaskManager taskManager;
 
-    private SharedData sharedData;
-
     public TaskTimer(Vertx vertx, TaskManager taskManager) {
         this.vertx = vertx;
         this.taskManager = taskManager;
-        this.sharedData = vertx.sharedData();
         runPluginTaskTimer();
     }
-
-    private final String LOCK = "plugin_task_run";
 
     /**
      * 定时任务执行-寻找任务执行
      */
     private void runPluginTaskTimer() {
         vertx.setPeriodic(20 * 1000, id -> {
-            log.info("找任务了");
             taskManager.run();
-            /*this.sharedData.getLockWithTimeout(LOCK,1000).onSuccess(suss -> {
-                try {
-                    log.info("获取锁成功");
-                    taskManager.run();
-                } catch (Exception e) {
-                    log.error("执行任务失败");
-                }
-                // 注册延迟释放锁
-                registerLockRelease(suss);
-            }).onFailure(lockFail->{
-                log.error("获取锁失败 {}",ExceptionMessage.getStackTrace(lockFail));
-            });*/
         });
     }
 
-    /**
-     * 提供锁的延迟释放
-     * @param lock
-     */
-    private void registerLockRelease(Lock lock){
-        vertx.setTimer(5000,id->{
-            lock.release();
+    // 新增一个一次性任务 启动的时候，校验版本信息，是否需要重新部署
+    public void checkVersion() {
+        // 新增一个一次的timer
+        vertx.setTimer(1000, id -> {
+
         });
     }
 }

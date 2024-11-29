@@ -12,6 +12,7 @@ import cn.spider.node.host.plugin.center.model.service.IAreaDomainFunctionInfoSe
 import cn.spider.node.host.plugin.center.model.service.ISpiderApplicationTaskService;
 import cn.spider.node.host.plugin.center.model.service.ISpiderHostApplicationService;
 import cn.spider.node.host.plugin.center.model.service.ISpiderPluginDeployInfoService;
+import cn.spider.node.host.plugin.center.sdk.data.CheckDeployParam;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,9 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -38,6 +38,7 @@ public class HostApplicationManager {
 
     @Resource
     private IAreaDomainFunctionInfoService infoService;
+
 
     // 注册 宿主应用 直接新增
     public void online(String ip) {
@@ -72,6 +73,20 @@ public class HostApplicationManager {
             tasks.add(task);
         }
         taskService.saveBatch(tasks);
+    }
+
+    // 基于ip下线服务
+    public void deleteSpiderApplicationTask(String ip){
+        taskService.lambdaUpdate().eq(SpiderApplicationTask::getIp, ip).remove();
+    }
+
+    // 使用deployInfoService 基于ip进行删除数据
+    public void deletePluginDeployInfo(String ip) {
+        deployInfoService.lambdaUpdate().eq(SpiderPluginDeployInfo::getIp, ip).remove();
+    }
+
+    public void deleteApplicationHost(String ip) {
+        hostApplicationService.lambdaUpdate().eq(SpiderHostApplication::getIp, ip).remove();
     }
 
     // 申请上线插件
@@ -116,15 +131,38 @@ public class HostApplicationManager {
         taskService.saveBatch(tasks);
     }
 
-    public AreaDomainFunctionInfo queryFunctionInfo(String taskComponent, String taskService,String domainFunctionVersionId) {
+    public AreaDomainFunctionInfo queryFunctionInfo(String taskComponent, String taskService, String domainFunctionVersionId) {
         AreaDomainFunctionInfo functionInfo = infoService.lambdaQuery()
-                .eq(StringUtils.isNotEmpty(taskComponent),AreaDomainFunctionInfo::getTaskComponent, taskComponent)
-                .eq(StringUtils.isNotEmpty(taskService),AreaDomainFunctionInfo::getTaskService, taskService)
-                .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, domainFunctionVersionId)
+                .eq(StringUtils.isNotEmpty(taskComponent), AreaDomainFunctionInfo::getTaskComponent, taskComponent)
+                .eq(StringUtils.isNotEmpty(taskService), AreaDomainFunctionInfo::getTaskService, taskService)
+                .eq(StringUtils.isNotEmpty(domainFunctionVersionId), AreaDomainFunctionInfo::getDomainFunctionVersionId, domainFunctionVersionId)
                 .one();
         if (Objects.isNull(functionInfo)) {
-            return null;
+            return new AreaDomainFunctionInfo();
         }
         return functionInfo;
+    }
+
+    public List<SpiderPluginDeployInfo> queryDeployInfo(String domainFunctionVersionId) {
+        return deployInfoService.lambdaQuery().eq(SpiderPluginDeployInfo::getDomainFunctionVersionId, domainFunctionVersionId).list();
+    }
+
+    public void checkDeployInfo(CheckDeployParam param) {
+        List<SpiderPluginDeployInfo> spiderPluginDeployInfos = deployInfoService.lambdaQuery().in(SpiderPluginDeployInfo::getDomainFunctionVersionId, param.getDomainVersionIds()).list();
+        // 把spiderPluginDeployInfos 基于domainFunctionVersionId 进行分组
+        Map<String, List<SpiderPluginDeployInfo>> deployInfoMap = spiderPluginDeployInfos.stream().collect(Collectors.groupingBy(SpiderPluginDeployInfo::getDomainFunctionVersionId));
+        // 遍历 param中的domainVersionIds
+        Set<String> versionIds = param.getDomainVersionIds().stream().filter(item->!deployInfoMap.containsKey(item)).collect(Collectors.toSet());
+        if(CollectionUtils.isEmpty(versionIds)){
+            return;
+        }
+        List<AreaDomainFunctionInfo> areaDomainFunctionInfos = infoService.lambdaQuery().in(AreaDomainFunctionInfo::getDomainFunctionVersionId, versionIds).list();
+        if(CollectionUtils.isEmpty(areaDomainFunctionInfos)){
+            return;
+        }
+        // 申请上线
+        for (AreaDomainFunctionInfo areaDomainFunctionInfo : areaDomainFunctionInfos) {
+            applyOnlinePlugin(areaDomainFunctionInfo.getId());
+        }
     }
 }

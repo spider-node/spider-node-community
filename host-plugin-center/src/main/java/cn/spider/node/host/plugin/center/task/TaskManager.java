@@ -113,6 +113,7 @@ public class TaskManager {
                                 .taskService(areaDomainFunctionInfo.getTaskService())
                                 .version(areaDomainFunctionInfo.getVersion())
                                 .status(PluginStatus.ING)
+                                .domainFunctionVersionId(areaDomainFunctionInfo.getDomainFunctionVersionId())
                                 .build();
                         deployInfoService.save(spiderPluginDeployInfo);
                     } catch (Exception e) {

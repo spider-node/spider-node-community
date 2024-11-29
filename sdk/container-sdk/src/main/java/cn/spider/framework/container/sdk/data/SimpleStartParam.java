@@ -1,4 +1,4 @@
-package cn.spider.framework.flow.funtion.data;
+package cn.spider.framework.container.sdk.data;
 
 import java.util.Map;
 
@@ -11,7 +11,6 @@ public class SimpleStartParam {
     private String version;
 
     private String workerName;
-
     /**
      * 工作类型
      */

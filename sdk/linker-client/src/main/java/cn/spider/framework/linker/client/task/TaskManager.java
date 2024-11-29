@@ -84,6 +84,7 @@ public class TaskManager {
                 response.setResultCode(ResultCode.SUSS);
                 response.setResultData(JSONObject.parseObject(JSON.toJSONString(resultObject)));
             } catch (Exception e) {
+                log.error("执行报错的信息为 {}",ExceptionMessage.getStackTrace(e));
                 // 异常信息给到返回值当中
                 response = new LinkerServerResponse();
                 response.setResultCode(ResultCode.FAIL);
@@ -128,6 +129,7 @@ public class TaskManager {
             } catch (Exception e) {
                 // 异常信息给到返回值当中
                 message = ExceptionMessage.getStackTrace(e);
+                log.error("执行报错的信息为 {}",message);
                 response = TransferResponse.newBuilder()
                         .setCode(1002)
                         .setMessage(message)
@@ -158,8 +160,10 @@ public class TaskManager {
     }
     // 宿主机-执行功能
     public Object runHostApplication(LinkerServerRequest request) {
+        log.info("执行了宿主应用的功能信息 {}",JSON.toJSONString(request));
         if (Objects.isNull(hostApplicationService)) {
             hostApplicationService = applicationContext.getBean(HostApplicationService.class);
+            log.info("获取到的宿主应用服务为 {}");
         }
         return hostApplicationService.runFunction(request);
     }

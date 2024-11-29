@@ -75,7 +75,7 @@ public class SpiderCoreStart {
                 .setAddress(FlowService.ADDRESS)
                 .register(FlowService.class, flowService);
         containerConsumers.add(flowConsumer);
-
+        log.info("FlowService-发布");
         LeaderService leaderService = applicationContext.getBean(LeaderService.class);
         String leaderAddr = BrokerInfoUtil.queryBrokerName(vertx) + LeaderService.ADDRESS;
         MessageConsumer<JsonObject> leaderConsumer = this.binder

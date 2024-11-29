@@ -1,23 +1,25 @@
 package cn.spider.framework.linker.server;
-
-import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.config.SpringConfig;
 import cn.spider.framework.linker.server.external.LinkerServiceImpl;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
+import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class LinkerMainVerticle extends AbstractVerticle {
 
     private AbstractApplicationContext factory;
@@ -45,11 +47,14 @@ public class LinkerMainVerticle extends AbstractVerticle {
         this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
         ClientRegisterCenter clientRegisterCenter = factory.getBean(ClientRegisterCenter.class);
         FunctionInterface functionInterface = factory.getBean(FunctionInterface.class);
-        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface);
+        WorkerRegisterManager workerRegisterManager = factory.getBean(WorkerRegisterManager.class);
+        HostPluginInterface hostPluginInterface = factory.getBean(HostPluginInterface.class);
+        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface,workerRegisterManager,hostPluginInterface);
         // 发布接口
         this.binder = new ServiceBinder(vertx);
-        MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(this.brokerName + LinkerService.ADDRESS)
+        MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(LinkerService.ADDRESS)
                 .register(LinkerService.class, linkerService);
+        log.info("调度已经启动完成");
         this.containerConsumers.add(linkerConsumer);
         startPromise.complete();
     }

@@ -173,13 +173,13 @@ public class WorkerRegisterManager {
             case DEPLOY:
                 List<NodeParamInfoBath> areaModels = refreshAreaParam.getNodeParamInfoBathList();
                 for (NodeParamInfoBath areaModel : areaModels) {
-                    // 上线
                     // 发送上线的 事件
                     List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
                     for(NodeParamInfo nodeParamInfo: nodeParamInfos){
                         hostWorkerRegisterManager.registerFunction(ip, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion());
                     }
                 }
+
                 break;
             case UNLOCK:
                 for (NodeParamInfoBath areaModel : refreshAreaParam.getNodeParamInfoBathList()) {

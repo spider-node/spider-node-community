@@ -19,10 +19,12 @@ public class HostApplicationOfflineHandler {
 
     private HostApplicationManager applicationManager;
 
+
     public HostApplicationOfflineHandler(EventBus eventBus, HostApplicationManager applicationManager, Vertx vertx) {
         this.eventBus = eventBus;
         this.applicationManager = applicationManager;
         this.localBrokerName = BrokerInfoUtil.queryBrokerName(vertx);
+        registerConsumer();
     }
 
     public void registerConsumer() {
@@ -32,8 +34,12 @@ public class HostApplicationOfflineHandler {
             if (!StringUtils.equals(localBrokerName, offlineData.getBrokerName())) {
                 return;
             }
-            //  处理下线
-            applicationManager.offline(offlineData.getIp());
+            // 宿主机下线了，，直接删除关联的插件
+            applicationManager.deletePluginDeployInfo(offlineData.getIp());
+            // 删除宿主机应用的地址
+            applicationManager.deleteApplicationHost(offlineData.getIp());
+            // 删除部署信息
+            applicationManager.deleteSpiderApplicationTask(offlineData.getIp());
         });
     }
 }

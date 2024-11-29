@@ -54,5 +54,8 @@ public interface HostPluginInterface {
      */
     Future<JsonObject> queryFunctionVersion(JsonObject data);
 
+    Future<JsonObject> queryDeployInfo(JsonObject data);
 
+    // 校验是否有部署,如果没有，发起部署
+    Future<Void> checkDeployInfo(JsonObject data);
 }

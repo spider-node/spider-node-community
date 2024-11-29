@@ -9,6 +9,7 @@ import cn.spider.framework.linker.server.consumer.EscalationHandler;
 import cn.spider.framework.linker.server.socket.HostWorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.EventBus;
@@ -92,6 +93,11 @@ public class SpringConfig {
     @Bean
     public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx){
         return new HostWorkerRegisterManager(vertx);
+    }
+
+    @Bean
+    public HostPluginInterface buildHostPluginInterface(Vertx vertx){
+        return HostPluginInterface.createProxy(vertx,HostPluginInterface.ADDRESS);
     }
 
 }

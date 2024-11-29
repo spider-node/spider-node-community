@@ -21,6 +21,7 @@ import cn.spider.framework.flow.bpmn.enums.ServerTaskTypeEnum;
 import cn.spider.framework.flow.component.bpmn.builder.ServiceTaskBuilder;
 import cn.spider.framework.flow.resource.service.ServiceNodeResource;
 import cn.spider.framework.flow.util.GlobalUtil;
+import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
 import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
 
@@ -111,6 +112,8 @@ public interface ServiceTask extends Task {
     String getBranchId();
 
     void setXid(String xid);
+
+    ApplicationProviderType queryProviderType();
 
     void setBranchId(String branchId);
 

@@ -42,6 +42,8 @@ import cn.spider.framework.flow.util.*;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mysqlclient.MySQLPool;
@@ -89,36 +91,33 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
         this.vertx = vertx;
     }
 
-    public void initBpmn(){
-        if(BrokerInfoUtil.queryStartSpiderNode(this.vertx)){
-            initBpmnInfo();
-            return;
-        }
-        initResourceList();
+    public Future<Void> initBpmn() {
+        return initBpmnInfo();
     }
 
-    public void initBpmnInfo(){
-        versionInterface.queryBpmnUrl().onSuccess(suss->{
+    public Future<Void> initBpmnInfo() {
+        Promise<Void> promise = Promise.promise();
+        versionInterface.queryBpmnUrl().onSuccess(suss -> {
             QueryBpmnUrlResult queryBpmnUrlResult = suss.mapTo(QueryBpmnUrlResult.class);
-            if(CollectionUtils.isEmpty(queryBpmnUrlResult.getBpmnUrls())){
+            if (CollectionUtils.isEmpty(queryBpmnUrlResult.getBpmnUrls())) {
                 log.warn("没有搜索到可以部署的bpmn模型");
+                promise.complete();
                 return;
             }
-            queryBpmnUrlResult.getBpmnUrls().forEach(item->{
+            queryBpmnUrlResult.getBpmnUrls().forEach(item -> {
                 try {
                     dynamicsLoaderBpmn(item);
+                    promise.complete();
                 } catch (Exception e) {
-                    log.error("加载失败的url-{} -异常信息-{}", item,ExceptionMessage.getStackTrace(e));
+                    log.error("加载失败的url-{} -异常信息-{}", item, ExceptionMessage.getStackTrace(e));
+                    promise.fail(e);
                 }
             });
-        }).onFailure(fail->{
-            log.error("initBpmnInfo-fail-{}",ExceptionMessage.getStackTrace(fail));
+        }).onFailure(fail -> {
+            promise.fail(fail);
+            log.error("initBpmnInfo-fail-{}", ExceptionMessage.getStackTrace(fail));
         });
-    }
-
-
-
-    public void initResourceList() {
+        return promise.future();
     }
 
     /**
@@ -129,7 +128,7 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     public void dynamicsLoaderBpmn(String url) {
         List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, url);
         if (CollectionUtils.isEmpty(configResourceList)) {
-            log.info("--没有获取到-bpmn的url {}",url);
+            log.info("--没有获取到-bpmn的url {}", url);
             return;
         }
 

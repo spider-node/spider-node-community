@@ -3,8 +3,10 @@ package cn.spider.framework.domain.area.impl;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.data.*;
+import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import cn.spider.framework.domain.area.node.entity.SpiderAreaFunction;
 import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
+import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
 import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
@@ -44,11 +46,14 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private Executor spiderBusinessPool;
 
-    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool) {
+    private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
+
+    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
         this.hostPluginInterface = hostPluginInterface;
         this.spiderBusinessPool = spiderBusinessPool;
+        this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
     }
 
     @Override
@@ -194,12 +199,20 @@ public class NodeInterfaceImpl implements NodeInterface {
                 promise.complete(JsonObject.mapFrom(projectResult));
                 return;
             }
-            // 构造基础信息成功- 开始发起部署
-            hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onSuccess(onlineSuss->{
-                promise.complete();
-            }).onFailure(onlineFail->{
-                promise.fail(onlineFail);
+            promise.complete();
+            spiderBusinessPool.execute(()->{
+                // 修改版本新增状态为编译完成
+                String domainFunctionVersionId = param.getString("domainFunctionVersionId");
+                spiderAreaFunctionVersionService.lambdaUpdate()
+                        .set(SpiderAreaFunctionVersion::getStatus, NodeStatus.COMPILE)
+                        .eq(SpiderAreaFunctionVersion::getId,domainFunctionVersionId)
+                        .update();
+                // 构造基础信息成功- 开始发起部署
+                hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onFailure(fail->{
+                    log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
+                });
             });
+
         }).onFailure(buildFail->{
             promise.fail(buildFail);
         });

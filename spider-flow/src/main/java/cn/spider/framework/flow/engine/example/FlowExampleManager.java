@@ -20,14 +20,12 @@ import cn.spider.framework.flow.container.component.TaskServiceDef;
 import cn.spider.framework.flow.engine.FlowRegister;
 import cn.spider.framework.flow.engine.StoryEngineModule;
 import cn.spider.framework.flow.engine.example.data.FlowExample;
-import cn.spider.framework.flow.engine.example.enums.FlowExampleRole;
 import cn.spider.framework.flow.engine.example.enums.FlowExampleRunStatus;
 import cn.spider.framework.flow.engine.example.enums.VerifyStatus;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
 import cn.spider.framework.flow.exception.BusinessException;
 import cn.spider.framework.flow.exception.ExceptionEnum;
-import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.timer.SpiderTimer;
@@ -72,13 +70,10 @@ public class FlowExampleManager {
 
     private EventManager eventManager;
 
-
     /**
      * leader的实例map
      */
     private Map<String, FlowExample> leaderFlowExampleMap;
-
-    private ClassLoaderManager classLoaderManager;
 
     private SpiderTimer spiderTimer;
 
@@ -96,7 +91,6 @@ public class FlowExampleManager {
         this.schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
         this.transactionInterface = SpiderCoreVerticle.factory.getBean(TransactionInterface.class);
         this.eventManager = SpiderCoreVerticle.factory.getBean(EventManager.class);
-        this.classLoaderManager = SpiderCoreVerticle.factory.getBean(ClassLoaderManager.class);
         this.spiderTimer = SpiderCoreVerticle.factory.getBean(SpiderTimer.class);
         this.paramInterface = SpiderCoreVerticle.factory.getBean(ParamInterface.class);
 
@@ -366,8 +360,8 @@ public class FlowExampleManager {
      * 正常
      *
      * @param transactionGroupId 事务组Id
-     * @param serviceTask task
-     * @param example 流程实例
+     * @param serviceTask        task
+     * @param example            流程实例
      * @param elementExampleData 实例data
      */
     private void normal(String transactionGroupId, ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {

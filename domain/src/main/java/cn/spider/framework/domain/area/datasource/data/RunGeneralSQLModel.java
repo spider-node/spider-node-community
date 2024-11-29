@@ -9,6 +9,12 @@ public class RunGeneralSQLModel {
 
     private Map<String,Object> params;
 
+    public RunGeneralSQLModel(String datasource, String sql, Map<String, Object> params) {
+        this.datasource = datasource;
+        this.sql = sql;
+        this.params = params;
+    }
+
     public String getDatasource() {
         return datasource;
     }

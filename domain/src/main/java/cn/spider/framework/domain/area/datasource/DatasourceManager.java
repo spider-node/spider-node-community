@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
@@ -75,17 +76,18 @@ public class DatasourceManager {
         datasourceInfoService.saveOrUpdate(datasourceInfo);
     }
 
-    public void runUpdateSql(RunGeneralSQLParam param) {
-        List<RunGeneralSQLModel> runGeneralSQLModels = param.getRunGeneralSQLModelList();
-        for (RunGeneralSQLModel runGeneralSQLModel : runGeneralSQLModels) {
-            MySQLPool mySQLPool = datasourcePoolMap.containsKey(runGeneralSQLModel.getDatasource()) ? datasourcePoolMap.get(runGeneralSQLModel.getDatasource()) : getMySQLPool(runGeneralSQLModel.getDatasource());
-            Future<SqlResult<Void>> future = SqlTemplate
-                    .forUpdate(mySQLPool, runGeneralSQLModel.getSql())
-                    .execute(runGeneralSQLModel.getParams())
-                    .onSuccess(result -> {
-
-                    });
-        }
+    public Future<Void> runUpdateSql(RunGeneralSQLModel runGeneralSQLModel) {
+        Promise<Void> promise = Promise.promise();
+        MySQLPool mySQLPool = datasourcePoolMap.containsKey(runGeneralSQLModel.getDatasource()) ? datasourcePoolMap.get(runGeneralSQLModel.getDatasource()) : getMySQLPool(runGeneralSQLModel.getDatasource());
+        SqlTemplate
+                .forUpdate(mySQLPool, runGeneralSQLModel.getSql())
+                .execute(runGeneralSQLModel.getParams())
+                .onSuccess(result -> {
+                    promise.complete();
+                }).onFailure(fail -> {
+                    promise.fail(fail);
+                });
+        return promise.future();
     }
 
     private MySQLPool getMySQLPool(String datasource) {

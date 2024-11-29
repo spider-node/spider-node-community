@@ -98,7 +98,7 @@ public class SpiderConfigV2 {
      */
     @Bean
     public LinkerService buildLinkerService(Vertx vertx) {
-        return LinkerService.createProxy(vertx, BrokerInfoUtil.queryBrokerName(vertx) + LinkerService.ADDRESS);
+        return LinkerService.createProxy(vertx, LinkerService.ADDRESS);
     }
 
     @Bean

@@ -35,7 +35,7 @@
         <dependency.spring.version>5.3.31</dependency.spring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <vertx.version>4.3.7</vertx.version>
+        <vertx.version>4.4.9</vertx.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <spring.version>5.3.31</spring.version>
         <dependency.lang3.version>3.12.0</dependency.lang3.version>

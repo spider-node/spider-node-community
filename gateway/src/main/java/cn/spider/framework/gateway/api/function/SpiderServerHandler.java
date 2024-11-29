@@ -183,7 +183,9 @@ public class SpiderServerHandler {
         querySonDomainVersion();
         upsertDomainFunctionVersion();
         createCoder();
+        runCase();
         queryFunctionCode();
+        queryDeployInfo();
     }
 
     public void selectBpmn() {
@@ -530,17 +532,6 @@ public class SpiderServerHandler {
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });
-
-
-                   /* if (this.clusterMode.equals(Constant.N0_CENTER_MODE)) {
-
-                        return;
-                    }
-                    leaderHeartService.querySpiderInfo().onSuccess(suss -> {
-                        response.end(ResponseData.suss(suss));
-                    }).onFailure(fail -> {
-                        response.send(ResponseData.fail(fail));
-                    });*/
                 });
     }
 
@@ -1326,6 +1317,20 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void runCase() {
+        router.post("/run_case")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.startTestCase(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     private void queryFunctionCode() {
         router.post("/query_function_code")
                 .handler(ctx -> {
@@ -1333,6 +1338,20 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     hostPluginInterface.queryFunctionVersion(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryDeployInfo() {
+        router.post("/query_deploy_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    hostPluginInterface.queryDeployInfo(param).onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
