@@ -1,8 +1,11 @@
 package cn.spider.node.host.plugin.center.model.entity;
 
+import cn.spider.node.host.plugin.center.model.data.SonDomainModelInfo;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,13 +20,10 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author dds
- * @since 2024-09-03
+ * @since 2024-08-06
  */
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Data
-@TableName("area_domain_function_info")
+@TableName(value = "area_domain_function_info", autoResultMap = true)
 public class AreaDomainFunctionInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -40,16 +40,6 @@ public class AreaDomainFunctionInfo implements Serializable {
      * 表名称
      */
     private String tableName;
-
-    /**
-     * 功能名称
-     */
-    private String functionName;
-
-    /**
-     * 功能描述
-     */
-    private String functionDesc;
 
     /**
      * 数据源名称
@@ -71,10 +61,6 @@ public class AreaDomainFunctionInfo implements Serializable {
      */
     private String areaFunctionResultClass;
 
-    /**
-     * 使用的基础版本
-     */
-    private String baseVersion;
 
     /**
      * 状态-init,init_fail,init_suss
@@ -86,36 +72,61 @@ public class AreaDomainFunctionInfo implements Serializable {
      */
     private String version;
 
+    private LocalDateTime createTime;
+
     /**
-     * pom文件中的group_id
+     * 功能名称
+     */
+    private String functionName;
+
+    /**
+     * 功能描述
+     */
+    private String functionDesc;
+
+    /**
+     * pom中的groupId
      */
     private String groupId;
 
     /**
-     * pom文件中的artifact_id
+     * pom中的artifactId
      */
     private String artifactId;
 
     /**
-     * 组件名称
+     * 领域id
+     */
+    private String areaId;
+
+    /**
+     * 领域名称
+     */
+    private String areaName;
+
+    @TableField(value = "son_domain_info", typeHandler = FastjsonTypeHandler.class)
+    private SonDomainModelInfo sonDomainModelInfo;
+
+    /**
+     * 组件
      */
     private String taskComponent;
 
     /**
-     * 组件方法
+     * 组件功能
      */
     private String taskService;
 
-    private LocalDateTime createTime;
-
-    private String bizUrl;
-
     /**
-     * 部署的实例数量
+     * 文件 地址
      */
     private Integer instanceNum;
+
+    private String bizUrl;
     /**
      * 领域功能版本id
      */
     private String domainFunctionVersionId;
+
+    private Integer taskId;
 }

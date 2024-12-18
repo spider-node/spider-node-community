@@ -3,6 +3,7 @@ package cn.spider.framework.domain.area.task.data;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.Set;
 
 public class CreateCoderParam {
     // 项目名称 传入功能的名称+版本
@@ -12,7 +13,6 @@ public class CreateCoderParam {
     private JsonObject sonDomainInfo;
 
     // 数据源id
-    private String datasource;
     // 需求
     private List<String> businessRequirements;
 
@@ -21,7 +21,7 @@ public class CreateCoderParam {
     /**
      * 领域功能版本的id
      */
-    private Integer baseInfoId;
+    private Set<Integer> baseInfoIds;
 
     /**
      * 领域功能版本的id
@@ -29,10 +29,9 @@ public class CreateCoderParam {
     private String domainFunctionVersionId;
 
 
-    public CreateCoderParam(String projectName, JsonObject sonDomainInfo, String datasourceId, List<String> businessRequirements) {
+    public CreateCoderParam(String projectName, JsonObject sonDomainInfo, List<String> businessRequirements) {
         this.projectName = projectName;
         this.sonDomainInfo = sonDomainInfo;
-        this.datasource = datasourceId;
         this.businessRequirements = businessRequirements;
     }
 
@@ -52,14 +51,6 @@ public class CreateCoderParam {
         this.sonDomainInfo = sonDomainInfo;
     }
 
-    public String getDatasource() {
-        return datasource;
-    }
-
-    public void setDatasource(String datasourceId) {
-        this.datasource = datasourceId;
-    }
-
     public List<String> getBusinessRequirements() {
         return businessRequirements;
     }
@@ -76,12 +67,12 @@ public class CreateCoderParam {
         this.taskId = taskId;
     }
 
-    public Integer getBaseInfoId() {
-        return baseInfoId;
+    public Set<Integer> getBaseInfoIds() {
+        return baseInfoIds;
     }
 
-    public void setBaseInfoId(Integer baseInfoId) {
-        this.baseInfoId = baseInfoId;
+    public void setBaseInfoIds(Set<Integer> baseInfoIds) {
+        this.baseInfoIds = baseInfoIds;
     }
 
     public String getDomainFunctionVersionId() {

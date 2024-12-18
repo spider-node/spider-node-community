@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,10 +37,10 @@ public class SpiderSonAreaServiceImpl extends ServiceImpl<SpiderSonAreaMapper, S
         Page<SpiderSonArea> rowPage = new Page(param.getPage(), param.getSize());
         rowPage.setSearchCount(true);
         LambdaQueryWrapper queryWrapper = new LambdaQueryWrapper<SpiderSonArea>()
-                .eq(StringUtils.isNotEmpty(param.getAreaName()), SpiderSonArea::getAreaName, param.getAreaName())
-                .in(CollectionUtils.isNotEmpty(param.getIds()),SpiderSonArea :: getId,param.getIds())
-                .eq(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderSonArea::getSonAreaName, param.getSonAreaName());
-        super.baseMapper.selectPage(rowPage,queryWrapper);
+                .likeRight(StringUtils.isNotEmpty(param.getAreaName()), SpiderSonArea::getAreaName, param.getAreaName())
+                .in(CollectionUtils.isNotEmpty(param.getIds()), SpiderSonArea::getId, param.getIds())
+                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderSonArea::getSonAreaName, param.getSonAreaName());
+        super.baseMapper.selectPage(rowPage, queryWrapper);
         List<SpiderSonArea> spiderSonAreas = rowPage.getRecords();
         if (CollectionUtils.isEmpty(spiderSonAreas)) {
             return new QuerySonAreaResult(new ArrayList<>(), 0l);
@@ -58,17 +59,17 @@ public class SpiderSonAreaServiceImpl extends ServiceImpl<SpiderSonAreaMapper, S
         List<QuerySonAreaData> sonAreaData = new ArrayList<>(spiderSonAreas.size());
         for (SpiderSonArea sonArea : spiderSonAreas) {
             List<AreaDomainBaseInfo> areaDomainBaseInfoList = areaDomainBaseInfoMap.get(sonArea.getSonAreaName());
-            if(CollectionUtils.isEmpty(areaDomainBaseInfoList)){
+            if (CollectionUtils.isEmpty(areaDomainBaseInfoList)) {
                 continue;
             }
             // 把areaDomainBaseInfoList根据createTime进行排序返回创建时间最新的一条数据
-            AreaDomainBaseInfo baseInfo  = areaDomainBaseInfoList.stream().sorted(Comparator.comparing(AreaDomainBaseInfo :: getId).reversed()).findFirst().get();
+            AreaDomainBaseInfo baseInfo = areaDomainBaseInfoList.stream().sorted(Comparator.comparing(AreaDomainBaseInfo::getId).reversed()).findFirst().get();
 
             List<DomainFieldInfo> domainFieldInfos = JSONArray.parseArray(baseInfo.getDomainObject(), DomainFieldInfo.class);
             domainFieldInfos.forEach(item -> {
                 item.setAreaFiled(ClassUtil.toLowerFirstChar(baseInfo.getDomainObjectEntityName()) + "." + item.getField());
             });
-            QuerySonAreaData areaData = new QuerySonAreaData(sonArea.getSonAreaName(), domainFieldInfos,sonArea.getId());
+            QuerySonAreaData areaData = new QuerySonAreaData(sonArea.getSonAreaName(), domainFieldInfos, sonArea.getId());
             sonAreaData.add(areaData);
         }
         return new QuerySonAreaResult(sonAreaData, rowPage.getTotal());
@@ -77,15 +78,17 @@ public class SpiderSonAreaServiceImpl extends ServiceImpl<SpiderSonAreaMapper, S
     @Override
     public QuerySonAreaInfoResult querySonAreaInfos(QuerySonAreaInfoParam param) {
         LambdaQueryWrapper queryWrapper = new LambdaQueryWrapper<SpiderSonArea>()
-                .eq(Objects.nonNull(param.getId()),SpiderSonArea::getId,param.getId())
-                .likeRight(StringUtils.isNotEmpty(param.getTableName()),SpiderSonArea :: getTableName,param.getTableName())
-                .likeRight(StringUtils.isNotEmpty(param.getAreaName()),SpiderSonArea :: getAreaName,param.getAreaName())
-                .likeRight(StringUtils.isNotEmpty(param.getDatasource()),SpiderSonArea :: getDatasource,param.getDatasource())
-                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()),SpiderSonArea :: getSonAreaName,param.getSonAreaName())
-                .eq(StringUtils.isNotEmpty(param.getAreaId()),SpiderSonArea :: getAreaId,param.getAreaId());
+                .eq(Objects.nonNull(param.getId()), SpiderSonArea::getId, param.getId())
+                .in(CollectionUtils.isNotEmpty(param.getIds()), SpiderSonArea::getId, param.getIds())
+                .in(CollectionUtils.isNotEmpty(param.getAreaIds()), SpiderSonArea::getAreaId, param.getAreaIds())
+                .likeRight(StringUtils.isNotEmpty(param.getTableName()), SpiderSonArea::getTableName, param.getTableName())
+                .likeRight(StringUtils.isNotEmpty(param.getAreaName()), SpiderSonArea::getAreaName, param.getAreaName())
+                .likeRight(StringUtils.isNotEmpty(param.getDatasource()), SpiderSonArea::getDatasource, param.getDatasource())
+                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderSonArea::getSonAreaName, param.getSonAreaName())
+                .eq(StringUtils.isNotEmpty(param.getAreaId()), SpiderSonArea::getAreaId, param.getAreaId());
         Page<SpiderSonArea> rowPage = new Page(param.getPage(), param.getSize());
-        super.baseMapper.selectPage(rowPage,queryWrapper);
+        super.baseMapper.selectPage(rowPage, queryWrapper);
         List<SpiderSonArea> spiderSonAreas = rowPage.getRecords();
-        return new QuerySonAreaInfoResult(spiderSonAreas,rowPage.getTotal());
+        return new QuerySonAreaInfoResult(spiderSonAreas, rowPage.getTotal());
     }
 }

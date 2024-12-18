@@ -19,6 +19,10 @@ public interface VersionInterface {
     }
     // 新增版本
     Future<Void> insertVersion(JsonObject data);
+
+    // 新增版本v2
+    Future<Void> insertVersionV2(JsonObject data);
+
     // 更新版本
     Future<Void> updateVersion(JsonObject data);
 

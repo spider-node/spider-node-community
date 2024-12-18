@@ -1,7 +1,9 @@
 package cn.spider.framework.domain.area.node.entity;
 
+import cn.spider.framework.domain.area.node.data.SonDomainInfo;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 
 import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
@@ -15,7 +17,7 @@ import java.util.Date;
  * @author dds
  * @since 2024-11-10
  */
-@TableName("spider_area_function")
+@TableName(value = "spider_area_function", autoResultMap = true)
 public class SpiderAreaFunction {
 
     /**
@@ -64,15 +66,12 @@ public class SpiderAreaFunction {
      */
     private String areaName;
 
-    /**
-     * 子领域id
-     */
-    private Integer sonDomainId;
 
     /**
-     * 子域名称
+     * 子域的信息存储
      */
-    private String sonDomainName;
+    @TableField(value = "son_domain_Info", typeHandler = FastjsonTypeHandler.class)
+    private SonDomainInfo sonDomainInfo;
 
     /**
      * 服务id
@@ -186,19 +185,11 @@ public class SpiderAreaFunction {
         this.createTime = createTime;
     }
 
-    public Integer getSonDomainId() {
-        return sonDomainId;
+    public SonDomainInfo getSonDomainInfo() {
+        return sonDomainInfo;
     }
 
-    public void setSonDomainId(Integer sonDomainId) {
-        this.sonDomainId = sonDomainId;
-    }
-
-    public String getSonDomainName() {
-        return sonDomainName;
-    }
-
-    public void setSonDomainName(String sonDomainName) {
-        this.sonDomainName = sonDomainName;
+    public void setSonDomainInfo(SonDomainInfo sonDomainInfo) {
+        this.sonDomainInfo = sonDomainInfo;
     }
 }

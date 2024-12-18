@@ -48,7 +48,7 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
 
-    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager, HostPluginInterface hostPluginInterface, Executor spiderBusinessPool, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
         this.hostPluginInterface = hostPluginInterface;
@@ -80,10 +80,10 @@ public class NodeInterfaceImpl implements NodeInterface {
         Node node = JSON.parseObject(data.toString(), Node.class);
         JSONObject methodParam = JSONObject.parseObject(data.getJsonObject("methodParam").toString());
 
-        if(methodParam.containsKey("param")){
+        if (methodParam.containsKey("param")) {
             node.setParamMapping(new JsonObject(methodParam.getJSONObject("param").toString()));
         }
-        if (methodParam.containsKey("result")){
+        if (methodParam.containsKey("result")) {
             node.setResultMapping(new JsonObject(methodParam.getJSONObject("result").toString()));
         }
         return nodeManger.updateNode(node);
@@ -187,33 +187,35 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     /**
      * 构建并且-发起部署申请
-     * @param param 构建应用插件的参数信息
      *
+     * @param param 构建应用插件的参数信息
      */
     @Override
     public Future<JsonObject> deployCode(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
-        pluginManager.buildPlugin(param).onSuccess(buildSuss->{
+        String domainFunctionVersionId = param.getString("domainFunctionVersionId");
+        SpiderAreaFunctionVersion spiderAreaFunctionVersion = spiderAreaFunctionVersionService.getById(domainFunctionVersionId);
+        param.put("version", spiderAreaFunctionVersion.getVersion());
+        pluginManager.buildPlugin(param).onSuccess(buildSuss -> {
             CreateProjectResult projectResult = buildSuss.mapTo(CreateProjectResult.class);
-            if(StringUtils.isNotEmpty(projectResult.getErrorStackTrace())){
+            if (StringUtils.isNotEmpty(projectResult.getErrorStackTrace())) {
                 promise.complete(JsonObject.mapFrom(projectResult));
                 return;
             }
             promise.complete();
-            spiderBusinessPool.execute(()->{
+            spiderBusinessPool.execute(() -> {
                 // 修改版本新增状态为编译完成
-                String domainFunctionVersionId = param.getString("domainFunctionVersionId");
                 spiderAreaFunctionVersionService.lambdaUpdate()
                         .set(SpiderAreaFunctionVersion::getStatus, NodeStatus.COMPILE)
-                        .eq(SpiderAreaFunctionVersion::getId,domainFunctionVersionId)
+                        .eq(SpiderAreaFunctionVersion::getId, domainFunctionVersionId)
                         .update();
                 // 构造基础信息成功- 开始发起部署
-                hostPluginInterface.pluginOnline(new JsonObject().put("functionId",projectResult.getId())).onFailure(fail->{
+                hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
                     log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 });
             });
 
-        }).onFailure(buildFail->{
+        }).onFailure(buildFail -> {
             promise.fail(buildFail);
         });
         return promise.future();
@@ -237,14 +239,14 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<JsonObject> queryDomainFunction(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             try {
                 QueryDomainFunctionParam queryDomainFunctionParam = param.mapTo(QueryDomainFunctionParam.class);
                 QueryDomainFunctionResult result = nodeManger.queryDomainFunction(queryDomainFunctionParam);
                 promise.complete(JsonObject.mapFrom(result));
             } catch (Exception e) {
                 promise.fail(e);
-                log.error("queryDomainFunction error",e);
+                log.error("queryDomainFunction error", e);
             }
         });
         return promise.future();
@@ -253,7 +255,7 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<Void> updateDomainFunction(JsonObject param) {
         Promise<Void> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             try {
                 SpiderAreaFunction spiderAreaFunction = param.mapTo(SpiderAreaFunction.class);
                 nodeManger.upsertDomainFunction(spiderAreaFunction);
@@ -270,13 +272,13 @@ public class NodeInterfaceImpl implements NodeInterface {
     @Override
     public Future<JsonObject> queryDomainFunctionVersion(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             try {
                 QueryDomainFunctionVersionResult result = nodeManger.queryDomainFunctionVersion(param.mapTo(QueryDomainFunctionVersionParam.class));
                 promise.complete(JsonObject.mapFrom(result));
             } catch (Exception e) {
                 promise.fail(e);
-                log.error("queryDomainFunctionVersion error",e);
+                log.error("queryDomainFunctionVersion error", e);
             }
         });
         return promise.future();

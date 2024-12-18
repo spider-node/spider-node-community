@@ -3,11 +3,15 @@ package cn.spider.framework.domain.area.function.data;
 public class QueryBusinessFunctionParam {
     private String functionName;
 
+    private String functionId;
+
     private String areaId;
 
     private Integer page;
 
     private Integer size;
+
+
 
     public String getFunctionName() {
         return functionName;
@@ -39,5 +43,13 @@ public class QueryBusinessFunctionParam {
 
     public void setSize(Integer size) {
         this.size = size;
+    }
+
+    public String getFunctionId() {
+        return functionId;
+    }
+
+    public void setFunctionId(String functionId) {
+        this.functionId = functionId;
     }
 }

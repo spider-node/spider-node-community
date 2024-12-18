@@ -234,7 +234,7 @@ public class FunctionManger {
                                 .startId(functionVersionModel.getStartEventId())
                                 .functionName(functionVersionModel.getFunctionName())
                                 .versionId(functionVersionModel.getId())
-                                .resultMapping(functionVersionModel.getResultMapping())
+                                //.resultMapping(functionVersionModel.getResultMapping())
                                 .build();
                         promise.complete(functionInfo);
                     }).onFailure(fail -> {
@@ -251,6 +251,7 @@ public class FunctionManger {
         Page<SpiderBusinessFunction> rowPage = new Page(param.getPage(), param.getSize());
         LambdaQueryWrapper<SpiderBusinessFunction> queryWrapper = new LambdaQueryWrapper<SpiderBusinessFunction>()
                 .eq(StringUtils.isNotEmpty(param.getAreaId()), SpiderBusinessFunction::getAreaId, param.getAreaId())
+                .eq(StringUtils.isNotEmpty(param.getFunctionId()), SpiderBusinessFunction::getId, param.getFunctionId())
                 .likeRight(StringUtils.isNotEmpty(param.getFunctionName()), SpiderBusinessFunction::getFunctionName, param.getFunctionName());
         IPage page = spiderBusinessFunctionService.page(rowPage, queryWrapper);
         return new QueryBusinessFunctionResult(page.getRecords(), page.getTotal());
@@ -272,5 +273,6 @@ public class FunctionManger {
         }
         spiderAreaFunctionVersionService.updateById(param);
     }
+
 
 }

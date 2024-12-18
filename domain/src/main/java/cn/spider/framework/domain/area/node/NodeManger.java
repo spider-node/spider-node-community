@@ -385,8 +385,9 @@ public class NodeManger {
         Page<SpiderAreaFunction> rowPage = new Page(param.getPage(), param.getSize());
         LambdaQueryWrapper<SpiderAreaFunction> queryWrapper = new LambdaQueryWrapper<SpiderAreaFunction>()
                 .likeRight(StringUtils.isNotEmpty(param.getName()), SpiderAreaFunction::getName, param.getName())
+                .eq(StringUtils.isNotEmpty(param.getFunctionId()), SpiderAreaFunction::getId, param.getFunctionId())
                 .likeRight(StringUtils.isNotEmpty(param.getAreaName()), SpiderAreaFunction::getAreaName, param.getAreaName())
-                .likeRight(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderAreaFunction::getSonDomainName, param.getSonAreaName());
+                .like(StringUtils.isNotEmpty(param.getSonAreaName()), SpiderAreaFunction::getSonDomainInfo, param.getSonAreaName());
 
         IPage page = spiderAreaFunctionService.page(rowPage, queryWrapper);
         return new QueryDomainFunctionResult(page.getRecords(), page.getTotal());
@@ -394,11 +395,15 @@ public class NodeManger {
 
     // 查询版本
     public QueryDomainFunctionVersionResult queryDomainFunctionVersion(QueryDomainFunctionVersionParam param) {
-        List<SpiderAreaFunctionVersion> functionVersions = spiderAreaFunctionVersionService.lambdaQuery()
+        Page<SpiderAreaFunctionVersion> rowPage = new Page(param.getPage(), param.getSize());
+        LambdaQueryWrapper<SpiderAreaFunctionVersion> queryWrapper = new LambdaQueryWrapper<SpiderAreaFunctionVersion>()
                 .eq(StringUtils.isNotEmpty(param.getDomainFunctionId()), SpiderAreaFunctionVersion::getDomainFunctionId, param.getDomainFunctionId())
-                .likeRight(StringUtils.isNotEmpty(param.getSonDomainVersion()), SpiderAreaFunctionVersion::getSonDomainVersion, param.getSonDomainVersion())
-                .list();
-        return new QueryDomainFunctionVersionResult(functionVersions);
+                .eq(StringUtils.isNotEmpty(param.getDomainFunctionVersionId()), SpiderAreaFunctionVersion::getId, param.getDomainFunctionVersionId())
+                .eq(StringUtils.isNotEmpty(param.getDomainFunctionName()), SpiderAreaFunctionVersion::getDomainFunctionName, param.getDomainFunctionName());
+
+        IPage page = spiderAreaFunctionVersionService.page(rowPage, queryWrapper);
+
+        return new QueryDomainFunctionVersionResult(page.getRecords(),page.getTotal());
     }
 
     public Future<Void> checkDeployInfo() {

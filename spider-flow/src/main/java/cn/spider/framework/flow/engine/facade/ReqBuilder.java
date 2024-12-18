@@ -87,12 +87,8 @@ public class ReqBuilder<T> {
         return this;
     }
 
-    public ReqBuilder<T> resultClassMapping(String resultMapping) {
-        Map<String,String> resultMap = new HashMap<>();
-        if(StringUtils.isNotEmpty(resultMapping)){
-            resultMap = JSON.parseObject(resultMapping,Map.class);
-        }
-        this.storyRequest.setResultMapping(resultMap);
+    public ReqBuilder<T> resultClassMapping(Map<String,String> resultMapping) {
+        this.storyRequest.setResultMapping(resultMapping);
         return this;
     }
 

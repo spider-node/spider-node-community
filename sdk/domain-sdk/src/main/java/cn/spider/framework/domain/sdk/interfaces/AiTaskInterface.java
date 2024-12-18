@@ -29,5 +29,27 @@ public interface AiTaskInterface {
      */
     Future<Void> startTestCase(JsonObject param);
 
+    /**
+     * 查询用例信息
+     */
+    Future<JsonObject> queryTestCaseInfo(JsonObject param);
 
+    /**
+     *  重新执行case
+     * @param param 用例的参数
+     * @return 返回一个空的Future 这是个异步的任务
+     */
+    Future<Void> restartCase(JsonObject param);
+
+    /**
+     * 通过 ai生成代码任务的步骤
+     * @param param 步骤信息
+     * @return 空的future
+     */
+    Future<Void> syncAiCoderStep(JsonObject param);
+
+    /**
+     * 查看任务步骤
+     */
+    Future<JsonObject> queryTaskStep(JsonObject param);
 }

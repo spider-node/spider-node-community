@@ -30,12 +30,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class AreaImpl implements AreaInterface {
@@ -52,7 +54,7 @@ public class AreaImpl implements AreaInterface {
 
     private IAreaDomainBaseInfoService areaDomainBaseInfoService;
 
-    public AreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService, DatasourceManager datasourceManager, Executor spiderBusinessPool, ISpiderAreaService spiderAreaService,IAreaDomainBaseInfoService areaDomainBaseInfoService) {
+    public AreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService, DatasourceManager datasourceManager, Executor spiderBusinessPool, ISpiderAreaService spiderAreaService, IAreaDomainBaseInfoService areaDomainBaseInfoService) {
         this.areaManger = areaManger;
         this.spiderSonAreaService = spiderSonAreaService;
         this.datasourceManager = datasourceManager;
@@ -168,6 +170,12 @@ public class AreaImpl implements AreaInterface {
     @Override
     public Future<JsonObject> querySonBase(JsonObject data) {
         QuerySonBaseParam param = data.mapTo(QuerySonBaseParam.class);
+        if (CollectionUtils.isNotEmpty(param.getSonBaseIds())) {
+            List<AreaDomainBaseInfo> areaDomainBaseInfos = areaDomainBaseInfoService.lambdaQuery().in(AreaDomainBaseInfo::getId, param.getSonBaseIds()).select(AreaDomainBaseInfo::getSonAreaId).list();
+            // 获取areaDomainBaseInfos中的SonAreaId 转为list 把
+            List<Long> sonAreaIds = areaDomainBaseInfos.stream().map(item->Long.valueOf(item.getSonAreaId().intValue())).collect(Collectors.toList());
+            param.setSonIds(sonAreaIds);
+        }
         List<SpiderSonArea> spiderSonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId, param.getSonIds()).list();
         QuerySonBaseResult result = new QuerySonBaseResult(spiderSonAreas);
         return Future.succeededFuture(JsonObject.mapFrom(result));
@@ -236,7 +244,7 @@ public class AreaImpl implements AreaInterface {
     @Override
     public Future<Void> upsertDatasource(JsonObject data) {
         Promise<Void> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             datasourceManager.upsertDatasource(data.mapTo(AreaDatasourceInfo.class));
             promise.complete();
         });
@@ -246,15 +254,26 @@ public class AreaImpl implements AreaInterface {
     @Override
     public Future<JsonObject> querySonDomainVersion(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             try {
                 QuerySonAreaVersionParam param = data.mapTo(QuerySonAreaVersionParam.class);
-                QuerySonAreaVersionResult result = areaDomainBaseInfoService.querySonAreaVersion(param);
+                QuerySonAreaVersionResultV2 result = areaDomainBaseInfoService.querySonAreaBaseV2(param);
                 promise.complete(JsonObject.mapFrom(result));
             } catch (Exception e) {
                 promise.fail(e);
-                log.error("querySonDomainVersion error",e);
+                log.error("querySonDomainVersion error", e);
             }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> querySonAreaBaseV2(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            QuerySonAreaVersionParam param = data.mapTo(QuerySonAreaVersionParam.class);
+            QuerySonAreaVersionResultV2 result = areaDomainBaseInfoService.querySonAreaBaseV2(param);
+            promise.complete(JsonObject.mapFrom(result));
         });
         return promise.future();
     }

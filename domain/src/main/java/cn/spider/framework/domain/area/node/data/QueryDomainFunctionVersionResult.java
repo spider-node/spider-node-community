@@ -5,8 +5,11 @@ import java.util.List;
 public class QueryDomainFunctionVersionResult {
     private List<SpiderAreaFunctionVersion> versionList;
 
-    public QueryDomainFunctionVersionResult(List<SpiderAreaFunctionVersion> versionList) {
+    private Long total;
+
+    public QueryDomainFunctionVersionResult(List<SpiderAreaFunctionVersion> versionList, Long total) {
         this.versionList = versionList;
+        this.total = total;
     }
 
     public List<SpiderAreaFunctionVersion> getVersionList() {

@@ -6,13 +6,21 @@ import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.domain.area.data.enums.BpmnStatus;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.data.QueryFunctionParam;
+import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
+import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
+import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
 import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
+import cn.spider.framework.domain.area.function.version.data.QueryFunctionVersionResult;
 import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
 import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
 import cn.spider.framework.domain.sdk.data.RefreshBpmnParam;
 import cn.spider.framework.domain.sdk.data.enums.UploadBpmnStatus;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -24,6 +32,9 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.*;
 
@@ -42,9 +53,12 @@ public class VersionManager {
 
     private ContainerService containerService;
 
-    public VersionManager(MySQLPool client, ContainerService containerService) {
+    private ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService;
+
+    public VersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService) {
         this.client = client;
         this.containerService = containerService;
+        this.spiderBusinessFunctionVersionService = spiderBusinessFunctionVersionService;
     }
 
     private RowMapper<FunctionVersionModel> ROW_BUSINESS = row -> {
@@ -57,12 +71,10 @@ public class VersionManager {
         functionVersionModel.setBpmnUrl(row.getString("bpmn_url"));
         functionVersionModel.setStartEventId(row.getString("start_event_id"));
         functionVersionModel.setBpmnName(row.getString("bpmn_name"));
-        if(StringUtils.isNotEmpty(row.getString("bpmn_status"))){
+        if (StringUtils.isNotEmpty(row.getString("bpmn_status"))) {
             functionVersionModel.setBpmnStatus(BpmnStatus.valueOf(row.getString("bpmn_status")));
         }
-        functionVersionModel.setResultMapping(row.getString("result_mapping"));
-        functionVersionModel.setStatus(VersionStatus.valueOf(row.getString("status")));
-        functionVersionModel.setRunMapping(row.getString("run_mapping"));
+
         return functionVersionModel;
     };
 
@@ -92,7 +104,7 @@ public class VersionManager {
                 .onSuccess(function -> {
                     promise.complete();
                 }).onFailure(fail -> {
-                    log.info("新增version错误信息为 {}",ExceptionMessage.getStackTrace(fail));
+                    log.info("新增version错误信息为 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
                 });
         return promise.future();
@@ -138,10 +150,10 @@ public class VersionManager {
         queryVersionFunctionParam.setPage(1);
         queryVersionFunctionParam.setSize(1);
         Future<List<FunctionVersionModel>> functionFuture = selectVersion(queryVersionFunctionParam);
-        functionFuture.onSuccess(suss->{
+        functionFuture.onSuccess(suss -> {
             List<FunctionVersionModel> functionVersionModels = suss;
-            if(param.equals(VersionStatus.START)){
-                if(CollectionUtils.isEmpty(functionVersionModels)){
+            if (param.equals(VersionStatus.START)) {
+                if (CollectionUtils.isEmpty(functionVersionModels)) {
                     promise.fail("该功能中存在一个有效版本,不允许启动其他版本");
                 }
             }
@@ -167,7 +179,7 @@ public class VersionManager {
                         promise.fail(fail);
                     });
 
-        }).onFailure(fail->{
+        }).onFailure(fail -> {
             promise.fail(fail);
         });
         return promise.future();
@@ -196,7 +208,7 @@ public class VersionManager {
             sql.append(" and start_event_id = #{startEventId} ");
         }
 
-        if(StringUtils.isNotEmpty(param.getVersion())){
+        if (StringUtils.isNotEmpty(param.getVersion())) {
             sql.append(" and version = #{version} ");
         }
 
@@ -248,7 +260,7 @@ public class VersionManager {
                         businessFunctionList.add(item);
                     });
                     FunctionVersionModel functionVersionModel = businessFunctionList.get(0);
-                    if(StringUtils.isEmpty(functionVersionModel.getBpmnUrl())){
+                    if (StringUtils.isEmpty(functionVersionModel.getBpmnUrl())) {
                         promise.complete();
                         return;
                     }
@@ -352,5 +364,60 @@ public class VersionManager {
         return promise.future();
     }
 
+    public QueryFunctionVersionResult queryVersion(QueryVersionFunctionParam param) {
+        Page<SpiderBusinessFunctionVersion> rowPage = new Page(param.getPage(), param.getSize());
+        LambdaQueryWrapper<SpiderBusinessFunctionVersion> queryWrapper = new LambdaQueryWrapper<SpiderBusinessFunctionVersion>()
+                .eq(StringUtils.isNotEmpty(param.getFunctionId()), SpiderBusinessFunctionVersion::getFunctionId, param.getFunctionId())
+                .eq(StringUtils.isNotEmpty(param.getVersionId()), SpiderBusinessFunctionVersion::getId, param.getVersionId())
+                .eq(StringUtils.isNotEmpty(param.getFunctionName()), SpiderBusinessFunctionVersion::getFunctionName, param.getFunctionName());
+        IPage page = spiderBusinessFunctionVersionService.page(rowPage, queryWrapper);
+        return new QueryFunctionVersionResult(page.getRecords(), page.getTotal());
+    }
+
+    public void addVersion(SpiderBusinessFunctionVersion spiderBusinessFunctionVersion) {
+        if (StringUtils.isEmpty(spiderBusinessFunctionVersion.getId())) {
+            spiderBusinessFunctionVersion.setId(UUID.randomUUID().toString());
+            spiderBusinessFunctionVersion.setBpmnStatus(BpmnStatus.INIT);
+            spiderBusinessFunctionVersionService.save(spiderBusinessFunctionVersion);
+            return;
+        }
+        spiderBusinessFunctionVersionService.updateById(spiderBusinessFunctionVersion);
+    }
+
+    public SpiderBusinessFunctionVersion queryAllowRunFunctionVersion(String functionId, String version, Map<String, Object> param) {
+        // 查询出来版本信息
+        List<SpiderBusinessFunctionVersion> functionVersions = spiderBusinessFunctionVersionService.lambdaQuery()
+                .eq(SpiderBusinessFunctionVersion::getFunctionId, functionId)
+                .eq(StringUtils.isNotEmpty(version), SpiderBusinessFunctionVersion::getVersion, version)
+                .eq(SpiderBusinessFunctionVersion::getStatus, VersionStatus.START)
+                .eq(SpiderBusinessFunctionVersion::getBpmnStatus, BpmnStatus.DEPLOY)
+                .list();
+        Preconditions.checkArgument(CollectionUtils.isNotEmpty(functionVersions), "没有找到对应的功能版本,请检查");
+        // 如果指定的版本不为空，直接过滤版本
+        if (StringUtils.isNotEmpty(version)) {
+            Optional<SpiderBusinessFunctionVersion> businessFunctionVersion = functionVersions
+                    .stream()
+                    .filter(item -> item.getVersion().equals(version))
+                    .findFirst();
+            Preconditions.checkArgument(businessFunctionVersion.isPresent(), "没有找到对应的功能版本,请检查");
+            return businessFunctionVersion.get();
+        }
+        // 通过表达式来获取正确的版本
+        Optional<SpiderBusinessFunctionVersion> businessFunctionVersion = functionVersions
+                .stream()
+                .filter(item-> elQueryFunctionVersion(item.getRule(), param))
+                .findFirst();
+        Preconditions.checkArgument(businessFunctionVersion.isPresent(), "没有找到对应的功能版本,请检查");
+        return businessFunctionVersion.get();
+    }
+
+    private Boolean elQueryFunctionVersion(String rule, Map<String, Object> param) {
+        // 创建SpEL表达式解析器
+        ExpressionParser parser = new SpelExpressionParser();
+
+        // 创建评估上下文并注册变量（即JSON对象）
+        StandardEvaluationContext context = new StandardEvaluationContext(param);
+        return parser.parseExpression(rule).getValue(context, Boolean.class);
+    }
 
 }

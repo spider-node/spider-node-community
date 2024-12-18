@@ -98,21 +98,28 @@ public class SpiderTaskTestInfoServiceImpl extends ServiceImpl<SpiderTaskTestInf
             spiderTaskTestInfoService.updateById(spiderTaskTestInfo);
             flowService.simpleStartNode(JsonObject.mapFrom(simpleStartParam))
                     .onSuccess(suss -> {
-                        SimpleStartResult runResult = suss.mapTo(SimpleStartResult.class);
-                        TestStatus testStatus = runResult.getRunStatus() ? TestStatus.SUSS : TestStatus.FAIL;
-                        spiderTaskTestInfo.setTestStatus(testStatus);
-                        if(runResult.getRunStatus()){
-                            CaseExpect expect = spiderTaskTestInfo.getCaseInputParam().getResultIsException() ? CaseExpect.NO_SATISFY : CaseExpect.SATISFY;
-                            spiderTaskTestInfo.setExpect(expect);
-                            spiderTaskTestInfo.setRunResult(JSONObject.parseObject(runResult.getResultObject().toString()));
-                        }else {
-                            CaseExpect expect = spiderTaskTestInfo.getCaseInputParam().getResultIsException() ? CaseExpect.SATISFY : CaseExpect.NO_SATISFY;
-                            spiderTaskTestInfo.setExpect(expect);
-                            // 把runResult.getError() 截取前1000个字符
-                            String error = runResult.getError().substring(0, Math.min(3000, runResult.getError().length()));
-                            spiderTaskTestInfo.setError(error);
+                        log.info("case执行成功");
+                        try {
+                            SimpleStartResult runResult = JSON.parseObject(suss.toString(),SimpleStartResult.class);
+                            TestStatus testStatus = runResult.getRunStatus() ? TestStatus.SUSS : TestStatus.FAIL;
+                            spiderTaskTestInfo.setTestStatus(testStatus);
+                            if(runResult.getRunStatus()){
+                                CaseExpect expect = spiderTaskTestInfo.getCaseInputParam().getResultIsException() ? CaseExpect.NO_SATISFY : CaseExpect.SATISFY;
+                                spiderTaskTestInfo.setExpect(expect);
+                                spiderTaskTestInfo.setTestStatus(TestStatus.SUSS);
+                                spiderTaskTestInfo.setRunResult(JSONObject.parseObject(runResult.getResultObject().toString()));
+                            }else {
+                                CaseExpect expect = spiderTaskTestInfo.getCaseInputParam().getResultIsException() ? CaseExpect.SATISFY : CaseExpect.NO_SATISFY;
+                                spiderTaskTestInfo.setExpect(expect);
+                                // 把runResult.getError() 截取前3000个字符
+                                String error = runResult.getError().substring(0, Math.min(3000, runResult.getError().length()));
+                                spiderTaskTestInfo.setError(error);
+                                spiderTaskTestInfo.setTestStatus(TestStatus.FAIL);
+                            }
+                            spiderTaskTestInfoService.updateById(spiderTaskTestInfo);
+                        } catch (Exception e) {
+                            log.info("执行失败{}",ExceptionMessage.getStackTrace(e));
                         }
-                        spiderTaskTestInfoService.updateById(spiderTaskTestInfo);
                     }).onFailure(fail -> {
                         spiderTaskTestInfo.setTestStatus(TestStatus.FAIL);
                         String error = ExceptionMessage.getStackTrace(fail);

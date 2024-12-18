@@ -37,6 +37,13 @@ public interface FunctionInterface {
     // 查询执行的功能节点
     Future<JsonObject> findExecuteFunction(JsonObject data);
 
+    /**
+     * 支持使用el表达式
+     * @param data functionId+ 请求参数，来命中版本,也可以指定版本获取版本
+     * @return
+     */
+    Future<JsonObject> findExecuteFunctionV2(JsonObject data);
+
     // 启动功能
     Future<Void> startStopFunction(JsonObject model);
 

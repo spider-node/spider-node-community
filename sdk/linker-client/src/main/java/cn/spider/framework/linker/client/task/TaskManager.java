@@ -160,10 +160,8 @@ public class TaskManager {
     }
     // 宿主机-执行功能
     public Object runHostApplication(LinkerServerRequest request) {
-        log.info("执行了宿主应用的功能信息 {}",JSON.toJSONString(request));
         if (Objects.isNull(hostApplicationService)) {
             hostApplicationService = applicationContext.getBean(HostApplicationService.class);
-            log.info("获取到的宿主应用服务为 {}");
         }
         return hostApplicationService.runFunction(request);
     }

@@ -76,7 +76,7 @@ public class SpiderServerHandler {
                                VersionInterface versionInterface,
                                Vertx vertx,
                                EventManager eventManager, DataFlowInterface dataFlowInterface,
-                               AiTaskInterface aiTaskInterface,HostPluginInterface hostPluginInterface) {
+                               AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -119,7 +119,7 @@ public class SpiderServerHandler {
         queryVersion();
         updateVersion();
         createVersion();
-
+        createVersionV2();
         updateNode();
         queryNode();
         createNode();
@@ -179,13 +179,18 @@ public class SpiderServerHandler {
         upsertBusinessFunctionV2();
         querySonDomainFunction();
         upsertDomainFunction();
+        queryFunctionVersion();
         queryDomainFunctionVersion();
         querySonDomainVersion();
         upsertDomainFunctionVersion();
         createCoder();
         runCase();
+        restartCase();
         queryFunctionCode();
         queryDeployInfo();
+        queryCaseInfo();
+        syncAiCoderStep();
+        queryTaskStep();
     }
 
     public void selectBpmn() {
@@ -810,6 +815,20 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void createVersionV2() {
+        router.post("/upsert/businessVersion_v2")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.insertVersionV2(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     /**
      * 新增版本
      */
@@ -1260,6 +1279,20 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void queryFunctionVersion() {
+        router.post("/query/business_function_version")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.queryVersionByFunctionId(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     private void queryDomainFunctionVersion() {
         router.post("/query/domain_function_version")
                 .handler(ctx -> {
@@ -1317,6 +1350,34 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void syncAiCoderStep() {
+        router.post("/sync_ai_coder_step")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.syncAiCoderStep(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryTaskStep() {
+        router.post("/query/task_step")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.queryTaskStep(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     private void runCase() {
         router.post("/run_case")
                 .handler(ctx -> {
@@ -1324,6 +1385,20 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     aiTaskInterface.startTestCase(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void restartCase() {
+        router.post("/restart_case")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.restartCase(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
@@ -1352,6 +1427,20 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     hostPluginInterface.queryDeployInfo(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryCaseInfo() {
+        router.post("/query_case_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.queryTestCaseInfo(param).onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));

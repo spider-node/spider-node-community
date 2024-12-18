@@ -1,5 +1,6 @@
 package cn.spider.framework.domain.area.node.entity;
 
+import cn.spider.framework.domain.area.node.SonDomainInfoFunction;
 import cn.spider.framework.domain.area.node.TestCase;
 import cn.spider.framework.domain.area.node.data.FunctionFunctional;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
@@ -32,9 +33,9 @@ public class SpiderAreaFunctionVersion{
     private String domainFunctionId;
 
     /**
-     * 子域id
+     * 功能名称
      */
-    private Integer sonDomainId;
+    private String domainFunctionName;
 
     /**
      * 版本号
@@ -76,19 +77,37 @@ public class SpiderAreaFunctionVersion{
     private NodeStatus status;
 
     /**
-     * 子域版本
-     */
-    private String sonDomainVersion;
-
-    /**
      * 部署数量
      */
     private Integer predictDeployNum;
+
+    @TableField(value = "son_domain_functions", typeHandler = FastjsonTypeHandler.class)
+    private SonDomainInfoFunction sonDomainFunctions;
 
     /**
      * 创建时间
      */
     private Date createTime;
+
+    private Integer dataFlowId;
+
+    private String dataFlowName;
+
+    public Integer getDataFlowId() {
+        return dataFlowId;
+    }
+
+    public void setDataFlowId(Integer dataFlowId) {
+        this.dataFlowId = dataFlowId;
+    }
+
+    public String getDataFlowName() {
+        return dataFlowName;
+    }
+
+    public void setDataFlowName(String dataFlowName) {
+        this.dataFlowName = dataFlowName;
+    }
 
     public Integer getPredictDeployNum() {
         return predictDeployNum;
@@ -104,14 +123,6 @@ public class SpiderAreaFunctionVersion{
 
     public void setDomainFunctionId(String domainFunctionId) {
         this.domainFunctionId = domainFunctionId;
-    }
-
-    public Integer getSonDomainId() {
-        return sonDomainId;
-    }
-
-    public void setSonDomainId(Integer sonDomainId) {
-        this.sonDomainId = sonDomainId;
     }
 
     public String getVersion() {
@@ -171,14 +182,6 @@ public class SpiderAreaFunctionVersion{
         this.id = id;
     }
 
-    public String getSonDomainVersion() {
-        return sonDomainVersion;
-    }
-
-    public void setSonDomainVersion(String sonDomainVersion) {
-        this.sonDomainVersion = sonDomainVersion;
-    }
-
     public FunctionFunctional getFunctionFunctional() {
         return functionFunctional;
     }
@@ -193,5 +196,21 @@ public class SpiderAreaFunctionVersion{
 
     public void setTestCase(TestCase testCase) {
         this.testCase = testCase;
+    }
+
+    public String getDomainFunctionName() {
+        return domainFunctionName;
+    }
+
+    public void setDomainFunctionName(String domainFunctionName) {
+        this.domainFunctionName = domainFunctionName;
+    }
+
+    public SonDomainInfoFunction getSonDomainFunctions() {
+        return sonDomainFunctions;
+    }
+
+    public void setSonDomainFunctions(SonDomainInfoFunction sonDomainFunctions) {
+        this.sonDomainFunctions = sonDomainFunctions;
     }
 }

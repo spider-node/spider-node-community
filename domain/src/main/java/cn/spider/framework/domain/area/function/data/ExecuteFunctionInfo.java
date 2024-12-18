@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.domain.area.function.data
@@ -47,5 +49,5 @@ public class ExecuteFunctionInfo {
     /**
      * 返回参数的隐射
      */
-    private String resultMapping;
+    private Map<String,String> resultMapping;
 }

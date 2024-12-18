@@ -1,8 +1,12 @@
 package cn.spider.framework.domain.area.sondomain.entity;
 
+import java.util.Set;
+
 public class QuerySonAreaInfoParam {
 
     private Integer id;
+
+    private Set<Integer> ids;
     /**
      * 子域的名称
      */
@@ -21,6 +25,8 @@ public class QuerySonAreaInfoParam {
     private String datasource;
 
     private String areaId;
+
+    private Set<String> areaIds;
 
     private Long page;
 
@@ -88,5 +94,21 @@ public class QuerySonAreaInfoParam {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Set<Integer> getIds() {
+        return ids;
+    }
+
+    public void setIds(Set<Integer> ids) {
+        this.ids = ids;
+    }
+
+    public Set<String> getAreaIds() {
+        return areaIds;
+    }
+
+    public void setAreaIds(Set<String> areaIds) {
+        this.areaIds = areaIds;
     }
 }

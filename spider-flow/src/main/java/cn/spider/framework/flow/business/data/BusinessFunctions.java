@@ -4,6 +4,7 @@ import cn.spider.framework.flow.business.enums.FunctionStatus;
 import cn.spider.framework.flow.business.enums.IsAsync;
 import cn.spider.framework.flow.business.enums.IsRetry;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * @BelongsProject: spider-node
@@ -66,13 +67,13 @@ public class BusinessFunctions {
 
     private String requestClass;
 
-    private String resultMapping;
+    private Map<String,String> resultMapping;
 
-    public String getResultMapping() {
+    public Map<String, String> getResultMapping() {
         return resultMapping;
     }
 
-    public void setResultMapping(String resultMapping) {
+    public void setResultMapping(Map<String, String> resultMapping) {
         this.resultMapping = resultMapping;
     }
 

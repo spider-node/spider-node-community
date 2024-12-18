@@ -112,5 +112,7 @@ public interface AreaInterface {
      */
     Future<JsonObject> querySonDomainVersion(JsonObject data);
 
+    Future<JsonObject> querySonAreaBaseV2(JsonObject data);
+
 
 }

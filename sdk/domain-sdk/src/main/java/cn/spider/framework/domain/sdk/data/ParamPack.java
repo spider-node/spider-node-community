@@ -7,6 +7,8 @@ import java.util.List;
 public class ParamPack {
     private List<NodeField> inputParamDefs;
 
+    public ParamPack(){}
+
     public ParamPack(List<NodeField> inputParamDefs) {
         this.inputParamDefs = inputParamDefs;
     }

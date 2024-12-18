@@ -13,4 +13,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IAreaDomainBaseInfoService extends IService<AreaDomainBaseInfo> {
     QuerySonAreaVersionResult querySonAreaVersion(QuerySonAreaVersionParam param);
+
+    QuerySonAreaVersionResultV2 querySonAreaBaseV2(QuerySonAreaVersionParam param);
 }

@@ -1,10 +1,14 @@
 package cn.spider.framework.domain.area.task.entity;
 
+import cn.spider.framework.domain.area.node.data.SonDomainInfo;
 import cn.spider.framework.domain.area.task.data.enums.TaskStatus;
 import cn.spider.framework.domain.area.task.data.enums.TaskType;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -16,21 +20,20 @@ import java.time.LocalDateTime;
  * @author dds
  * @since 2024-11-10
  */
-@TableName("spider_domain_function_task")
+@TableName(value = "spider_domain_function_task", autoResultMap = true)
 public class SpiderDomainFunctionTask {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
+
+    @TableField(value = "son_domain_info", typeHandler = FastjsonTypeHandler.class)
+    private SonDomainInfo sonDomainInfo;
+
     /**
      * 领域id
      */
     private String taskDomainId;
-
-    /**
-     * 子域id
-     */
-    private Integer taskSonDomainId;
 
     /**
      * 任务类型 NEWLY_ADDED/ITERATION
@@ -127,11 +130,11 @@ public class SpiderDomainFunctionTask {
         this.status = status;
     }
 
-    public Integer getTaskSonDomainId() {
-        return taskSonDomainId;
+    public SonDomainInfo getSonDomainInfo() {
+        return sonDomainInfo;
     }
 
-    public void setTaskSonDomainId(Integer taskSonDomainId) {
-        this.taskSonDomainId = taskSonDomainId;
+    public void setSonDomainInfo(SonDomainInfo sonDomainInfo) {
+        this.sonDomainInfo = sonDomainInfo;
     }
 }

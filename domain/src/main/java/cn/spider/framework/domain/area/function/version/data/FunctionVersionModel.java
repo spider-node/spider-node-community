@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.function.version.data;
 
 import cn.spider.framework.domain.area.data.enums.BpmnStatus;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 /**
@@ -68,10 +69,20 @@ public class FunctionVersionModel {
     /**
      * 返回参数的隐射
      */
-    private String resultMapping;
+    private JSONObject resultMapping;
 
     /**
      * 返回参数的隐射
      */
-    private String runMapping;
+    private JSONObject runMapping;
+
+    /**
+     * 数据流id
+     */
+    private Integer dataFlowId;
+
+    /**
+     * dataflow名称
+     */
+    private String dataFlowName;
 }

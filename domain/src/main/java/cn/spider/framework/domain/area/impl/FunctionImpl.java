@@ -5,9 +5,13 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.data.*;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
+import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
+import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
 import cn.spider.framework.domain.sdk.data.FlowElementModel;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
+import cn.spider.framework.domain.sdk.data.FunctionParamOutput;
+import cn.spider.framework.domain.sdk.data.QueryFunctionVersionParam;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.log.sdk.data.FlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
@@ -26,7 +30,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -48,6 +54,8 @@ public class FunctionImpl implements FunctionInterface {
     private LogInterface logInterface;
 
     private Executor spiderBusinessPool;
+
+    private VersionManager versionManager;
 
     public FunctionImpl(FunctionManger functionManger, LogInterface logInterface, Executor spiderBusinessPool) {
         this.functionManger = functionManger;
@@ -107,6 +115,32 @@ public class FunctionImpl implements FunctionInterface {
             promise.complete(JsonObject.mapFrom(functionInfo));
         }).onFailure(fail -> {
             promise.fail(fail);
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> findExecuteFunctionV2(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                QueryFunctionVersionParam param = data.mapTo(QueryFunctionVersionParam.class);
+                SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = versionManager.queryAllowRunFunctionVersion(param.getFunctionId(), param.getFunctionVersion(), param.getParam());
+                ExecuteFunctionInfo functionInfo = new ExecuteFunctionInfo();
+                functionInfo.setFunctionId(spiderBusinessFunctionVersion.getFunctionId());
+                functionInfo.setFunctionName(spiderBusinessFunctionVersion.getFunctionName());
+                functionInfo.setVersionId(spiderBusinessFunctionVersion.getId());
+                FunctionParamOutput resultMapping  = spiderBusinessFunctionVersion.getResultMapping();
+                Map<String,String> resultMap = new HashMap<>();
+                resultMapping.getOutputParam().stream().forEach(item -> {
+                    resultMap.put(item.getFieldName(),item.getTargetName());
+                });
+                functionInfo.setResultMapping(resultMap);
+                promise.complete(JsonObject.mapFrom(functionInfo));
+            } catch (Exception e) {
+                log.error("获取版本出错{}", ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            }
         });
         return promise.future();
     }

@@ -11,6 +11,8 @@ public class QueryDomainFunctionParam {
      */
     private String sonAreaName;
 
+    private String functionId;
+
     /**
      * 功能名称
      */
@@ -59,5 +61,13 @@ public class QueryDomainFunctionParam {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFunctionId() {
+        return functionId;
+    }
+
+    public void setFunctionId(String functionId) {
+        this.functionId = functionId;
     }
 }

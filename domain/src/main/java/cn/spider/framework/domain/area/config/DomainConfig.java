@@ -14,6 +14,7 @@ import cn.spider.framework.domain.area.domain.service.ISpiderAreaService;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;
+import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.impl.*;
 import cn.spider.framework.domain.area.node.NodeManger;
@@ -24,6 +25,7 @@ import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoServ
 import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
 import cn.spider.framework.domain.area.task.AiTaskInterfaceImpl;
 import cn.spider.framework.domain.area.task.TaskManager;
+import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoderStepService;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import cn.spider.framework.domain.area.task.service.ISpiderTaskTestInfoService;
 import cn.spider.framework.domain.area.timer.CoderTimer;
@@ -92,8 +94,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService) {
-        return new VersionManager(client, containerService);
+    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService) {
+        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService);
     }
 
     @Bean
@@ -148,8 +150,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionInterface buildVersionImpl(VersionManager versionManager) {
-        return new VersionImpl(versionManager);
+    public VersionInterface buildVersionImpl(VersionManager versionManager,Executor spiderBusinessPool) {
+        return new VersionImpl(versionManager,spiderBusinessPool);
     }
 
     @Bean
@@ -315,12 +317,12 @@ public class DomainConfig {
 
     @Bean
     public TaskManager buildTaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
-                       ISpiderAreaFunctionService spiderAreaFunctionService,
-                       ISpiderSonAreaService spiderSonAreaService,
-                       IAreaDomainBaseInfoService baseInfoService,
-                       ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                       AgentVertxClient agentVertxClient){
-        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient);
+                                        ISpiderAreaFunctionService spiderAreaFunctionService,
+                                        ISpiderSonAreaService spiderSonAreaService,
+                                        IAreaDomainBaseInfoService baseInfoService,
+                                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
+                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService){
+        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService);
     }
 
     @Bean

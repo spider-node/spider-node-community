@@ -1,8 +1,17 @@
 package cn.spider.framework.domain.area.function.entity;
 
+import cn.spider.framework.domain.area.data.enums.BpmnStatus;
+import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
+import cn.spider.framework.domain.sdk.data.FunctionParamInput;
+import cn.spider.framework.domain.sdk.data.FunctionParamOutput;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>
@@ -12,7 +21,7 @@ import java.time.LocalDateTime;
  * @author dds
  * @since 2024-10-13
  */
-@TableName("spider_business_function_version")
+@TableName(value = "spider_business_function_version",autoResultMap = true)
 public class SpiderBusinessFunctionVersion implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -30,6 +39,7 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     /**
      * 领域描述
      */
+    @TableField("`desc`")
     private String desc;
 
     /**
@@ -60,34 +70,51 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     /**
      * bpmn_状态
      */
-    private String bpmnStatus;
+    private BpmnStatus bpmnStatus;
 
     /**
      * 返回的字段信息
      */
-    private String resultMapping;
+    @TableField(value = "result_Mapping", typeHandler = FastjsonTypeHandler.class)
+    private FunctionParamOutput resultMapping;
 
     /**
      * 返回参数
      */
-    private String runMapping;
+    @TableField(value = "run_mapping", typeHandler = FastjsonTypeHandler.class)
+    private FunctionParamInput runMapping;
 
     /**
      * 状态
      */
-    private String status;
+    private VersionStatus status;
+
+    /**
+     * 命中规则
+     */
+    private String rule;
 
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
-    public String getRunMapping() {
-        return runMapping;
+    /**
+     * 数据流id
+     */
+    private Integer dataFlowId;
+
+    /**
+     * 数据流名称
+     */
+    private String dataFlowName;
+
+    public String getDataFlowName() {
+        return dataFlowName;
     }
 
-    public void setRunMapping(String runMapping) {
-        this.runMapping = runMapping;
+    public void setDataFlowName(String dataFlowName) {
+        this.dataFlowName = dataFlowName;
     }
 
     public String getId() {
@@ -154,53 +181,59 @@ public class SpiderBusinessFunctionVersion implements Serializable {
         this.bpmnName = bpmnName;
     }
 
-    public String getBpmnStatus() {
-        return bpmnStatus;
-    }
-
-    public void setBpmnStatus(String bpmnStatus) {
-        this.bpmnStatus = bpmnStatus;
-    }
-
-    public String getResultMapping() {
+    public FunctionParamOutput getResultMapping() {
         return resultMapping;
     }
 
-    public void setResultMapping(String resultMapping) {
+    public void setResultMapping(FunctionParamOutput resultMapping) {
         this.resultMapping = resultMapping;
     }
 
-    public String getStatus() {
-        return status;
+    public FunctionParamInput getRunMapping() {
+        return runMapping;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setRunMapping(FunctionParamInput runMapping) {
+        this.runMapping = runMapping;
     }
 
-    public LocalDateTime getCreateTime() {
+    public String getRule() {
+        return rule;
+    }
+
+    public void setRule(String rule) {
+        this.rule = rule;
+    }
+
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(LocalDateTime createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
-    @Override
-    public String toString() {
-        return "SpiderBusinessFunctionVersion{" +
-            "id = " + id +
-            ", functionName = " + functionName +
-            ", desc = " + desc +
-            ", version = " + version +
-            ", functionId = " + functionId +
-            ", bpmnUrl = " + bpmnUrl +
-            ", startEventId = " + startEventId +
-            ", bpmnName = " + bpmnName +
-            ", bpmnStatus = " + bpmnStatus +
-            ", resultMapping = " + resultMapping +
-            ", status = " + status +
-            ", createTime = " + createTime +
-        "}";
+    public BpmnStatus getBpmnStatus() {
+        return bpmnStatus;
+    }
+
+    public void setBpmnStatus(BpmnStatus bpmnStatus) {
+        this.bpmnStatus = bpmnStatus;
+    }
+
+    public VersionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(VersionStatus status) {
+        this.status = status;
+    }
+
+    public Integer getDataFlowId() {
+        return dataFlowId;
+    }
+
+    public void setDataFlowId(Integer dataFlowId) {
+        this.dataFlowId = dataFlowId;
     }
 }

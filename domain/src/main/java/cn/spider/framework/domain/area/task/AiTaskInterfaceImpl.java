@@ -1,11 +1,14 @@
 package cn.spider.framework.domain.area.task;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.datasource.data.RunGeneralSQLModel;
-import cn.spider.framework.domain.area.task.data.CaseSqlModel;
-import cn.spider.framework.domain.area.task.data.MethodInputModel;
-import cn.spider.framework.domain.area.task.data.StartTestCaseParam;
+import cn.spider.framework.domain.area.task.data.*;
+import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionAiCoderStep;
 import cn.spider.framework.domain.area.task.entity.SpiderTaskTestInfo;
+import cn.spider.framework.domain.area.task.entity.enums.CaseExpect;
+import cn.spider.framework.domain.area.task.entity.enums.StepStatus;
+import cn.spider.framework.domain.area.task.entity.enums.TestStatus;
 import cn.spider.framework.domain.area.task.service.ISpiderTaskTestInfoService;
 import cn.spider.framework.domain.sdk.interfaces.AiTaskInterface;
 import com.alibaba.fastjson.JSON;
@@ -14,6 +17,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -93,5 +98,73 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
             spiderTaskTestInfoService.save(spiderTaskTestInfo);
         });
         return Future.succeededFuture();
+    }
+
+    /**
+     * 查询ai构造的测试用例
+     * @param 主要作用域 domainFunctionVersionId
+     * @return 测试用例信息
+     */
+    @Override
+    public Future<JsonObject> queryTestCaseInfo(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            String domainFunctionVersionId = param.getString("domainFunctionVersionId");
+            try {
+                List<SpiderTaskTestInfo> spiderTaskTestInfos = spiderTaskTestInfoService.lambdaQuery().eq(SpiderTaskTestInfo::getDomainFunctionVersionId, domainFunctionVersionId).list();
+                CaseInfoResult caseInfoResult = new CaseInfoResult(spiderTaskTestInfos);
+                promise.complete(JsonObject.mapFrom(caseInfoResult));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error("查询测试用例失败{}", ExceptionMessage.getStackTrace(e));
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> restartCase(JsonObject param) {
+        Integer taskId = param.getInteger("id");
+        spiderTaskTestInfoService.lambdaUpdate()
+                .set(SpiderTaskTestInfo::getTestStatus, TestStatus.INIT)
+                .set(SpiderTaskTestInfo::getRunResult, null)
+                .set(SpiderTaskTestInfo::getExpect, CaseExpect.INIT)
+                .set(SpiderTaskTestInfo::getError, "")
+                .eq(SpiderTaskTestInfo::getId, taskId)
+                .update();
+        return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<Void> syncAiCoderStep(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                SpiderDomainFunctionAiCoderStep step = param.mapTo(SpiderDomainFunctionAiCoderStep.class);
+                step.setStepStatus(StringUtils.isEmpty(step.getError()) ? StepStatus.SUSS : StepStatus.FAIL);
+                taskManager.syncAiCoderStep(step);
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error(ExceptionMessage.getStackTrace(e));
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> queryTaskStep(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+
+            try {
+                QueryAiCoderStepResult queryAiCoderStepResult = taskManager.queryAiCoderStep(param.getString("functionVersionId"));
+                promise.complete(JsonObject.mapFrom(queryAiCoderStepResult));
+            } catch (Exception e) {
+                promise.fail(e);
+                log.error("查询任务步骤失败{}", ExceptionMessage.getStackTrace(e));
+            }
+        });
+        return promise.future();
     }
 }

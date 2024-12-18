@@ -7,6 +7,9 @@ public enum NodeStatus {
     COMPILE,
     // 部署完成
     DEPLOY,
+    CODING,
+
+    CODING_FAIL,
     // 卸载完成
     UNINSTALL,
 }

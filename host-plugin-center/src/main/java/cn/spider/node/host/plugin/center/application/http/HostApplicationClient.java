@@ -33,6 +33,7 @@ public class HostApplicationClient {
 
     public Future<Void> installPlugin(String applicationIp, JsonObject pluginParam) {
         // 获取所有的future
+        log.info("部署插件ip {} 插件信息 {}", applicationIp, pluginParam.toString());
         return sendHostApplication(applicationIp, this.installPlugin, hostApplicationPort, pluginParam);
     }
 

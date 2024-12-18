@@ -97,6 +97,7 @@ public class AgentVertxClient {
         // 获取所有的future
         List<Future> needFutures = new ArrayList<>();
         for (String ip : applicationIps) {
+            log.info("开始安装插件 {}", ip);
             Future<JsonObject> installFuture = sendHostApplication(ip, this.installPlugin, 1238, pluginParam);
             needFutures.add(installFuture);
         }

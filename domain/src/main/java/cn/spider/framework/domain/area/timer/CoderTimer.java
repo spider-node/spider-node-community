@@ -31,7 +31,7 @@ public class CoderTimer {
 
     public void checkDeployInfo() {
         // 设置20秒后执行一次
-        vertx.setPeriodic(1000 * 20, taskId -> {
+        vertx.setPeriodic(1000 * 40, taskId -> {
             nodeManger.checkDeployInfo().onFailure(fail -> {
                 log.error("checkDeployInfo fail {}", ExceptionMessage.getStackTrace(fail));
                 checkDeployInfo();
