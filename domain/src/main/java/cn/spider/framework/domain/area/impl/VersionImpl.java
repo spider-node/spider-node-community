@@ -52,9 +52,8 @@ public class VersionImpl implements VersionInterface {
         Promise<Void> promise = Promise.promise();
         spiderBusinessPool.execute(() -> {
             try {
-                FunctionVersionModel functionVersionModel = JSON.parseObject(data.toString(), FunctionVersionModel.class);
-                SpiderBusinessFunctionVersion functionVersion = new SpiderBusinessFunctionVersion();
-                BeanUtils.copyProperties(functionVersion, functionVersionModel);
+                SpiderBusinessFunctionVersion functionVersion = JSON.parseObject(data.toString(), SpiderBusinessFunctionVersion.class);
+
                 versionManager.addVersion(functionVersion);
                 promise.complete();
             } catch (Exception e) {

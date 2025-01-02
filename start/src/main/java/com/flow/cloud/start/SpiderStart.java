@@ -1,12 +1,12 @@
 package com.flow.cloud.start;
 import com.flow.cloud.start.role.RoleManager;
 import com.flow.cloud.start.util.ConfigUtil;
-import com.hazelcast.config.Config;
+//import com.hazelcast.config.Config;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+//import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
@@ -52,12 +52,13 @@ public class SpiderStart {
 
     private static ClusterManager buildCluster() {
         Map<String, String> config = ConfigUtil.queryZkAddr();
-        if(config.get("cluster-type").equals("zk")){
+        return buildZk(config);
+        /*if(config.get("cluster-type").equals("zk")){
             return buildZk(config);
         }else if(config.get("cluster-type").equals("hazelcast")){
             return buildHazelcast();
         }
-        return null;
+        return null;*/
     }
 
     private static ClusterManager buildZk(Map<String, String> config) {
@@ -73,9 +74,9 @@ public class SpiderStart {
         return new ZookeeperClusterManager(zkConfig);
     }
 
-    private static ClusterManager buildHazelcast(){
+    /*private static ClusterManager buildHazelcast(){
         Config hazelcastConfig = Config.load();
         // 设置集群类型
         return new HazelcastClusterManager(hazelcastConfig);
-    }
+    }*/
 }

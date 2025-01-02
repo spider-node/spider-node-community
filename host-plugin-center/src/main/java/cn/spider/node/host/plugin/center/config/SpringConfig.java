@@ -1,5 +1,6 @@
 package cn.spider.node.host.plugin.center.config;
 
+import cn.spider.framework.common.event.EventConfig;
 import cn.spider.node.host.plugin.center.MainVerticle;
 import cn.spider.node.host.plugin.center.application.HostApplicationManager;
 import cn.spider.node.host.plugin.center.application.http.HostApplicationClient;
@@ -20,6 +21,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -30,6 +32,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
+@Import({EventConfig.class})
 @ComponentScan(basePackages = {"cn.spider.node.host.plugin.center.*"})
 @MapperScan("cn.spider.node.host.plugin.center.model.mapper")
 public class SpringConfig {

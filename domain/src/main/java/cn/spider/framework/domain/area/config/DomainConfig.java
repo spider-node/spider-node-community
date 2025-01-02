@@ -321,8 +321,8 @@ public class DomainConfig {
                                         ISpiderSonAreaService spiderSonAreaService,
                                         IAreaDomainBaseInfoService baseInfoService,
                                         ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService){
-        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService);
+                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService){
+        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService);
     }
 
     @Bean

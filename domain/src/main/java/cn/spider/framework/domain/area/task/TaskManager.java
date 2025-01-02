@@ -1,6 +1,8 @@
 package cn.spider.framework.domain.area.task;
 
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
+import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
+import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.node.data.QueryDomainFunctionResult;
 import cn.spider.framework.domain.area.node.data.SonDomainInfoFunctionModel;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
@@ -22,6 +24,7 @@ import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionTask;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoderStepService;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.base.Preconditions;
@@ -68,12 +71,14 @@ public class TaskManager {
 
     private ISpiderDomainFunctionAiCoderStepService stepService;
 
+    private ISpiderDataFlowService dataFlowService;
+
     public TaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
                        ISpiderAreaFunctionService spiderAreaFunctionService,
                        ISpiderSonAreaService spiderSonAreaService,
                        IAreaDomainBaseInfoService baseInfoService,
                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                       AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService) {
+                       AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService) {
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
         this.spiderSonAreaService = spiderSonAreaService;
@@ -81,6 +86,20 @@ public class TaskManager {
         this.spiderDomainFunctionTaskService = spiderDomainFunctionTaskService;
         this.agentVertxClient = agentVertxClient;
         this.stepService = stepService;
+        this.dataFlowService = dataFlowService;
+    }
+
+    public void retryDomainFunctionTask(String versionId) {
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
+
+        if (Objects.isNull(functionVersion)) {
+            return;
+        }
+        if(functionVersion.getStatus().equals(NodeStatus.INIT) || functionVersion.getStatus().equals(NodeStatus.CODING)){
+            return;
+        }
+
+
     }
 
     // 新增领域功能的任务
@@ -126,6 +145,16 @@ public class TaskManager {
         // 发起跟ai交互
         createCoderParam.setTaskId(domainFunctionTask.getId());
         createCoderParam.setBaseInfoIds(domainBaseInfoIds);
+        if(Objects.nonNull(functionVersion.getDataFlowId())){
+            SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
+            createCoderParam.setDataFlow(spiderDataFlow.getData());
+            createCoderParam.setNeedDataFlow(Boolean.TRUE);
+            createCoderParam.setDataFlowDesc(spiderDataFlow.getFlowDataDesc());
+        }else {
+            createCoderParam.setNeedDataFlow(Boolean.FALSE);
+            createCoderParam.setDataFlow(new JSONObject());
+            createCoderParam.setDataFlowDesc("");
+        }
         createCoderParam.setDomainFunctionVersionId(versionId);
         log.info("create_coder_info {}", JSON.toJSONString(createCoderParam));
         agentVertxClient.createCoder(JsonObject.mapFrom(createCoderParam));
@@ -137,6 +166,15 @@ public class TaskManager {
         Wrapper<SpiderDomainFunctionAiCoderStep> queryWrapper = new LambdaQueryWrapper<SpiderDomainFunctionAiCoderStep>()
                 .eq(SpiderDomainFunctionAiCoderStep::getSpiderDomainFunctionTaskId, domainFunctionTask.getId());
         stepService.remove(queryWrapper);
+    }
+
+    public void updateCoder(JsonObject param) {
+        agentVertxClient.updatePlugin(param).onSuccess(suss->{
+            // 发起更新,重新部署
+            // todo 优化 调用k8s-api
+        }).onFailure(fail->{
+
+        });
     }
 
     /**

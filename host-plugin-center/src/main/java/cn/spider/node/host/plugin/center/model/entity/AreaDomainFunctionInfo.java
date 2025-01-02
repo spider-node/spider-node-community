@@ -1,6 +1,7 @@
 package cn.spider.node.host.plugin.center.model.entity;
 
 import cn.spider.node.host.plugin.center.model.data.SonDomainModelInfo;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -129,4 +130,9 @@ public class AreaDomainFunctionInfo implements Serializable {
     private String domainFunctionVersionId;
 
     private Integer taskId;
+
+    /**
+     * 用于发布的yml文件地址
+     */
+    private String deployYmlUrl;
 }

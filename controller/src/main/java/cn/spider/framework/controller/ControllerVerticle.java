@@ -15,12 +15,17 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.serviceproxy.ServiceBinder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class ControllerVerticle extends AbstractVerticle {
@@ -29,14 +34,14 @@ public class ControllerVerticle extends AbstractVerticle {
 
     public static Vertx clusterVertx;
 
+    private List<MessageConsumer<JsonObject>> containerConsumers;
+
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
 
         this.clusterVertx = vertx;
         this.factory = new AnnotationConfigApplicationContext(ControllerConfig.class);
-
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        this.containerConsumers = new ArrayList<>();
         ServiceBinder binder = new ServiceBinder(vertx);
 
         ControllerTimer controllerTimer = this.factory.getBean(ControllerTimer.class);
@@ -50,8 +55,9 @@ public class ControllerVerticle extends AbstractVerticle {
         // 发布获取brokerInfo接口
         BrokerInfoService brokerInfoService = this.factory.getBean(BrokerInfoService.class);
         String brokerInfoAddr = BrokerInfoService.ADDRESS;
-        binder.setAddress(brokerInfoAddr)
+        MessageConsumer<JsonObject> consumer = binder.setAddress(brokerInfoAddr)
                 .register(BrokerInfoService.class, brokerInfoService);
+        this.containerConsumers.add(consumer);
         //log.info("启动的模式为 {}",localMap.get("cluster_mode"));
         startPromise.complete();
     }
@@ -63,6 +69,10 @@ public class ControllerVerticle extends AbstractVerticle {
      */
     @Override
     public void stop(Promise<Void> stopPromise) {
+        for (MessageConsumer<JsonObject> consumer : containerConsumers) {
+            consumer.unregister();
+        }
+        factory.close();
         stopPromise.complete();
     }
 }

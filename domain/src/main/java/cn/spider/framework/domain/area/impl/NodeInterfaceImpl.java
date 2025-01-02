@@ -1,5 +1,8 @@
 package cn.spider.framework.domain.area.impl;
 
+import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.FunctionDeployData;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.data.*;
@@ -203,6 +206,7 @@ public class NodeInterfaceImpl implements NodeInterface {
                 return;
             }
             promise.complete();
+
             spiderBusinessPool.execute(() -> {
                 // 修改版本新增状态为编译完成
                 spiderAreaFunctionVersionService.lambdaUpdate()
@@ -213,6 +217,7 @@ public class NodeInterfaceImpl implements NodeInterface {
                 hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
                     log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 });
+                // 需要改造,直接调用k8s进行部署
             });
 
         }).onFailure(buildFail -> {

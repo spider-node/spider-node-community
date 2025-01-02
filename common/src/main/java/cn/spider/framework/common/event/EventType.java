@@ -56,6 +56,15 @@ public enum EventType {
     ESCALATION_AREA_INFO(SystemRole.FLOW_EXAMPLE,"escalation_area_info","宿主应用上报插件信息",EventTypeRole.SYSTEM),
     HOST_ONLINE(SystemRole.FLOW_EXAMPLE,"host_online","宿主机上线",EventTypeRole.SYSTEM),
     HOST_OFFLINE(SystemRole.FLOW_EXAMPLE,"host_offline","宿主机下线",EventTypeRole.SYSTEM),
+    // 部署
+    DEPLOY(SystemRole.FLOW_EXAMPLE,"FUNCTION_DEPLOY","功能上线",EventTypeRole.SYSTEM),
+
+    // 部署失败 operate
+    K8S_OPERATE_FAIL(SystemRole.FLOW_EXAMPLE,"K8S_OPERATE_FAIL","功能部署失败",EventTypeRole.SYSTEM),
+    //scale
+    SCALE_UP(SystemRole.FLOW_EXAMPLE,"SCALE_UP","扩缩容",EventTypeRole.SYSTEM),
+    // 下线
+    SCALE_DOWN(SystemRole.FLOW_EXAMPLE,"SCALE_DOWN","下线",EventTypeRole.SYSTEM),
     ;
     private SystemRole role;
 

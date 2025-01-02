@@ -33,8 +33,6 @@ public class ParamExampleManager {
 
     //prefix
     private final String SPIDER_PREFIX = "spider.";
-
-    private final String REQ_PREFIX = "req.";
     // default
     private final ONode DEFAULT_NODE = ONode.load("{}");
 
@@ -307,6 +305,8 @@ public class ParamExampleManager {
                     NodeParamMapping nodeParamMapping = suss;
                     // 获取参数的值映射
                     ParamPack resultMapping = nodeParamMapping.getResultMapping();
+                    // 发送事件-- 存表
+
                     Map<String, String> paramCache = new HashMap<>();
                     resultMapping.getInputParamDefs().forEach(item -> {
                         NodeField paramConfig = item;

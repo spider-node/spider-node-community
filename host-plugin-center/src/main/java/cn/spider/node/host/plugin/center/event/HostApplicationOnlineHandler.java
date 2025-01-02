@@ -23,7 +23,7 @@ public class HostApplicationOnlineHandler {
         this.eventBus = eventBus;
         this.applicationManager = applicationManager;
         this.localBrokerName = BrokerInfoUtil.queryBrokerName(vertx);
-        registerConsumer();
+        //registerConsumer();
     }
 
     public void registerConsumer() {

@@ -26,6 +26,7 @@
         <module>spider-param</module>
         <module>area-method-param</module>
         <module>host-plugin-center</module>
+        <module>dev-ops</module>
     </modules>
 
 

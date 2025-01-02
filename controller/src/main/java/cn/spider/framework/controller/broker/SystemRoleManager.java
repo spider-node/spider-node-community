@@ -34,6 +34,8 @@ public class SystemRoleManager {
 
     private final String hostApplication = "cn.spider.node.host.plugin.center.MainVerticle";
 
+    private final String deploy = "cn.spider.framework.dev.ops.MainVerticle";
+
     private String hostApplicationDeployId;
 
     private String linkerServerDeployId;
@@ -72,6 +74,7 @@ public class SystemRoleManager {
         startRole(this.domain, "domain", deployOptions);
         startRole(this.hostApplication, "hostApplication", deployOptions);
         startRole(this.logPath, "log", deployOptions);
+        startRole(this.deploy, "devOps", deployOptions);
     }
 
     private void startRole(String path, String role, DeploymentOptions deployOptions) {

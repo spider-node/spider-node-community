@@ -62,6 +62,15 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
     }
 
     @Override
+    public Future<JsonObject> updateCoder(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+
+        });
+        return promise.future();
+    }
+
+    @Override
     public Future<Void> startTestCase(JsonObject param) {
         log.info("case_data {}",param.toString());
         StartTestCaseParam startTestCaseParam = JSON.parseObject(param.toString(), StartTestCaseParam.class);

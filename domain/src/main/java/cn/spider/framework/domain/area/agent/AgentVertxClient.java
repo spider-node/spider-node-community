@@ -42,12 +42,15 @@ public class AgentVertxClient {
 
     private String coderApi;
 
+    private String updatePluginUrl;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
         this.queryAllAreaInfo = "/areaDomain/query_all_area_info";
         this.buildPluginUrl = "/code_agent/build_area_plugin";
         this.initAreaBaseUrl = "/code_agent/init_area_base";
+        this.updatePluginUrl = "/code_agent/update_function_coder";
         this.initAiRagUrl = "/insert/doc";
         this.querySonAreaBaseInfo = "/areaDomain/query_base_info";
         this.installPlugin = "/installBiz";
@@ -86,6 +89,10 @@ public class AgentVertxClient {
 
     public Future<JsonObject> initAiRag(JsonObject param) {
         return send(param, this.initAiRagUrl, this.aiCodePort, this.aiCodeHost);
+    }
+
+    public Future<JsonObject> updatePlugin(JsonObject param) {
+        return send(param, this.updatePluginUrl, this.agentPort, this.agentHost);
     }
 
     public Future<JsonObject> createCoder(JsonObject param){

@@ -1,7 +1,9 @@
 package com.flow.cloud.start.role;
 
+import cn.spider.framework.dev.ops.config.K8sConstant;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.exception.KstryException;
+import com.flow.cloud.start.config.EvnConstant;
 import com.flow.cloud.start.util.ExceptionMessage;
 import com.flow.cloud.start.util.PropertyReader;
 import io.vertx.core.DeploymentOptions;
@@ -62,6 +64,16 @@ public class RoleManager {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         localMap.putAll(spiderConf);
+        String spiderAgentUrlHost = System.getenv(EvnConstant.SPIDER_AGENT_URL_HOST);
+        if (StringUtils.isNotEmpty(spiderAgentUrlHost)) {
+            localMap.put("spider_agent_url_host", spiderAgentUrlHost);
+        }
+
+        String spiderCodeAiUrl = System.getenv(EvnConstant.SPIDER_CODE_AI_URL);
+        if (StringUtils.isNotEmpty(spiderCodeAiUrl)) {
+            localMap.put("spider_code_ai_url", spiderCodeAiUrl);
+        }
+
         String roleConfig = localMap.get("role");
         if (StringUtils.isEmpty(roleConfig)) {
             throw new KstryException(ExceptionEnum.SYSTEM_ROLE_ERROR);

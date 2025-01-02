@@ -3,6 +3,7 @@ package cn.spider.framework.domain.area.sondomain.service.impl;
 import cn.spider.framework.domain.area.sondomain.entity.*;
 import cn.spider.framework.domain.area.sondomain.mapper.AreaDomainBaseInfoMapper;
 import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
+import cn.spider.framework.domain.area.util.ClassUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
@@ -39,12 +40,16 @@ public class AreaDomainBaseInfoServiceImpl extends ServiceImpl<AreaDomainBaseInf
     public QuerySonAreaVersionResultV2 querySonAreaBaseV2(QuerySonAreaVersionParam param) {
         List<AreaDomainBaseInfo> areaDomainBaseInfoList = lambdaQuery()
                 .eq(Objects.nonNull(param.getSonAreaId()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaId())
+                .in(CollectionUtils.isNotEmpty(param.getSonAreaIds()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaIds())
                 .list();
         List<AreaDomainBaseInfoModel> baseInfoModels = areaDomainBaseInfoList.stream().map(item->{
             AreaDomainBaseInfoModel baseInfoModel = new AreaDomainBaseInfoModel();
             // 使用beanUtil进行把item copy到baseInfoModel
             BeanUtils.copyProperties(item, baseInfoModel);
             List<DomainFieldInfo> domainFieldInfos = JSONArray.parseArray(item.getDomainObject(), DomainFieldInfo.class);
+            domainFieldInfos.forEach(items -> {
+                items.setAreaFiled(ClassUtil.toLowerFirstChar(item.getDomainObjectEntityName()) + "." + items.getField());
+            });
             baseInfoModel.setDomainFieldInfos(domainFieldInfos);
             return baseInfoModel;
         }).collect(Collectors.toList());

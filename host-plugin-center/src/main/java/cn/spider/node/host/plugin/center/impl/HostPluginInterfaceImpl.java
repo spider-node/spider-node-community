@@ -1,10 +1,16 @@
 package cn.spider.node.host.plugin.center.impl;
 
+import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.DeleteDeployData;
+import cn.spider.framework.common.event.data.FunctionDeployData;
+import cn.spider.framework.common.event.data.ScaleUpData;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.node.host.plugin.center.application.HostApplicationManager;
 import cn.spider.node.host.plugin.center.model.data.QueryDeployInfoResult;
 import cn.spider.node.host.plugin.center.model.entity.AreaDomainFunctionInfo;
 import cn.spider.node.host.plugin.center.model.entity.SpiderPluginDeployInfo;
+import cn.spider.node.host.plugin.center.model.service.IAreaDomainFunctionInfoService;
 import cn.spider.node.host.plugin.center.sdk.data.*;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.Future;
@@ -28,11 +34,17 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     @Resource
     private Executor spiderBusinessPool;
 
+    @Resource
+    private EventManager eventManager;
+
+    @Resource
+    private IAreaDomainFunctionInfoService areaDomainFunctionInfoService;
+
     @Override
     public Future<Void> hostOnline(JsonObject data) {
         HostOnlineParam hostOnlineParam = data.mapTo(HostOnlineParam.class);
         try {
-            hostApplicationManager.online(hostOnlineParam.getIp());
+           // hostApplicationManager.online(hostOnlineParam.getIp());
         } catch (Exception e) {
             return Future.failedFuture(e);
         }
@@ -43,7 +55,7 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     public Future<Void> hostOffline(JsonObject data) {
         HostOfflineParam hostOfflineParam = data.mapTo(HostOfflineParam.class);
         try {
-            hostApplicationManager.offline(hostOfflineParam.getIp());
+            //hostApplicationManager.offline(hostOfflineParam.getIp());
         } catch (Exception e) {
             return Future.failedFuture(e);
         }
@@ -52,9 +64,15 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
 
     @Override
     public Future<Void> pluginOffline(JsonObject data) {
-        FunctionPluginOnlineParam param = data.mapTo(FunctionPluginOnlineParam.class);
+        PluginOfflineParam pluginOfflineParam = data.mapTo(PluginOfflineParam.class);
         try {
-            hostApplicationManager.applyOfflinePlugin(param.getFunctionId());
+            AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService
+                    .lambdaQuery()
+                    .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, pluginOfflineParam.getAreaVersionId())
+                    .one();
+            String deploymentName = areaDomainFunctionInfo.getFunctionName() + "_" + areaDomainFunctionInfo.getVersion();
+            DeleteDeployData hostApplicationOnlineData = new DeleteDeployData(deploymentName, areaDomainFunctionInfo.getDomainFunctionVersionId());
+            eventManager.sendMessage(EventType.SCALE_DOWN, hostApplicationOnlineData);
         } catch (Exception e) {
             return Future.failedFuture(e);
         }
@@ -65,10 +83,22 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     public Future<Void> pluginOnline(JsonObject data) {
         FunctionPluginOfflineParam param = data.mapTo(FunctionPluginOfflineParam.class);
         try {
-            hostApplicationManager.applyOnlinePlugin(param.getFunctionId());
+            AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery().eq(AreaDomainFunctionInfo::getId, param.getFunctionId()).one();
+            FunctionDeployData hostApplicationOnlineData = new FunctionDeployData(areaDomainFunctionInfo.getBizUrl(), areaDomainFunctionInfo.getDomainFunctionVersionId());
+            eventManager.sendMessage(EventType.DEPLOY, hostApplicationOnlineData);
         } catch (Exception e) {
             return Future.failedFuture(e);
         }
+        return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<Void> scalePlugin(JsonObject data) {
+        ScalePluginParam scalePluginParam = data.mapTo(ScalePluginParam.class);
+        AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery().eq(AreaDomainFunctionInfo::getId, scalePluginParam.getFunctionId()).one();
+        String deploymentName = areaDomainFunctionInfo.getFunctionName() + "_" + areaDomainFunctionInfo.getVersion();
+        ScaleUpData hostApplicationOnlineData = new ScaleUpData(deploymentName, scalePluginParam.getNum(), areaDomainFunctionInfo.getDomainFunctionVersionId());
+        eventManager.sendMessage(EventType.SCALE_UP, hostApplicationOnlineData);
         return Future.succeededFuture();
     }
 

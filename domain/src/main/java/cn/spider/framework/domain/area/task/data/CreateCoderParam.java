@@ -1,5 +1,6 @@
 package cn.spider.framework.domain.area.task.data;
 
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
@@ -27,6 +28,12 @@ public class CreateCoderParam {
      * 领域功能版本的id
      */
     private String domainFunctionVersionId;
+
+    private JSONObject dataFlow;
+    // 数据流描述
+    private String dataFlowDesc;
+
+    private Boolean needDataFlow;
 
 
     public CreateCoderParam(String projectName, JsonObject sonDomainInfo, List<String> businessRequirements) {
@@ -81,5 +88,29 @@ public class CreateCoderParam {
 
     public void setDomainFunctionVersionId(String domainFunctionVersionId) {
         this.domainFunctionVersionId = domainFunctionVersionId;
+    }
+
+    public JSONObject getDataFlow() {
+        return dataFlow;
+    }
+
+    public void setDataFlow(JSONObject dataFlow) {
+        this.dataFlow = dataFlow;
+    }
+
+    public Boolean getNeedDataFlow() {
+        return needDataFlow;
+    }
+
+    public void setNeedDataFlow(Boolean needDataFlow) {
+        this.needDataFlow = needDataFlow;
+    }
+
+    public String getDataFlowDesc() {
+        return dataFlowDesc;
+    }
+
+    public void setDataFlowDesc(String dataFlowDesc) {
+        this.dataFlowDesc = dataFlowDesc;
     }
 }

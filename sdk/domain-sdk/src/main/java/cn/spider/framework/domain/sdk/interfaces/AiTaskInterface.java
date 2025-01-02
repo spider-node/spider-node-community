@@ -52,4 +52,11 @@ public interface AiTaskInterface {
      * 查看任务步骤
      */
     Future<JsonObject> queryTaskStep(JsonObject param);
+
+    /**
+     * 修改代码
+     * @param param 修改后的业务代码
+     * @return 返回修改后的信息
+     */
+    Future<JsonObject> updateCoder(JsonObject param);
 }

@@ -141,4 +141,19 @@ public class Constant {
 
     public final static int sussCode = 1001;
 
+    // spider.worker.name
+    public final static String WORKER_NAME = "SPIDER_WORKER_MAME";
+
+    //spider.worker.rpc-port
+    public final static String WORKER_RPC_PORT = "SPIDER_WORKER_RPC_PORT";
+
+    //spider.server.ip
+    public final static String SPIDER_SERVER_IP = "SPIDER_SERVER_IP";
+    // spider.server.port
+    public final static String SPIDER_SERVER_PORT = "SPIDER_SERVER_PORT";
+
+    //spider.worker.type
+    public final static String WORKER_TYPE = "SPIDER_WORKER_TYPE";
+
+
 }

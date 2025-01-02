@@ -40,6 +40,8 @@ public interface HostPluginInterface {
      */
     Future<Void> pluginOnline(JsonObject data);
 
+    Future<Void> scalePlugin(JsonObject data);
+
     /**
      *
      * @param data 宿主应用的信息

@@ -56,7 +56,7 @@ else
 fi
 
 echo -e "Starting the $SERVER_NAME ..."
-nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -jar  $DEPLOY_DIR/lib/$JAR_NAME > $STDOUT_FILE 2>&1 &
+nohup java $JAVA_OPTS -Dsun.security.validator=ALWAYS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -jar  $DEPLOY_DIR/lib/$JAR_NAME > $STDOUT_FILE 2>&1 &
 
 echo "OK!"
 PIDS=`ps -f | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
