@@ -110,7 +110,7 @@ public class SpringConfig {
         return vertx.eventBus();
     }
 
-    @Bean
+
     public TaskTimer buildTaskTimer(Vertx vertx, TaskManager taskManager) {
         return new TaskTimer(vertx, taskManager);
     }

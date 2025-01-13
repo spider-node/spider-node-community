@@ -1,10 +1,13 @@
 package cn.spider.framework.domain.area.flowdata.entity;
+
+import cn.spider.framework.domain.sdk.data.DataFlowAnalysisModel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+
 import java.util.Date;
 
 /**
@@ -15,7 +18,7 @@ import java.util.Date;
  * @author dds
  * @since 2024-09-19
  */
-@TableName("spider_data_flow")
+@TableName(value = "spider_data_flow", autoResultMap = true)
 public class SpiderDataFlow {
 
     @TableId(value = "id", type = IdType.AUTO)
@@ -52,6 +55,10 @@ public class SpiderDataFlow {
      */
     private Date createTime;
 
+    @TableField(value = "data_flow_analysis_model", typeHandler = FastjsonTypeHandler.class)
+    private DataFlowAnalysisModel dataFlowAnalysisModel;
+
+
     public String getFlowDataDesc() {
         return flowDataDesc;
     }
@@ -72,8 +79,8 @@ public class SpiderDataFlow {
         return data;
     }
 
-    public void setData(String data) {
-        this.data = JSONObject.parseObject(data);
+    public void setData(JSONObject data) {
+        this.data = data;
     }
 
 
@@ -108,5 +115,13 @@ public class SpiderDataFlow {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public DataFlowAnalysisModel getDataFlowAnalysisModel() {
+        return dataFlowAnalysisModel;
+    }
+
+    public void setDataFlowAnalysisModel(DataFlowAnalysisModel dataFlowAnalysisModel) {
+        this.dataFlowAnalysisModel = dataFlowAnalysisModel;
     }
 }

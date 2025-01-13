@@ -48,4 +48,13 @@ public class LogVerticle extends AbstractVerticle {
     startPromise.complete();
   }
 
+  @Override
+  public void stop(Promise<Void> stopPromise) throws Exception {
+    for (MessageConsumer<JsonObject> consumer : containerConsumers) {
+      this.binder.unregister(consumer);
+    }
+    this.factory.close();
+    stopPromise.complete();
+  }
+
 }

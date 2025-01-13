@@ -24,4 +24,9 @@ public interface DataFlowInterface {
     Future<Void> upsertDataFlow(JsonObject param);
 
     Future<Void> upsertDataFlowStatus(JsonObject param);
+
+    // 修改数据流的解析
+    Future<Void> upsertDataFlowParse(JsonObject param);
+
+    Future<Void> generateDataFlowInfo(JsonObject param);
 }

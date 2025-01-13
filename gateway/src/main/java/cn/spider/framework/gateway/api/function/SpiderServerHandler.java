@@ -191,6 +191,9 @@ public class SpiderServerHandler {
         queryCaseInfo();
         syncAiCoderStep();
         queryTaskStep();
+        notifyDataFlowAnalysis();
+        generateDataFlowInfo();
+        writeTableAnalysisInfo();
     }
 
     public void selectBpmn() {
@@ -1442,6 +1445,54 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     aiTaskInterface.queryTestCaseInfo(param).onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 通知数据流分析的结果
+     */
+    private void notifyDataFlowAnalysis() {
+        router.post("/notify/domain_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.upsertDataFlowParse(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+
+    }
+    /**
+     * /generate_data_flow_info
+     */
+    private void generateDataFlowInfo() {
+        router.post("/generate_data_flow_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    dataFlowInterface.generateDataFlowInfo(ctx.getBodyAsJson()).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+    // writeTableAnalysisInfo
+    private void writeTableAnalysisInfo() {
+        router.post("/write_table_analysis_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    log.info("param=== {}", param.toString());
+                    nodeInterface.writeTableAnalysisInfo(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });

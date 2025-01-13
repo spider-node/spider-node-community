@@ -155,8 +155,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public DataFlowInterface buildDataFlowInterface(ISpiderDataFlowService spiderDataFlowService){
-        return new DataFlowInterfaceImpl(spiderDataFlowService);
+    public DataFlowInterface buildDataFlowInterface(ISpiderDataFlowService spiderDataFlowService,AgentVertxClient agentVertxClient, TaskManager taskManager){
+        return new DataFlowInterfaceImpl(spiderDataFlowService,agentVertxClient,taskManager);
     }
 
     @Bean

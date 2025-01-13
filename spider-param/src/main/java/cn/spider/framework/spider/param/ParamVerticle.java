@@ -47,7 +47,7 @@ public class ParamVerticle extends AbstractVerticle {
     @Override
     public void stop(Promise<Void> stopPromise) {
         for (MessageConsumer<JsonObject> consumer : containerConsumers) {
-            consumer.unregister();
+            this.binder.unregister(consumer);
         }
         this.factory.close();
         stopPromise.complete();

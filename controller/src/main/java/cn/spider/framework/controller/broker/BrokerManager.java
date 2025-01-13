@@ -1,22 +1,13 @@
 package cn.spider.framework.controller.broker;
 
-import cn.spider.framework.common.event.EventManager;
-import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.BrokerInfoData;
 import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.controller.broker.data.BrokerInfo;
+import cn.spider.framework.controller.leader.Leader;
 import cn.spider.framework.controller.sdk.data.SpiderServerInfo;
-import cn.spider.framework.controller.sdk.interfaces.BrokerHeartService;
 import com.google.common.collect.Lists;
 import io.vertx.core.Vertx;
-import io.vertx.core.WorkerExecutor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -43,6 +34,8 @@ public class BrokerManager {
      */
     private String brokerIp;
 
+    private Leader leader;
+
 
     public BrokerManager(SystemRoleManager systemRoleManager,Vertx vertx) {
         this.brokerRole = BrokerRole.FOLLOWER;
@@ -52,11 +45,22 @@ public class BrokerManager {
 
     }
 
+    // 返回leader
     public List<SpiderServerInfo> queryBrokerInfo() {
+        // 获取leader进行返回
         SpiderServerInfo spiderServerInfo = new SpiderServerInfo();
-        spiderServerInfo.setBrokerIp(this.brokerIp);
-        spiderServerInfo.setBrokerName(this.brokerName);
-        return Lists.newArrayList(spiderServerInfo);
+        if(brokerRole.equals(BrokerRole.LEADER)){
+            spiderServerInfo.setBrokerIp(this.brokerIp);
+            spiderServerInfo.setBrokerName(this.brokerName);
+            return Lists.newArrayList(spiderServerInfo);
+        }
+        spiderServerInfo.setBrokerIp(leader.getBrokerIp());
+        spiderServerInfo.setBrokerName(leader.getBrokerName());
+       return Lists.newArrayList(spiderServerInfo);
+    }
+
+    public void setLeader(Leader leader) {
+        this.leader = leader;
     }
 
     /**
@@ -64,7 +68,6 @@ public class BrokerManager {
      */
     public void setupLeaderRole() {
         this.brokerRole = BrokerRole.LEADER;
-
         starSystemLeaderRole();
     }
 

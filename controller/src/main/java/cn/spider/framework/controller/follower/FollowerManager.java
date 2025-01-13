@@ -76,7 +76,7 @@ public class FollowerManager {
                            LeaderHeartService leaderHeartService,
                            BrokerRoleManager brokerRoleManager,
                            ControllerTimer timer,
-                           EventBus eventBus,BrokerManager brokerManager) {
+                           EventBus eventBus, BrokerManager brokerManager) {
         this.followerIp = BrokerInfoUtil.queryBrokerIp(vertx);
         this.followerName = BrokerInfoUtil.queryBrokerName(vertx);
         this.eventBus = eventBus;
@@ -86,6 +86,7 @@ public class FollowerManager {
         this.brokerRoleManager = brokerRoleManager;
         this.isStart = false;
         this.brokerManager = brokerManager;
+        this.leader = Leader.builder().build();
     }
 
     /**
@@ -141,16 +142,17 @@ public class FollowerManager {
             if (StringUtils.equals(brokerName, this.followerName)) {
                 return;
             }
-            startFollower();
+            //startFollower();
             //log.info("接受到leader的信息为 {}", message.body());
             NotifyLeaderCommissionData commissionData = JSON.parseObject(message.body(), NotifyLeaderCommissionData.class);
-            if (Objects.nonNull(this.leader) && this.leader.getBrokerIp().equals(commissionData.getBrokerIp())) {
+            if (StringUtils.isNotEmpty(this.leader.getBrokerIp()) && this.leader.getBrokerIp().equals(commissionData.getBrokerIp())) {
+                log.info("接受到leader事件-结束通知操作 {}", message.body());
                 return;
             }
-            this.leader = Leader.builder()
-                    .brokerIp(commissionData.getBrokerIp())
-                    .brokerName(commissionData.getBrokerName())
-                    .build();
+            log.info("接受到leader事件 {}", message.body());
+            this.leader.setBrokerIp(commissionData.getBrokerIp());
+            this.leader.setBrokerName(commissionData.getBrokerName());
+            brokerManager.setLeader(this.leader);
         });
     }
 
@@ -199,6 +201,10 @@ public class FollowerManager {
             return null;
         }
         return this.leader.getBrokerName();
+    }
+
+    public Leader queryLeader() {
+        return this.leader;
     }
 
 }

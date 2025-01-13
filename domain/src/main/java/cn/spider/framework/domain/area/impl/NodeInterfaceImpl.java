@@ -221,6 +221,7 @@ public class NodeInterfaceImpl implements NodeInterface {
             });
 
         }).onFailure(buildFail -> {
+            log.info("构建失败 {}", ExceptionMessage.getStackTrace(buildFail));
             promise.fail(buildFail);
         });
         return promise.future();
@@ -284,6 +285,26 @@ public class NodeInterfaceImpl implements NodeInterface {
             } catch (Exception e) {
                 promise.fail(e);
                 log.error("queryDomainFunctionVersion error", e);
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> writeTableAnalysisInfo(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                AnalysisTableInfo analysisTableInfo = param.mapTo(AnalysisTableInfo.class);
+                TableAnalysisModel tableAnalysisInfo = new TableAnalysisModel();
+                tableAnalysisInfo.setTableInfo(analysisTableInfo.getTableInfo());
+                String tableAnalysisInfoJson = JSON.toJSONString(tableAnalysisInfo);
+                spiderAreaFunctionVersionService.lambdaUpdate().set(SpiderAreaFunctionVersion::getTableAnalysisInfo, tableAnalysisInfoJson)
+                        .eq(SpiderAreaFunctionVersion::getId, analysisTableInfo.getDomainFunctionVersionId()).update();
+                promise.future();
+            } catch (Exception e) {
+                promise.fail(e);
+                throw new RuntimeException(e);
             }
         });
         return promise.future();

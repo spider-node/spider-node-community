@@ -6,6 +6,7 @@ import cn.spider.framework.gateway.enums.FileServerType;
 import cn.spider.framework.gateway.minio.MinioManager;
 import cn.spider.framework.gateway.oss.OssConfigClient;
 import io.minio.MinioClient;
+import io.minio.ObjectWriteResponse;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
@@ -52,6 +53,7 @@ public class FileHandler {
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         this.fileServerType = FileServerType.valueOf(localMap.get("file_server_type"));
         if (this.fileServerType.equals(FileServerType.MINIO)) {
+            // 设置上传文件,不需要验证
             String endpoint = localMap.get("minio_url");
             String accessKey = localMap.get("minio_access_key");
             String secretKey = localMap.get("minio_secret_key");

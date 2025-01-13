@@ -16,15 +16,15 @@ public class TaskTimer {
     public TaskTimer(Vertx vertx, TaskManager taskManager) {
         this.vertx = vertx;
         this.taskManager = taskManager;
-        runPluginTaskTimer();
+       // runPluginTaskTimer();
     }
 
     /**
      * 定时任务执行-寻找任务执行
      */
-    private void runPluginTaskTimer() {
+    /*private void runPluginTaskTimer() {
         vertx.setPeriodic(30 * 1000, id -> {
             taskManager.run();
         });
-    }
+    }*/
 }

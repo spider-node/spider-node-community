@@ -103,33 +103,26 @@ public class TaskManager {
     }
 
     // 新增领域功能的任务
-    public void runDomainFunctionTask(String versionId) {
+    public void runDomainFunctionTask(String versionId,Boolean retry) {
         // 判断下状态，如果是编译通过，就不能进行代码生成
         SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
-        if (!functionVersion.getStatus().equals(NodeStatus.INIT)) {
+        if (!functionVersion.getStatus().equals(NodeStatus.INIT) && !retry) {
             Preconditions.checkArgument(false, "该功能版本状态为：" + functionVersion.getStatus() + "，不能进行代码生成");
         }
-        Set<Integer> sonDomainIds = functionVersion.getSonDomainFunctions().getSonDomainFunctionList().stream().map(SonDomainInfoFunctionModel::getSonDomainId).collect(Collectors.toSet());
-        List<SpiderSonArea> sonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId, sonDomainIds).list();
-        String domainId = sonAreas.get(0).getAreaId();
-        Set<Integer> domainBaseInfoIds = functionVersion.getSonDomainFunctions().getSonDomainFunctionList().stream().map(SonDomainInfoFunctionModel::getVersionId).collect(Collectors.toSet());
-        List<AreaDomainBaseInfo> areaDomainBaseInfos = baseInfoService.lambdaQuery()
-                .in(AreaDomainBaseInfo::getId, domainBaseInfoIds).list();
+        SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
+        Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(),Set.class);
         SpiderAreaFunction areaFunction = spiderAreaFunctionService.getById(functionVersion.getDomainFunctionId());
         String projectName = areaFunction.getName() + "_" + functionVersion.getVersion();
-
+        String domainId = areaFunction.getAreaId();
         JsonObject domainBaseInfos = new JsonObject();
 
-        List<JsonObject> domainBaseInfoJson = areaDomainBaseInfos.stream().map(item -> {
-            JsonObject domainBaseInfo = JsonObject.mapFrom(item);
-            domainBaseInfo.put("domainObjectName", firstLowerCase(item.getDomainObjectEntityName()));
-            return domainBaseInfo;
-        }).collect(Collectors.toList());
+        List<JsonObject> domainBaseInfoJson = buildDomainInfo(domainBaseInfoIds);
         domainBaseInfos.put("domainBaseInfos", domainBaseInfoJson);
         domainBaseInfos.put("taskComponent", firstLowerCase(areaFunction.getTaskComponent()));
         domainBaseInfos.put("taskService", firstLowerCase(areaFunction.getTaskService()));
 
         CreateCoderParam createCoderParam = new CreateCoderParam(projectName, domainBaseInfos, functionVersion.getFunctionFunctional().getFunctionalList());
+
         // 创建任务
         SpiderDomainFunctionTask spiderDomainFunctionTasks = spiderDomainFunctionTaskService.lambdaQuery().eq(SpiderDomainFunctionTask::getDomainFunctionVersionId, versionId).one();
         SpiderDomainFunctionTask domainFunctionTask = new SpiderDomainFunctionTask();
@@ -145,16 +138,11 @@ public class TaskManager {
         // 发起跟ai交互
         createCoderParam.setTaskId(domainFunctionTask.getId());
         createCoderParam.setBaseInfoIds(domainBaseInfoIds);
-        if(Objects.nonNull(functionVersion.getDataFlowId())){
-            SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
-            createCoderParam.setDataFlow(spiderDataFlow.getData());
-            createCoderParam.setNeedDataFlow(Boolean.TRUE);
-            createCoderParam.setDataFlowDesc(spiderDataFlow.getFlowDataDesc());
-        }else {
-            createCoderParam.setNeedDataFlow(Boolean.FALSE);
-            createCoderParam.setDataFlow(new JSONObject());
-            createCoderParam.setDataFlowDesc("");
-        }
+
+        createCoderParam.setDomainInfoAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getDomainInfoResult());
+        createCoderParam.setDataFlowAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult());
+        createCoderParam.setDataFlow(spiderDataFlow.getData());
+        createCoderParam.setNeedDataFlow(Boolean.TRUE);
         createCoderParam.setDomainFunctionVersionId(versionId);
         log.info("create_coder_info {}", JSON.toJSONString(createCoderParam));
         agentVertxClient.createCoder(JsonObject.mapFrom(createCoderParam));
@@ -166,6 +154,16 @@ public class TaskManager {
         Wrapper<SpiderDomainFunctionAiCoderStep> queryWrapper = new LambdaQueryWrapper<SpiderDomainFunctionAiCoderStep>()
                 .eq(SpiderDomainFunctionAiCoderStep::getSpiderDomainFunctionTaskId, domainFunctionTask.getId());
         stepService.remove(queryWrapper);
+    }
+
+    public List<JsonObject> buildDomainInfo(Set<Integer> ids){
+        List<AreaDomainBaseInfo> areaDomainBaseInfos = baseInfoService.lambdaQuery()
+                .in(AreaDomainBaseInfo::getId, ids).list();
+        return areaDomainBaseInfos.stream().map(item -> {
+            JsonObject domainBaseInfo = JsonObject.mapFrom(item);
+            domainBaseInfo.put("domainObjectName", firstLowerCase(item.getDomainObjectEntityName()));
+            return domainBaseInfo;
+        }).collect(Collectors.toList());
     }
 
     public void updateCoder(JsonObject param) {

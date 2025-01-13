@@ -5,13 +5,11 @@ import cn.spider.framework.log.sdk.data.FlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExampleResponse;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
-import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 import cn.spider.framework.spider.log.es.esx.EsContext;
 import cn.spider.framework.spider.log.es.esx.EsQuery;
 import cn.spider.framework.spider.log.es.esx.model.EsData;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +32,7 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
 
     private final String index = "bms-spider-element-v7";
 
-    private SimplePropertyPreFilter filter = new SimplePropertyPreFilter(SpiderFlowElementExampleLog.class);
+    //private SimplePropertyPreFilter filter = new SimplePropertyPreFilter(SpiderFlowElementExampleLog.class);
 
     private final String createIndexJson = "{\"mappings\":{\"properties\":{\"id\":{\"type\":\"keyword\"},\"requestId\":{\"type\":\"keyword\"},\"flowElementName\":{\"type\":\"keyword\"},\"flowElementId\":{\"type\":\"keyword\"},\"functionId\":{\"type\":\"keyword\"},\"requestParam\":{\"type\":\"text\"},\"functionName\":{\"type\":\"keyword\"},\"returnParam\":{\"type\":\"text\"},\"exception\":{\"type\":\"keyword\"},\"status\":{\"type\":\"keyword\"},\"startTime\":{\"type\":\"long\"},\"endTime\":{\"type\":\"long\"},\"finalEndTime\":{\"type\":\"long\"},\"transactionGroupId\":{\"type\":\"keyword\"},\"branchId\":{\"type\":\"keyword\"},\"transactionStatus\":{\"type\":\"keyword\"},\"transactionOperate\":{\"type\":\"keyword\"}}}}";
 

@@ -31,7 +31,9 @@ public class CreateCoderParam {
 
     private JSONObject dataFlow;
     // 数据流描述
-    private String dataFlowDesc;
+    private String dataFlowAnalysis;
+
+    private String domainInfoAnalysis;
 
     private Boolean needDataFlow;
 
@@ -106,11 +108,19 @@ public class CreateCoderParam {
         this.needDataFlow = needDataFlow;
     }
 
-    public String getDataFlowDesc() {
-        return dataFlowDesc;
+    public String getDataFlowAnalysis() {
+        return dataFlowAnalysis;
     }
 
-    public void setDataFlowDesc(String dataFlowDesc) {
-        this.dataFlowDesc = dataFlowDesc;
+    public void setDataFlowAnalysis(String dataFlowAnalysis) {
+        this.dataFlowAnalysis = dataFlowAnalysis;
+    }
+
+    public String getDomainInfoAnalysis() {
+        return domainInfoAnalysis;
+    }
+
+    public void setDomainInfoAnalysis(String domainInfoAnalysis) {
+        this.domainInfoAnalysis = domainInfoAnalysis;
     }
 }

@@ -134,5 +134,5 @@ public class AreaDomainFunctionInfo implements Serializable {
     /**
      * 用于发布的yml文件地址
      */
-    private String deployYmlUrl;
+    private String deployYaml;
 }

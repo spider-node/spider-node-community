@@ -51,7 +51,8 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
         spiderBusinessPool.execute(() -> {
             try {
                 String versionId = param.getString("domainFunctionVersionId");
-                taskManager.runDomainFunctionTask(versionId);
+                Boolean retry = param.getBoolean("retry");
+                taskManager.runDomainFunctionTask(versionId,retry);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);

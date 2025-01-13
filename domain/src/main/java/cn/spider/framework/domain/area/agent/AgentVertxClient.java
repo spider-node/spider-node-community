@@ -44,6 +44,8 @@ public class AgentVertxClient {
 
     private String updatePluginUrl;
 
+    private String analysisDataFlowUrl;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
@@ -56,6 +58,7 @@ public class AgentVertxClient {
         this.installPlugin = "/installBiz";
         this.unInstallPlugin = "/uninstallBiz";
         this.coderApi = "/ai_code_automatic";
+        this.analysisDataFlowUrl = "/analysis_domain_info";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");
@@ -97,6 +100,10 @@ public class AgentVertxClient {
 
     public Future<JsonObject> createCoder(JsonObject param){
         return send(param, this.coderApi, this.aiCodePort, this.aiCodeHost);
+    }
+
+    public Future<JsonObject> analysisDataFlow(JsonObject param) {
+        return send(param, this.analysisDataFlowUrl, this.aiCodePort, this.aiCodeHost);
     }
 
     public Future<Void> installPlugin(Set<String> applicationIps, JsonObject pluginParam) {

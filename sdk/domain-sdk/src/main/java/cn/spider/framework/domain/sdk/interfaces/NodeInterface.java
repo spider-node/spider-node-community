@@ -68,6 +68,6 @@ public interface NodeInterface {
     // 查询版本信息
     Future<JsonObject> queryDomainFunctionVersion(JsonObject param);
 
-
-
+    // 回写table_analysis_info信息
+    Future<Void> writeTableAnalysisInfo(JsonObject param);
 }

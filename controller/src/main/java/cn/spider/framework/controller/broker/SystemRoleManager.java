@@ -61,6 +61,15 @@ public class SystemRoleManager {
         startRole(this.gateway, "gateway", deployOptions);
         startRole(this.transactionCore, "transactionCore", deployOptions);
         startRole(this.paramPatch, "paramPatch", deployOptions);
+        startRole(this.logPath, "log", deployOptions);
+    }
+
+    // 卸载base能力
+    public void destroyBaseSystemRole() {
+        destroyRole(this.flowNode, "flow");
+        destroyRole(this.gateway, "gateway");
+        destroyRole(this.transactionCore, "transactionCore");
+        destroyRole(this.paramPatch, "paramPatch");
     }
 
     public void StartLeaderSystemRole() {
@@ -73,8 +82,8 @@ public class SystemRoleManager {
         startRole(this.linkerServer, "scheduler", deployOptions);
         startRole(this.domain, "domain", deployOptions);
         startRole(this.hostApplication, "hostApplication", deployOptions);
-        startRole(this.logPath, "log", deployOptions);
         startRole(this.deploy, "devOps", deployOptions);
+        //destroyBaseSystemRole();
     }
 
     private void startRole(String path, String role, DeploymentOptions deployOptions) {

@@ -1,4 +1,5 @@
 package cn.spider.framework.gateway;
+
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
@@ -21,52 +22,55 @@ import org.springframework.context.support.AbstractApplicationContext;
 @Slf4j
 public class GatewayVerticle extends AbstractVerticle {
 
-  private static AbstractApplicationContext factory;
+    private static AbstractApplicationContext factory;
 
-  public static Vertx clusterVertx;
+    public static Vertx clusterVertx;
 
-  /**
-   * 启动
-   * @param startPromise
-   * @throws Exception
-   */
-  @Override
-  public void start(Promise<Void> startPromise) throws Exception {
+    /**
+     * 启动
+     *
+     * @param startPromise
+     * @throws Exception
+     */
+    @Override
+    public void start(Promise<Void> startPromise) throws Exception {
 
-    this.clusterVertx = vertx;
-    // 启动spring-ioc
-    this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
-    Router apiRouter = Router.router(vertx);
-    apiRouter.route().handler(CorsHandler.create()
-            .addOrigin("*")
-            .allowedHeader(" x-www-form-urlencoded, Content-Type,x-requested-with,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Access-Control-Allow-Methods")
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.DELETE));
-    apiRouter.route().handler(BodyHandler.create());
+        this.clusterVertx = vertx;
+        // 启动spring-ioc
+        this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
+        Router apiRouter = Router.router(vertx);
+        apiRouter.route().handler(CorsHandler.create()
+                .addOrigin("*")
+                .allowedHeader(" x-www-form-urlencoded, Content-Type,x-requested-with,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Access-Control-Allow-Methods")
+                .allowedMethod(HttpMethod.GET)
+                .allowedMethod(HttpMethod.POST)
+                .allowedMethod(HttpMethod.PUT)
+                .allowedMethod(HttpMethod.DELETE));
+        apiRouter.route().handler(BodyHandler.create());
 
-    SpiderServerHandler spiderServerHandler = factory.getBean(SpiderServerHandler.class);
-    // 进行handler注册
-    spiderServerHandler.init(apiRouter);
+        SpiderServerHandler spiderServerHandler = factory.getBean(SpiderServerHandler.class);
+        // 进行handler注册
+        spiderServerHandler.init(apiRouter);
 
-    FileHandler fileHandler = factory.getBean(FileHandler.class);
-    fileHandler.init(apiRouter);
+        FileHandler fileHandler = factory.getBean(FileHandler.class);
+        fileHandler.init(apiRouter);
 
-    HttpServer apiServer = vertx.createHttpServer();
-    String functionPort = BrokerInfoUtil.queryFunctionPort(vertx);
-    apiServer.requestHandler(apiRouter).listen(Integer.parseInt(functionPort));
+        HttpServer apiServer = vertx.createHttpServer();
+        String functionPort = BrokerInfoUtil.queryFunctionPort(vertx);
+        apiServer.requestHandler(apiRouter).listen(Integer.parseInt(functionPort));
 
-    startPromise.complete();
-  }
+        startPromise.complete();
+    }
 
-  /**
-   * 关闭
-   * @param stopPromise
-   */
-  @Override
-  public void stop(Promise<Void> stopPromise){
-    log.info("gateway-退出了");
-    stopPromise.complete();
-  }
+    /**
+     * 关闭
+     *
+     * @param stopPromise
+     */
+    @Override
+    public void stop(Promise<Void> stopPromise) {
+        log.info("gateway-退出了");
+        this.factory.close();
+        stopPromise.complete();
+    }
 }

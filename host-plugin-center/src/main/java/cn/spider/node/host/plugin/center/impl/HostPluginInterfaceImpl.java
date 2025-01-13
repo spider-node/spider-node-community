@@ -84,7 +84,7 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
         FunctionPluginOfflineParam param = data.mapTo(FunctionPluginOfflineParam.class);
         try {
             AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery().eq(AreaDomainFunctionInfo::getId, param.getFunctionId()).one();
-            FunctionDeployData hostApplicationOnlineData = new FunctionDeployData(areaDomainFunctionInfo.getBizUrl(), areaDomainFunctionInfo.getDomainFunctionVersionId());
+            FunctionDeployData hostApplicationOnlineData = new FunctionDeployData(areaDomainFunctionInfo.getDeployYaml(), areaDomainFunctionInfo.getDomainFunctionVersionId());
             eventManager.sendMessage(EventType.DEPLOY, hostApplicationOnlineData);
         } catch (Exception e) {
             return Future.failedFuture(e);
