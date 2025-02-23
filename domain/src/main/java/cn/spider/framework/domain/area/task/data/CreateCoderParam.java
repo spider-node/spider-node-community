@@ -37,6 +37,14 @@ public class CreateCoderParam {
 
     private Boolean needDataFlow;
 
+    private String inputParam;
+
+    private String outParam;
+
+    // 采用定制参数
+    private Boolean customizedParam;
+
+    private String datasource;
 
     public CreateCoderParam(String projectName, JsonObject sonDomainInfo, List<String> businessRequirements) {
         this.projectName = projectName;
@@ -122,5 +130,37 @@ public class CreateCoderParam {
 
     public void setDomainInfoAnalysis(String domainInfoAnalysis) {
         this.domainInfoAnalysis = domainInfoAnalysis;
+    }
+
+    public String getInputParam() {
+        return inputParam;
+    }
+
+    public void setInputParam(String inputParam) {
+        this.inputParam = inputParam;
+    }
+
+    public String getOutParam() {
+        return outParam;
+    }
+
+    public void setOutParam(String outParam) {
+        this.outParam = outParam;
+    }
+
+    public Boolean getCustomizedParam() {
+        return customizedParam;
+    }
+
+    public void setCustomizedParam(Boolean customizedParam) {
+        this.customizedParam = customizedParam;
+    }
+
+    public String getDatasource() {
+        return datasource;
+    }
+
+    public void setDatasource(String datasource) {
+        this.datasource = datasource;
     }
 }

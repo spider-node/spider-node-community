@@ -1,9 +1,10 @@
 package cn.spider.framework.domain.area.impl;
 
-import cn.spider.framework.common.event.EventManager;
-import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.FunctionDeployData;
+import cn.spider.framework.domain.area.agent.AgentVertxClient;
+import cn.spider.framework.domain.area.sondomain.entity.*;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
+import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.data.*;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
@@ -11,13 +12,13 @@ import cn.spider.framework.domain.area.node.entity.SpiderAreaFunction;
 import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
 import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionVersionService;
 import cn.spider.framework.domain.area.plugin.ApplicationPluginManager;
+import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -26,9 +27,9 @@ import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -51,12 +52,28 @@ public class NodeInterfaceImpl implements NodeInterface {
 
     private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
 
-    public NodeInterfaceImpl(NodeManger nodeManger, ApplicationPluginManager pluginManager, HostPluginInterface hostPluginInterface, Executor spiderBusinessPool, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+    private ISpiderDataFlowService spiderDataFlowService;
+
+    private IAreaDomainBaseInfoService areaDomainBaseInfoService;
+
+    private AgentVertxClient agentVertxClient;
+
+    public NodeInterfaceImpl(NodeManger nodeManger,
+                             ApplicationPluginManager pluginManager,
+                             HostPluginInterface hostPluginInterface,
+                             Executor spiderBusinessPool,
+                             ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
+                             ISpiderDataFlowService spiderDataFlowService,
+                             IAreaDomainBaseInfoService areaDomainBaseInfoService,
+                             AgentVertxClient agentVertxClient) {
         this.nodeManger = nodeManger;
         this.pluginManager = pluginManager;
         this.hostPluginInterface = hostPluginInterface;
         this.spiderBusinessPool = spiderBusinessPool;
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
+        this.spiderDataFlowService = spiderDataFlowService;
+        this.areaDomainBaseInfoService = areaDomainBaseInfoService;
+        this.agentVertxClient = agentVertxClient;
     }
 
     @Override
@@ -294,7 +311,7 @@ public class NodeInterfaceImpl implements NodeInterface {
     public Future<Void> writeTableAnalysisInfo(JsonObject param) {
         Promise<Void> promise = Promise.promise();
         spiderBusinessPool.execute(() -> {
-            try {
+           /* try {
                 AnalysisTableInfo analysisTableInfo = param.mapTo(AnalysisTableInfo.class);
                 TableAnalysisModel tableAnalysisInfo = new TableAnalysisModel();
                 tableAnalysisInfo.setTableInfo(analysisTableInfo.getTableInfo());
@@ -305,7 +322,78 @@ public class NodeInterfaceImpl implements NodeInterface {
             } catch (Exception e) {
                 promise.fail(e);
                 throw new RuntimeException(e);
-            }
+            }*/
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> analysisParam(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        String functionVersionId = param.getString("functionVersionId");
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(functionVersionId);
+        Integer dataFlowId = functionVersion.getDataFlowId();
+        SpiderDataFlow flow = spiderDataFlowService.getById(dataFlowId);
+        List<Integer> baseIds = JSONObject.parseArray(flow.getSonAreaIds(), Integer.class);
+        List<AreaDomainBaseInfo> areaDomainBaseInfos = areaDomainBaseInfoService.lambdaQuery().in(AreaDomainBaseInfo::getId, baseIds).list();
+        Map<String, Object> analysisParamDataInfo = new HashMap<>();
+
+        // 使用areaDomainBaseInfos进行转map,key为 DomainObjectEntityName + ":" + version ,value为 DomainObject
+        Map<String, String> areaTableFlieds = areaDomainBaseInfos.stream().collect(Collectors.toMap(item -> item.getDomainObjectEntityName() + ":" + item.getVersion(), item -> item.getDomainObject()));
+        analysisParamDataInfo.put("tableInfo", areaTableFlieds);
+        JsonObject queryParam = new JsonObject();
+        queryParam.put("domainFunctionVersionId", functionVersionId);
+        hostPluginInterface.queryFunctionVersion(queryParam)
+                .onSuccess(suss -> {
+                    JsonObject functionVersionInfo = suss;
+                    analysisParamDataInfo.put("coder", functionVersionInfo.getString("areaFunctionResultClass"));
+                    analysisParamDataInfo.put("functionVersionId", functionVersionId);
+                    agentVertxClient.analysisParam(JsonObject.mapFrom(analysisParamDataInfo));
+                    promise.complete();
+                })
+                .onFailure(fail -> {
+                    promise.fail(fail);
+                });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> notifyAiAnalysis(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        NotifyAnalysisResultParam notifyAnalysisResultParam = JSON.parseObject(param.toString(), NotifyAnalysisResultParam.class);
+        spiderBusinessPool.execute(() -> {
+            Map<String, Set<String>> analysisResultTable = new HashMap<>();
+            notifyAnalysisResultParam.getAnalysisResult().forEach(item -> {
+                NotifyAnalysisResultModel resultModel = item;
+                Set<String> tableMap = !analysisResultTable.containsKey(resultModel.getTable()) ? new HashSet<>() : analysisResultTable.get(resultModel.getTable());
+                tableMap.addAll(resultModel.getFields().values());
+                if (!analysisResultTable.containsKey(resultModel.getTable())) {
+                    analysisResultTable.put(resultModel.getTable(), tableMap);
+                }
+            });
+            // 解析 notifyAnalysisResultParam.getAnalysisResult();
+            JsonObject analysisResult = new JsonObject();
+            analysisResult.put("analysis", new JsonArray(JSON.toJSONString(notifyAnalysisResultParam.getAnalysisResult())));
+            analysisResult.put("tables",analysisResultTable);
+            spiderAreaFunctionVersionService.lambdaUpdate()
+                    .set(SpiderAreaFunctionVersion::getResultAnalysis, analysisResult.toString())
+                    .eq(SpiderAreaFunctionVersion::getId, notifyAnalysisResultParam.getFunctionVersionId()).update();
+            promise.complete();
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> queryAnalysisParam(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        QueryAnalysisResultParam queryAnalysisResult = param.mapTo(QueryAnalysisResultParam.class);
+        spiderBusinessPool.execute(() -> {
+            SpiderAreaFunctionVersion spiderAreaFunctionVersion = spiderAreaFunctionVersionService.getById(queryAnalysisResult.getFunctionVersionId());
+            JsonObject resultAnalysis = Objects.nonNull(spiderAreaFunctionVersion.getResultAnalysis()) ?
+                    new JsonObject(spiderAreaFunctionVersion.getResultAnalysis().toString()) :
+                    new JsonObject();
+            QueryAnalysisResult queryAnalysisResultParam = new QueryAnalysisResult(resultAnalysis);
+            promise.complete(JsonObject.mapFrom(queryAnalysisResultParam));
         });
         return promise.future();
     }

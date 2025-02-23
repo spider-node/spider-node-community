@@ -4,6 +4,7 @@ import cn.spider.framework.domain.area.AreaManger;
 import cn.spider.framework.domain.area.data.AreaModel;
 import cn.spider.framework.domain.area.data.QueryAreaModel;
 import cn.spider.framework.domain.area.data.QueryDomainResult;
+import cn.spider.framework.domain.area.data.UpdateBaseFieldParam;
 import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.datasource.data.QueryDatasourceParam;
 import cn.spider.framework.domain.area.datasource.data.QueryDatasourceResult;
@@ -265,6 +266,16 @@ public class AreaImpl implements AreaInterface {
             }
         });
         return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> updateSonDomainField(JsonObject data) {
+        UpdateBaseFieldParam param = JSON.parseObject(data.toString(), UpdateBaseFieldParam.class);
+        areaDomainBaseInfoService.lambdaUpdate()
+                .set(AreaDomainBaseInfo::getDomainObject, param.getTableFieldInfos())
+                .eq(AreaDomainBaseInfo::getId, param.getId())
+                .update();
+        return Future.succeededFuture();
     }
 
     @Override

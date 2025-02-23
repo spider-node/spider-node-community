@@ -24,9 +24,6 @@ public class HostWorkerRegisterManager {
         this.hostApplicationMap = new HashMap<>();
     }
 
-    // 定时同步 宿主应用，与插件的关系
-
-
     /**
      * 宿主应用上线
      *

@@ -65,6 +65,10 @@ public enum EventType {
     SCALE_UP(SystemRole.FLOW_EXAMPLE,"SCALE_UP","扩缩容",EventTypeRole.SYSTEM),
     // 下线
     SCALE_DOWN(SystemRole.FLOW_EXAMPLE,"SCALE_DOWN","下线",EventTypeRole.SYSTEM),
+    // 进行通知删除对应的参数信息
+    DELETE_FUNCTION_PARAM_INFO(SystemRole.FLOW_EXAMPLE,"DELETE_FUNCTION_PARAM_INFO","删除参数信息",EventTypeRole.SYSTEM),
+    // 作用于参数添加后,配置定时器进行删除
+    RECORD_FUNCTION_PARAM_INFO(SystemRole.FLOW_EXAMPLE,"RECORD_FUNCTION_PARAM_INFO","记录参数信息",EventTypeRole.SYSTEM),
     ;
     private SystemRole role;
 

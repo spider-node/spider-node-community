@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class ElectionLeader {
     private CuratorFramework client;
 
-    private final String ELECTION_LEADER = "/spider_node_leader";
+    private final String ELECTION_LEADER = "/spider_node_leader_local";
 
     private Vertx vertx;
 

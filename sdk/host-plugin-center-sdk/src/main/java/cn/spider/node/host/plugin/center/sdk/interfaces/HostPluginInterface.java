@@ -40,6 +40,10 @@ public interface HostPluginInterface {
      */
     Future<Void> pluginOnline(JsonObject data);
 
+    /**
+     * 扩缩容
+     * @param data 宿主应用信息
+     */
     Future<Void> scalePlugin(JsonObject data);
 
     /**
@@ -60,4 +64,10 @@ public interface HostPluginInterface {
 
     // 校验是否有部署,如果没有，发起部署
     Future<Void> checkDeployInfo(JsonObject data);
+
+    // 查询版本对应的参数信息
+    Future<JsonObject> queryVersionParam(JsonObject data);
+
+    // 更新功能代码
+    Future<Void> updateFunctionCode(JsonObject data);
 }

@@ -26,6 +26,7 @@ import cn.spider.framework.flow.resource.service.ServiceNodeResource;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
+import cn.spider.framework.param.sdk.data.enums.FunctionType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
@@ -134,12 +135,39 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
      */
     private Integer delayTime;
 
+    /**
+     * 版本号
+     */
     private String version;
 
     /**
      * 应用类型
      */
     private ApplicationProviderType providerType;
+
+    // 节点id
+    private String functionVersionId;
+
+    // 节点类型
+    private FunctionType functionType;
+
+    private void setFunctionVersionId(String functionVersionId){
+        this.functionVersionId = functionVersionId;
+    }
+
+    private void setFunctionType(String functionType) {
+        this.functionType = FunctionType.valueOf(functionType);
+    }
+
+    public String queryFunctionVersionId () {
+        return this.functionVersionId;
+    }
+
+    public FunctionType queryFunctionType () {
+        return this.functionType;
+    }
+
+
 
     public void setProviderType(String providerType) {
         this.providerType = ApplicationProviderType.valueOf(providerType);

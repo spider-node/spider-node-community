@@ -1,11 +1,11 @@
 package cn.spider.framework.domain.area.datasource;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.datasource.data.*;
 import cn.spider.framework.domain.area.datasource.entity.AreaDatasourceInfo;
 import cn.spider.framework.domain.area.datasource.service.IAreaDatasourceInfoService;
 import cn.spider.framework.domain.area.util.DatasourceUtil;
 import cn.spider.framework.domain.area.util.TableInfo;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,18 +15,19 @@ import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.templates.SqlTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 数据源信息管理
  */
+@Slf4j
 public class DatasourceManager {
 
     private Map<String, MySQLPool> datasourcePoolMap;
@@ -35,8 +36,10 @@ public class DatasourceManager {
 
     private Vertx vertx;
 
-    public DatasourceManager(IAreaDatasourceInfoService datasourceInfoService) {
+    public DatasourceManager(IAreaDatasourceInfoService datasourceInfoService,Vertx vertx) {
         this.datasourceInfoService = datasourceInfoService;
+        this.datasourcePoolMap = new HashMap<>();
+        this.vertx = vertx;
     }
 
     // 获取数据源信息
@@ -44,6 +47,7 @@ public class DatasourceManager {
         List<AreaDatasourceInfo> datasourceInfos = datasourceInfoService.lambdaQuery()
                 .likeRight(StringUtils.isNotEmpty(param.getDatasource()), AreaDatasourceInfo::getDatasource, param.getDatasource())
                 .list();
+
         return new QueryDatasourceResult(datasourceInfos, 0L);
     }
 
@@ -78,7 +82,9 @@ public class DatasourceManager {
 
     public Future<Void> runUpdateSql(RunGeneralSQLModel runGeneralSQLModel) {
         Promise<Void> promise = Promise.promise();
-        MySQLPool mySQLPool = datasourcePoolMap.containsKey(runGeneralSQLModel.getDatasource()) ? datasourcePoolMap.get(runGeneralSQLModel.getDatasource()) : getMySQLPool(runGeneralSQLModel.getDatasource());
+        MySQLPool mySQLPool = datasourcePoolMap.containsKey(runGeneralSQLModel.getDatasource()) ?
+                datasourcePoolMap.get(runGeneralSQLModel.getDatasource()) :
+                getMySQLPool(runGeneralSQLModel.getDatasource());
         SqlTemplate
                 .forUpdate(mySQLPool, runGeneralSQLModel.getSql())
                 .execute(runGeneralSQLModel.getParams())
@@ -86,6 +92,8 @@ public class DatasourceManager {
                     promise.complete();
                 }).onFailure(fail -> {
                     promise.fail(fail);
+                    log.info("----执行异常 {}", ExceptionMessage.getStackTrace(fail));
+
                 });
         return promise.future();
     }

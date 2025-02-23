@@ -62,6 +62,11 @@ public class AreaDomainFunctionInfo implements Serializable {
      */
     private String areaFunctionResultClass;
 
+    /**
+     * 其他代码
+     */
+    private String otherCode;
+
 
     /**
      * 状态-init,init_fail,init_suss

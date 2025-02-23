@@ -136,6 +136,8 @@ public class SocketManager {
                 monitorSocket(res.result(), serverIp);
                 this.businessTimer.registerSocketHeart(serverIp, this);
                 this.businessTimer.senAreaInfo(this);
+                // 定时推送,当前节点功能信息
+                this.businessTimer.senAreaInfoFixedTime(this);
                 // 注册 heart
             } else {
                 log.error("跟spider-server通信进行链接失败 serverIp {} 错误信息为 {}", serverIp, ExceptionMessage.getStackTrace(res.cause()));
@@ -154,7 +156,6 @@ public class SocketManager {
     }
 
     public void escalationAreaFunctionInfo() {
-
         // 注册延迟，5s后执行
         areaInfoService.escalationAreaInfo();
     }

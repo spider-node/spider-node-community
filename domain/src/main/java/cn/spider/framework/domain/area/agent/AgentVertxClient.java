@@ -46,6 +46,10 @@ public class AgentVertxClient {
 
     private String analysisDataFlowUrl;
 
+    private String analysisParamInfo;
+
+    private String analysisDemandInfo;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
@@ -59,6 +63,8 @@ public class AgentVertxClient {
         this.unInstallPlugin = "/uninstallBiz";
         this.coderApi = "/ai_code_automatic";
         this.analysisDataFlowUrl = "/analysis_domain_info";
+        this.analysisParamInfo = "/analysis_param";
+        this.analysisDemandInfo = "/demand_analysis";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");
@@ -105,6 +111,19 @@ public class AgentVertxClient {
     public Future<JsonObject> analysisDataFlow(JsonObject param) {
         return send(param, this.analysisDataFlowUrl, this.aiCodePort, this.aiCodeHost);
     }
+
+    public Future<JsonObject> analysisParam(JsonObject param) {
+        return send(param, this.analysisParamInfo, this.aiCodePort, this.aiCodeHost);
+    }
+
+    /**
+     * 解析 需求
+     * @return
+     */
+    public Future<JsonObject> analysisDemand(JsonObject param) {
+        return send(param, this.analysisDemandInfo, this.aiCodePort, this.aiCodeHost);
+    }
+
 
     public Future<Void> installPlugin(Set<String> applicationIps, JsonObject pluginParam) {
         Promise<Void> promise = Promise.promise();

@@ -13,6 +13,7 @@ import cn.spider.node.host.plugin.center.model.entity.SpiderPluginDeployInfo;
 import cn.spider.node.host.plugin.center.model.service.IAreaDomainFunctionInfoService;
 import cn.spider.node.host.plugin.center.sdk.data.*;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 @Slf4j
@@ -95,9 +95,8 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     @Override
     public Future<Void> scalePlugin(JsonObject data) {
         ScalePluginParam scalePluginParam = data.mapTo(ScalePluginParam.class);
-        AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery().eq(AreaDomainFunctionInfo::getId, scalePluginParam.getFunctionId()).one();
-        String deploymentName = areaDomainFunctionInfo.getFunctionName() + "_" + areaDomainFunctionInfo.getVersion();
-        ScaleUpData hostApplicationOnlineData = new ScaleUpData(deploymentName, scalePluginParam.getNum(), areaDomainFunctionInfo.getDomainFunctionVersionId());
+        AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery().eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, scalePluginParam.getFunctionId()).one();
+        ScaleUpData hostApplicationOnlineData = new ScaleUpData(areaDomainFunctionInfo.getDeployYaml(), scalePluginParam.getNum(), areaDomainFunctionInfo.getDomainFunctionVersionId());
         eventManager.sendMessage(EventType.SCALE_UP, hostApplicationOnlineData);
         return Future.succeededFuture();
     }
@@ -136,5 +135,33 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
         });
 
         return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> queryVersionParam(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            QueryFunctionVersionsParam queryFunctionVersionParam = data.mapTo(QueryFunctionVersionsParam.class);
+            AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery()
+                    .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, queryFunctionVersionParam.getDomainFunctionVersionId()).one();
+            QueryFunctionVersionResult queryFunctionVersionResult = new QueryFunctionVersionResult();
+            queryFunctionVersionResult.setAreaFunctionResultClass(areaDomainFunctionInfo.getAreaFunctionResultClass());
+            queryFunctionVersionResult.setAreaFunctionParamClass(areaDomainFunctionInfo.getAreaFunctionParamClass());
+            log.info("==查询到的版本信息为 {}", JSON.toJSONString(queryFunctionVersionResult));
+            promise.complete(JsonObject.mapFrom(queryFunctionVersionResult));
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> updateFunctionCode(JsonObject data) {
+        UpdateCoderParam updateCoderParam = data.mapTo(UpdateCoderParam.class);
+        areaDomainFunctionInfoService.lambdaUpdate()
+                .set(AreaDomainFunctionInfo::getAreaFunctionClass, updateCoderParam.getAreaFunctionClass())
+                .set(AreaDomainFunctionInfo::getAreaFunctionParamClass, updateCoderParam.getAreaFunctionParamClass())
+                .set(AreaDomainFunctionInfo::getAreaFunctionResultClass, updateCoderParam.getAreaFunctionResultClass())
+                .eq(AreaDomainFunctionInfo::getId, updateCoderParam.getId())
+                .update();
+        return Future.succeededFuture();
     }
 }

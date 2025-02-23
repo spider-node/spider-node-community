@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jdk
+FROM openjdk:8-jdk
 RUN mkdir /usr/local/spider-node/
 COPY start/target/spider-node-2.0.0.tar.gz /usr/local/spider-node/
 WORKDIR /usr/local/spider-node/

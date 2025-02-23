@@ -85,17 +85,16 @@ public class SpiderPluginManager {
         List<NodeParamInfo> nodeParamInfos = new ArrayList<>();
         taskServiceMethodList.forEach(method -> {
             TaskService annotation = method.getAnnotation(TaskService.class);
-            String functionName = annotation.functionName();
-            String desc = annotation.desc();
+            //String functionName = annotation.functionName();
+            //String desc = annotation.desc();
             String taskServiceName = StringUtils.isBlank(annotation.name()) ? method.getName() : annotation.name();
-            TaskInstructWrapper taskInstruct = getTaskInstructWrapper(method, taskServiceName).orElse(null);
-            NoticeAnnotationWrapper noticeMethodSpecify = new NoticeAnnotationWrapper(method);
-            MethodWrapper methodWrapper = new MethodWrapper(method, annotation, noticeMethodSpecify, taskInstruct, true);
-
-            List<NodeField> outParams = methodWrapper.getReturnTypeNoticeDef().getNodeFields();
-
-            List<NodeField> input = convertInputParam(methodWrapper.getParamInjectDefs());
-            NodeParamInfo nodeParamInfo = new NodeParamInfo(input, outParams, taskComponent.workerName(), methodWrapper.getMethod().getName(), functionName, desc, "");
+            //TaskInstructWrapper taskInstruct = getTaskInstructWrapper(method, taskServiceName).orElse(null);
+            //NoticeAnnotationWrapper noticeMethodSpecify = new NoticeAnnotationWrapper(method);
+            //MethodWrapper methodWrapper = new MethodWrapper(method, annotation, noticeMethodSpecify, taskInstruct, true);
+            //List<NodeField> outParams = methodWrapper.getReturnTypeNoticeDef().getNodeFields();
+            //List<NodeField> input = convertInputParam(methodWrapper.getParamInjectDefs());
+            //NodeParamInfo nodeParamInfo = new NodeParamInfo(input, outParams, taskComponent.workerName(), methodWrapper.getMethod().getName(), functionName, desc, "");
+            NodeParamInfo nodeParamInfo = new NodeParamInfo();
             nodeParamInfo.setTaskComponent(taskComponent.name());
             nodeParamInfo.setTaskService(taskServiceName);
             nodeParamInfo.setVersion(this.version);

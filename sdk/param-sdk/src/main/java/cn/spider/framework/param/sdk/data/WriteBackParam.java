@@ -1,5 +1,6 @@
 package cn.spider.framework.param.sdk.data;
 
+import cn.spider.framework.param.sdk.data.enums.FunctionType;
 import io.vertx.core.json.JsonObject;
 import lombok.Data;
 
@@ -21,6 +22,12 @@ public class WriteBackParam {
     private String taskService;
 
     private String version;
+
+    // 节点id
+    private String functionVersionId;
+    // 节点类型
+
+    private FunctionType functionType;
 
     /**
      * 返回的参数
@@ -65,5 +72,21 @@ public class WriteBackParam {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getFunctionVersionId() {
+        return functionVersionId;
+    }
+
+    public void setFunctionVersionId(String functionVersionId) {
+        this.functionVersionId = functionVersionId;
+    }
+
+    public FunctionType getFunctionType() {
+        return functionType;
+    }
+
+    public void setFunctionType(FunctionType functionType) {
+        this.functionType = functionType;
     }
 }

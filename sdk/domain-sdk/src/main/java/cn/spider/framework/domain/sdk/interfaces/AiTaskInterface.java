@@ -58,5 +58,10 @@ public interface AiTaskInterface {
      * @param param 修改后的业务代码
      * @return 返回修改后的信息
      */
-    Future<JsonObject> updateCoder(JsonObject param);
+    Future<Void> updateCoder(JsonObject param);
+
+    /**
+     * 需求ai解析
+     */
+    Future<Void> demandAiParse(JsonObject param);
 }

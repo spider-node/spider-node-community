@@ -37,7 +37,6 @@ import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
-import com.sun.org.apache.bcel.internal.generic.PUSH;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
@@ -140,8 +139,10 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
-        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool,spiderAreaFunctionVersionService);
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDataFlowService spiderDataFlowService,
+                                            IAreaDomainBaseInfoService areaDomainBaseInfoService,
+                                            AgentVertxClient agentVertxClient) {
+        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool,spiderAreaFunctionVersionService,spiderDataFlowService,areaDomainBaseInfoService,agentVertxClient);
     }
 
     @Bean
@@ -304,8 +305,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService){
-        return new DatasourceManager(datasourceInfoService);
+    public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService,Vertx vertx){
+        return new DatasourceManager(datasourceInfoService,vertx);
     }
 
     @Bean
@@ -318,11 +319,11 @@ public class DomainConfig {
     @Bean
     public TaskManager buildTaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
                                         ISpiderAreaFunctionService spiderAreaFunctionService,
-                                        ISpiderSonAreaService spiderSonAreaService,
+                                        HostPluginInterface hostPluginInterface,
                                         IAreaDomainBaseInfoService baseInfoService,
                                         ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
                                         AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService){
-        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,spiderSonAreaService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService);
+        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService,hostPluginInterface);
     }
 
     @Bean

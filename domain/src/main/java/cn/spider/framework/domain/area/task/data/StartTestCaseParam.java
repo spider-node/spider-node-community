@@ -5,7 +5,7 @@ import java.util.List;
 public class StartTestCaseParam {
     private List<MethodInputModel> methodInputModes;
 
-    private List<CaseSqlModel> caseSqlModels;
+    private List<CaseSqlModel> caseSql;
 
     /**
      * 本次任务的id
@@ -27,12 +27,12 @@ public class StartTestCaseParam {
         this.methodInputModes = methodInputModes;
     }
 
-    public List<CaseSqlModel> getCaseSqlModels() {
-        return caseSqlModels;
+    public List<CaseSqlModel> getCaseSql() {
+        return caseSql;
     }
 
-    public void setCaseSqlModels(List<CaseSqlModel> caseSqlModels) {
-        this.caseSqlModels = caseSqlModels;
+    public void setCaseSql(List<CaseSqlModel> caseSql) {
+        this.caseSql = caseSql;
     }
 
     public Integer getTaskId() {

@@ -1,6 +1,7 @@
 package cn.spider.framework.linker.server.config;
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.db.config.DbRocksConfig;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * @create: 2023-03-02 10:55
  */
 @Configuration
-@Import(EventConfig.class)
+@Import({EventConfig.class, DbRocksConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.linker.server.*"})
 public class SpringConfig {
 

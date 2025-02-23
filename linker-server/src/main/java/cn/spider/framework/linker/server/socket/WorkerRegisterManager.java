@@ -28,8 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -147,16 +149,10 @@ public class WorkerRegisterManager {
                 hostWorkerRegisterManager.register(clientInfo);
                 // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
                 monitorSocketClose(socket, clientInfo);
-                // 发送上线事件
-                HostApplicationOnlineData hostApplicationOnlineData = HostApplicationOnlineData.builder()
-                        .ip(clientInfo.getIp())
-                        .brokerName(this.brokerName)
-                        .build();
-                eventManager.sendMessage(EventType.HOST_ONLINE, hostApplicationOnlineData);
-
                 break;
             case INTERFACE:
                 clientRegisterCenter.registerClient(clientInfo);
+                monitorSocketClose(socket, clientInfo);
                 break;
         }
     }

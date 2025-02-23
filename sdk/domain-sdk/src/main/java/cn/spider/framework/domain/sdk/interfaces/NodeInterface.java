@@ -70,4 +70,14 @@ public interface NodeInterface {
 
     // 回写table_analysis_info信息
     Future<Void> writeTableAnalysisInfo(JsonObject param);
+
+    /**
+     * 解析参数
+     */
+    Future<Void> analysisParam(JsonObject param);
+
+    Future<Void> notifyAiAnalysis(JsonObject param);
+
+    // queryAnalysisParam
+    Future<JsonObject> queryAnalysisParam(JsonObject param);
 }

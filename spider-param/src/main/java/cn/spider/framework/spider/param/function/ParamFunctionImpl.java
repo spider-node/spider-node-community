@@ -68,12 +68,13 @@ public class ParamFunctionImpl implements ParamInterface {
                 promise.complete();
                 return;
             }
-            paramExampleManager.notifyResult(writeBackParam.getTaskComponent(),
+            // 查询配置 配置放入缓存中
+            /*paramExampleManager.notifyResult(writeBackParam.getTaskComponent(),
                     writeBackParam.getTaskService(), writeBackParam.getRequestId(), new JsonObject(writeBackParam.getResult().toString()),writeBackParam.getVersion()).onSuccess(suss -> {
                 promise.complete();
             }).onFailure(fail -> {
                 promise.fail(fail);
-            });
+            });*/
         });
         return promise.future();
     }

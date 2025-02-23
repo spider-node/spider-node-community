@@ -182,6 +182,7 @@ public class SpiderServerHandler {
         queryFunctionVersion();
         queryDomainFunctionVersion();
         querySonDomainVersion();
+        updateSonDomainField();
         upsertDomainFunctionVersion();
         createCoder();
         runCase();
@@ -190,10 +191,16 @@ public class SpiderServerHandler {
         queryDeployInfo();
         queryCaseInfo();
         syncAiCoderStep();
+        updateCoder();
+        scalePlugin();
         queryTaskStep();
         notifyDataFlowAnalysis();
         generateDataFlowInfo();
         writeTableAnalysisInfo();
+        analysisParam();
+        notifyAiAnalysisResult();
+        queryParamConfig();
+        demandAiParse();
     }
 
     public void selectBpmn() {
@@ -1102,6 +1109,7 @@ public class SpiderServerHandler {
     private void querySonAreaInfos() {
         router.post("/query/son_area_infos")
                 .handler(ctx -> {
+                    System.out.println("22222222");
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
@@ -1325,6 +1333,20 @@ public class SpiderServerHandler {
 
     }
 
+    private void updateSonDomainField() {
+        router.post("/update_son_domain_field")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    areaInterface.updateSonDomainField(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
     private void upsertDomainFunctionVersion() {
         router.post("/upsert/domain_function_version")
                 .handler(ctx -> {
@@ -1346,6 +1368,38 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     aiTaskInterface.createCoder(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void updateCoder() {
+        router.post("/update_coder")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    log.info("updateCoder-param:{}", param);
+                    aiTaskInterface.updateCoder(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 扩缩容插件
+     */
+    private void scalePlugin() {
+        router.post("/scale_plugin")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    hostPluginInterface.scalePlugin(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
@@ -1468,6 +1522,7 @@ public class SpiderServerHandler {
                 });
 
     }
+
     /**
      * /generate_data_flow_info
      */
@@ -1483,6 +1538,7 @@ public class SpiderServerHandler {
                     });
                 });
     }
+
     // writeTableAnalysisInfo
     private void writeTableAnalysisInfo() {
         router.post("/write_table_analysis_info")
@@ -1498,4 +1554,65 @@ public class SpiderServerHandler {
                     });
                 });
     }
+
+    private void analysisParam() {
+        router.post("/analysis_param")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.analysisParam(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void notifyAiAnalysisResult() {
+        router.post("/notify/ai_analysis_result")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.notifyAiAnalysis(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // /query/analysis_param
+    private void queryParamConfig() {
+        router.post("/query/analysis_param")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    nodeInterface.queryAnalysisParam(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * demand解析
+     */
+    private void demandAiParse() {
+        router.post("/demand_analysis")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.demandAiParse(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
 }

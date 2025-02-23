@@ -78,6 +78,16 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     @TableField(value = "result_Mapping", typeHandler = FastjsonTypeHandler.class)
     private FunctionParamOutput resultMapping;
 
+    private String runClass;
+
+    private String resultClass;
+
+    @TableField(value = "run_object_config", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject runObjectConfig;
+
+    @TableField(value = "result_object_config", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject resultObjectConfig;
+
     /**
      * 返回参数
      */
@@ -235,5 +245,37 @@ public class SpiderBusinessFunctionVersion implements Serializable {
 
     public void setDataFlowId(Integer dataFlowId) {
         this.dataFlowId = dataFlowId;
+    }
+
+    public String getRunClass() {
+        return runClass;
+    }
+
+    public void setRunClass(String runClass) {
+        this.runClass = runClass;
+    }
+
+    public String getResultClass() {
+        return resultClass;
+    }
+
+    public void setResultClass(String resultClass) {
+        this.resultClass = resultClass;
+    }
+
+    public JSONObject getRunObjectConfig() {
+        return runObjectConfig;
+    }
+
+    public void setRunObjectConfig(JSONObject runObjectConfig) {
+        this.runObjectConfig = runObjectConfig;
+    }
+
+    public JSONObject getResultObjectConfig() {
+        return resultObjectConfig;
+    }
+
+    public void setResultObjectConfig(JSONObject resultObjectConfig) {
+        this.resultObjectConfig = resultObjectConfig;
     }
 }

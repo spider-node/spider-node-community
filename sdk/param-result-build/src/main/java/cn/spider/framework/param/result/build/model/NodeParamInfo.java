@@ -4,16 +4,8 @@ import cn.spider.framework.param.result.build.NodeField;
 
 import java.lang.reflect.Method;
 import java.util.List;
-public class NodeParamInfo {
-    /**
-     * 入参配置
-     */
-    private List<NodeField> inputParamDefs;
 
-    /**
-     * 出参配置
-     */
-    private List<NodeField> outputParamDefs;
+public class NodeParamInfo {
 
     /**
      * 提供能力的宿主应用
@@ -65,9 +57,7 @@ public class NodeParamInfo {
      */
     private String taskId;
 
-    public NodeParamInfo(List<NodeField> inputParamDefs, List<NodeField> outputParamDefs, String worker, String method, String functionName, String desc,String subDomainId) {
-        this.inputParamDefs = inputParamDefs;
-        this.outputParamDefs = outputParamDefs;
+    public NodeParamInfo(String worker, String method, String functionName, String desc, String subDomainId) {
         this.worker = worker;
         this.method = method;
         this.functionName = functionName;
@@ -75,25 +65,10 @@ public class NodeParamInfo {
         this.sonAreaId = subDomainId;
     }
 
-    public NodeParamInfo(){
+    public NodeParamInfo() {
 
     }
 
-    public List<NodeField> getInputParamDefs() {
-        return inputParamDefs;
-    }
-
-    public void setInputParamDefs(List<NodeField> inputParamDefs) {
-        this.inputParamDefs = inputParamDefs;
-    }
-
-    public List<NodeField> getOutputParamDefs() {
-        return outputParamDefs;
-    }
-
-    public void setOutputParamDefs(List<NodeField> outputParamDefs) {
-        this.outputParamDefs = outputParamDefs;
-    }
 
     public String getWorker() {
         return worker;

@@ -1,5 +1,6 @@
 package cn.spider.framework.linker.server.consumer;
 import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.param.result.build.enventData.EscalationData;
@@ -30,7 +31,11 @@ public class EscalationHandler {
             log.info("上报领域信息了 {}",message.body());
             EscalationData data = JSON.parseObject(message.body(), EscalationData.class);
             ReportParamInfo refreshAreaParam = JSON.parseObject(JSON.toJSONString(data.getRefreshAreaParam()),ReportParamInfo.class);
-            workerRegisterManager.escalationAreaInfo(refreshAreaParam,data.getIp(), FunctionEscalationType.valueOf(data.getFunctionEscalationType()));
+            try {
+                workerRegisterManager.escalationAreaInfo(refreshAreaParam,data.getIp(), FunctionEscalationType.valueOf(data.getFunctionEscalationType()));
+            } catch (IllegalArgumentException e) {
+                log.info("escalationAreaInfo error {} data {}", ExceptionMessage.getStackTrace(e),message.body());
+            }
         });
     }
 }

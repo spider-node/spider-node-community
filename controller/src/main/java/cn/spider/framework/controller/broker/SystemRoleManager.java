@@ -54,14 +54,21 @@ public class SystemRoleManager {
                 // verticle模式
                 .setWorker(true)
                 // 是否高可用
-                .setHa(false)
+                .setHa(true)
                 .setInstances(1);
         log.info("start-base-system-role");
         startRole(this.flowNode, "flow", deployOptions);
         startRole(this.gateway, "gateway", deployOptions);
         startRole(this.transactionCore, "transactionCore", deployOptions);
-        startRole(this.paramPatch, "paramPatch", deployOptions);
         startRole(this.logPath, "log", deployOptions);
+        DeploymentOptions deployOptions1 = new DeploymentOptions()
+                // verticle模式
+                .setWorker(true)
+                // 是否高可用
+                .setHa(true)
+                .setInstances(6);
+        startRole(this.paramPatch, "paramPatch", deployOptions1);
+
     }
 
     // 卸载base能力

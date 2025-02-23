@@ -22,6 +22,7 @@ import cn.spider.framework.flow.component.bpmn.builder.ServiceTaskBuilder;
 import cn.spider.framework.flow.resource.service.ServiceNodeResource;
 import cn.spider.framework.flow.util.GlobalUtil;
 import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
+import cn.spider.framework.param.sdk.data.enums.FunctionType;
 import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
 
@@ -146,6 +147,12 @@ public interface ServiceTask extends Task {
     Map<String, Object> getConversionParam();
 
     String getVersion();
+
+    // 查询功能版本id
+    String queryFunctionVersionId ();
+
+    // 查询功能类型
+    FunctionType queryFunctionType ();
 
     /**
      * 获取Service Task 构造器

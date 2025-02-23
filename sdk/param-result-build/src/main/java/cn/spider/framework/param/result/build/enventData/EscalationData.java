@@ -12,12 +12,14 @@ public class EscalationData extends EventData {
      * 上报的领域信息
      */
     private ReportParamInfo refreshAreaParam;
-
     /**
      * 上报类型
      */
     private String functionEscalationType;
 
+    /**
+     * 节点类型
+     */
     private String workerType;
 
     public String getIp() {

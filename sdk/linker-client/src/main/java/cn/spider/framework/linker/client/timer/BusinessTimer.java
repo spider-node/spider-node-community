@@ -63,9 +63,10 @@ public class BusinessTimer {
 
     /**
      * 获取spider-service信息
+     *
      * @param socketManager
      */
-    public void updateSpiderServer(SocketManager socketManager,Integer rpcPort) {
+    public void updateSpiderServer(SocketManager socketManager, Integer rpcPort) {
         vertx.setPeriodic(20 * 1000, id -> {
             socketManager.connect(rpcPort);
         });
@@ -75,7 +76,16 @@ public class BusinessTimer {
      * 发送_领域详情
      */
     public void senAreaInfo(SocketManager socketManager) {
-        vertx.setTimer(20 * 1000, id -> {
+        vertx.setTimer(30 * 1000, id -> {
+            socketManager.escalationAreaFunctionInfo();
+        });
+    }
+
+    /**
+     * 发送_领域详情-定时上报，自身的插件信息
+     */
+    public void senAreaInfoFixedTime(SocketManager socketManager) {
+        vertx.setPeriodic(60 * 1000, id -> {
             socketManager.escalationAreaFunctionInfo();
         });
     }

@@ -86,7 +86,7 @@ public class ParamConfig {
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //核心线程池大小
-        executor.setCorePoolSize(6);
+        executor.setCorePoolSize(2);
         //最大线程数
         executor.setMaxPoolSize(12);
         //队列容量-- 用最大程度的

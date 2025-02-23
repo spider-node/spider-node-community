@@ -23,6 +23,8 @@ public class DomainFieldInfo {
 
     private String areaFiled;
 
+    private Boolean uniqueIndex;
+
     public String getAreaFiled() {
         return areaFiled;
     }
@@ -61,5 +63,13 @@ public class DomainFieldInfo {
 
     public void setTableField(String tableField) {
         this.tableField = tableField;
+    }
+
+    public Boolean getUniqueIndex() {
+        return uniqueIndex;
+    }
+
+    public void setUniqueIndex(Boolean uniqueIndex) {
+        this.uniqueIndex = uniqueIndex;
     }
 }

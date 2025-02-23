@@ -1,5 +1,6 @@
 package cn.spider.framework.domain.area.task;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
@@ -14,20 +15,30 @@ import cn.spider.framework.domain.area.sondomain.entity.AreaDomainBaseInfo;
 import cn.spider.framework.domain.area.sondomain.entity.SpiderSonArea;
 import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
+import cn.spider.framework.domain.area.task.data.AiAnalysisDemandParam;
 import cn.spider.framework.domain.area.task.data.CreateCoderParam;
 import cn.spider.framework.domain.area.task.data.QueryAiCoderStepResult;
 import cn.spider.framework.domain.area.task.data.QueryDomainFunctionTaskResult;
+import cn.spider.framework.domain.area.task.data.enums.CodeCreateType;
 import cn.spider.framework.domain.area.task.data.enums.TaskStatus;
 import cn.spider.framework.domain.area.task.data.enums.TaskType;
 import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionAiCoderStep;
 import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionTask;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoderStepService;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
+import cn.spider.framework.domain.sdk.data.DemandAnalysisParam;
+import cn.spider.framework.domain.sdk.data.UpdateDemandsParam;
+import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
+import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionResult;
+import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionsParam;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.base.Preconditions;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -56,11 +67,6 @@ public class TaskManager {
     private ISpiderAreaFunctionService spiderAreaFunctionService;
 
     /**
-     * 子域的service
-     */
-    private ISpiderSonAreaService spiderSonAreaService;
-
-    /**
      * 子域的基础代码信息
      */
     private IAreaDomainBaseInfoService baseInfoService;
@@ -73,60 +79,112 @@ public class TaskManager {
 
     private ISpiderDataFlowService dataFlowService;
 
+    private HostPluginInterface hostPluginInterface;
+
     public TaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
                        ISpiderAreaFunctionService spiderAreaFunctionService,
-                       ISpiderSonAreaService spiderSonAreaService,
                        IAreaDomainBaseInfoService baseInfoService,
                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                       AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService) {
+                       AgentVertxClient agentVertxClient,
+                       ISpiderDomainFunctionAiCoderStepService stepService,
+                       ISpiderDataFlowService dataFlowService, HostPluginInterface hostPluginInterface) {
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
-        this.spiderSonAreaService = spiderSonAreaService;
         this.baseInfoService = baseInfoService;
         this.spiderDomainFunctionTaskService = spiderDomainFunctionTaskService;
         this.agentVertxClient = agentVertxClient;
         this.stepService = stepService;
         this.dataFlowService = dataFlowService;
-    }
-
-    public void retryDomainFunctionTask(String versionId) {
-        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
-
-        if (Objects.isNull(functionVersion)) {
-            return;
-        }
-        if(functionVersion.getStatus().equals(NodeStatus.INIT) || functionVersion.getStatus().equals(NodeStatus.CODING)){
-            return;
-        }
-
-
+        this.hostPluginInterface = hostPluginInterface;
     }
 
     // 新增领域功能的任务
-    public void runDomainFunctionTask(String versionId,Boolean retry) {
+    public void runDomainFunctionTask(String versionId, CodeCreateType codeCreateType, String selectedVersion) {
         // 判断下状态，如果是编译通过，就不能进行代码生成
         SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
-        if (!functionVersion.getStatus().equals(NodeStatus.INIT) && !retry) {
-            Preconditions.checkArgument(false, "该功能版本状态为：" + functionVersion.getStatus() + "，不能进行代码生成");
+        if (functionVersion.getStatus().equals(NodeStatus.CODING)) {
+            //Preconditions.checkArgument(false, "当前版本正在编译中，请稍后再试");
+            //return;
         }
+
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
-        Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(),Set.class);
+        Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(), Set.class);
         SpiderAreaFunction areaFunction = spiderAreaFunctionService.getById(functionVersion.getDomainFunctionId());
         String projectName = areaFunction.getName() + "_" + functionVersion.getVersion();
         String domainId = areaFunction.getAreaId();
         JsonObject domainBaseInfos = new JsonObject();
+        SpiderAreaFunctionVersion reuseFunction = null;
+        switch (codeCreateType) {
+            // 复用版本
+            case reuse_version:
+                Preconditions.checkArgument(StringUtils.isNotEmpty(selectedVersion), "请选择版本");
+                reuseFunction = spiderAreaFunctionVersionService.lambdaQuery()
+                        .eq(SpiderAreaFunctionVersion::getDomainFunctionId, functionVersion.getDomainFunctionId())
+                        .eq(SpiderAreaFunctionVersion::getVersion, functionVersion.getVersion()).one();
+                break;
+            //重新创建
+            case create:
+                break;
+            // 复用参数
+            case reuse_param:
+                reuseFunction = functionVersion;
+                break;
+        }
+        // 发起ai生成代码
+        if (Objects.nonNull(reuseFunction)) {
+            QueryFunctionVersionsParam param = new QueryFunctionVersionsParam(reuseFunction.getId());
+            hostPluginInterface.queryVersionParam(JsonObject.mapFrom(param)).onSuccess(res -> {
+                QueryFunctionVersionResult queryFunctionVersionResult = res.mapTo(QueryFunctionVersionResult.class);
+                createCoder(domainBaseInfoIds,
+                        domainBaseInfos,
+                        areaFunction,
+                        projectName,
+                        functionVersion,
+                        versionId,
+                        domainId,
+                        spiderDataFlow,
+                        queryFunctionVersionResult.getAreaFunctionParamClass(),
+                        queryFunctionVersionResult.getAreaFunctionResultClass());
+            }).onFailure(fail -> {
+                log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
+            });
+            return;
+        }
+        // 发起ai生成代码
+        createCoder(domainBaseInfoIds,
+                domainBaseInfos,
+                areaFunction,
+                projectName,
+                functionVersion,
+                versionId,
+                domainId,
+                spiderDataFlow,
+                null, null);
 
+    }
+
+    private void createCoder(Set<Integer> domainBaseInfoIds,
+                             JsonObject domainBaseInfos,
+                             SpiderAreaFunction areaFunction,
+                             String projectName,
+                             SpiderAreaFunctionVersion functionVersion,
+                             String versionId,
+                             String domainId,
+                             SpiderDataFlow spiderDataFlow, String inputParam, String outParam) {
         List<JsonObject> domainBaseInfoJson = buildDomainInfo(domainBaseInfoIds);
         domainBaseInfos.put("domainBaseInfos", domainBaseInfoJson);
         domainBaseInfos.put("taskComponent", firstLowerCase(areaFunction.getTaskComponent()));
         domainBaseInfos.put("taskService", firstLowerCase(areaFunction.getTaskService()));
 
         CreateCoderParam createCoderParam = new CreateCoderParam(projectName, domainBaseInfos, functionVersion.getFunctionFunctional().getFunctionalList());
-
+        createCoderParam.setInputParam(inputParam);
+        // 根据参数来判断，是否采用预定参数
+        createCoderParam.setCustomizedParam(StringUtils.isNotEmpty(inputParam));
+        createCoderParam.setOutParam(outParam);
         // 创建任务
         SpiderDomainFunctionTask spiderDomainFunctionTasks = spiderDomainFunctionTaskService.lambdaQuery().eq(SpiderDomainFunctionTask::getDomainFunctionVersionId, versionId).one();
         SpiderDomainFunctionTask domainFunctionTask = new SpiderDomainFunctionTask();
-        domainFunctionTask.setId(Objects.nonNull(spiderDomainFunctionTasks) ? spiderDomainFunctionTasks.getId(): null);
+        domainFunctionTask.setId(Objects.nonNull(spiderDomainFunctionTasks) ? spiderDomainFunctionTasks.getId() : null);
         domainFunctionTask.setDomainFunctionVersionId(functionVersion.getId());
         domainFunctionTask.setDomainFunctionId(functionVersion.getDomainFunctionId());
         domainFunctionTask.setTaskDomainId(domainId);
@@ -138,6 +196,8 @@ public class TaskManager {
         // 发起跟ai交互
         createCoderParam.setTaskId(domainFunctionTask.getId());
         createCoderParam.setBaseInfoIds(domainBaseInfoIds);
+        Integer baseInfoId = domainBaseInfoIds.stream().findFirst().orElse(null);
+        createCoderParam.setDatasource(queryDatasource(baseInfoId));
 
         createCoderParam.setDomainInfoAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getDomainInfoResult());
         createCoderParam.setDataFlowAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult());
@@ -148,7 +208,7 @@ public class TaskManager {
         agentVertxClient.createCoder(JsonObject.mapFrom(createCoderParam));
         functionVersion.setStatus(NodeStatus.CODING);
         spiderAreaFunctionVersionService.updateById(functionVersion);
-        if(Objects.isNull(spiderDomainFunctionTasks)){
+        if (Objects.isNull(spiderDomainFunctionTasks)) {
             return;
         }
         Wrapper<SpiderDomainFunctionAiCoderStep> queryWrapper = new LambdaQueryWrapper<SpiderDomainFunctionAiCoderStep>()
@@ -156,7 +216,15 @@ public class TaskManager {
         stepService.remove(queryWrapper);
     }
 
-    public List<JsonObject> buildDomainInfo(Set<Integer> ids){
+    public void analysisDemand(DemandAnalysisParam param) {
+        SpiderDataFlow spiderDataFlow = dataFlowService.getById(param.getFlowId());
+        String flowDataResult = spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult();
+        AiAnalysisDemandParam analysisDemandParam = new AiAnalysisDemandParam(flowDataResult, param.getDemands(), param.getFunctionVersionId());
+        log.info("analysis_demand_info {}", JSON.toJSONString(analysisDemandParam));
+        agentVertxClient.analysisDemand(JsonObject.mapFrom(analysisDemandParam));
+    }
+
+    public List<JsonObject> buildDomainInfo(Set<Integer> ids) {
         List<AreaDomainBaseInfo> areaDomainBaseInfos = baseInfoService.lambdaQuery()
                 .in(AreaDomainBaseInfo::getId, ids).list();
         return areaDomainBaseInfos.stream().map(item -> {
@@ -166,13 +234,29 @@ public class TaskManager {
         }).collect(Collectors.toList());
     }
 
-    public void updateCoder(JsonObject param) {
-        agentVertxClient.updatePlugin(param).onSuccess(suss->{
-            // 发起更新,重新部署
-            // todo 优化 调用k8s-api
-        }).onFailure(fail->{
+    public String queryDatasource(Integer id) {
+        AreaDomainBaseInfo domainBaseInfo = baseInfoService.lambdaQuery().eq(AreaDomainBaseInfo::getId, id).one();
+        return domainBaseInfo.getDatasourceName();
+    }
 
+    public Future<Void> updateCoder(JsonObject param) {
+        Promise<Void> promise = Promise.promise();
+        log.info("update_coder_info {}", param);
+        agentVertxClient.updatePlugin(param).onSuccess(suss -> {
+            // 发起跟k8s交互
+            // 构造基础信息成功- 开始发起部署
+            CreateProjectResult projectResult = suss.mapTo(CreateProjectResult.class);
+            hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
+                log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
+                promise.fail(fail);
+            }).onSuccess(deploySuss -> {
+                promise.complete(deploySuss);
+            });
+        }).onFailure(fail -> {
+            promise.fail(fail);
+            log.error("更新插件失败 {}", ExceptionMessage.getStackTrace(fail));
         });
+        return promise.future();
     }
 
     /**
@@ -183,7 +267,7 @@ public class TaskManager {
     }
 
     public void syncAiCoderStep(SpiderDomainFunctionAiCoderStep step) {
-        if(StringUtils.isNotEmpty(step.getError())){
+        if (StringUtils.isNotEmpty(step.getError())) {
             SpiderDomainFunctionTask task = spiderDomainFunctionTaskService.lambdaQuery().eq(SpiderDomainFunctionTask::getId, step.getSpiderDomainFunctionTaskId()).one();
             spiderAreaFunctionVersionService.lambdaUpdate()
                     .set(SpiderAreaFunctionVersion::getStatus, NodeStatus.CODING_FAIL)

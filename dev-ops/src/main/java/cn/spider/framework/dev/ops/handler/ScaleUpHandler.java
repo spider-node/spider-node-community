@@ -25,9 +25,9 @@ public class ScaleUpHandler {
 
     public void registerConsumer() {
         eventBus.consumer(eventType.queryAddr(), message -> {
-            ScaleUpData scaleUpData = (ScaleUpData) message.body();
+            ScaleUpData scaleUpData = JSON.parseObject(message.body().toString(), ScaleUpData.class);
             try {
-                k8sManager.scaleDeployment("spider-vertx",scaleUpData.getDeploymentName(), scaleUpData.getReplicas());
+                k8sManager.scaleDeployment("spider-vertx",scaleUpData.getYaml(), scaleUpData.getReplicas());
             } catch (Exception e) {
                 log.error("ScaleUpHandler操作失败的异常信息为 {}", ExceptionMessage.getStackTrace(e));
                 OperateFailData operateFailData = new OperateFailData(scaleUpData.getFunctionVersionId(), ExceptionMessage.getStackTrace(e));

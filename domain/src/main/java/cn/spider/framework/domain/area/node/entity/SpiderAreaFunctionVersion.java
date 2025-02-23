@@ -6,6 +6,8 @@ import cn.spider.framework.domain.area.node.data.FunctionFunctional;
 import cn.spider.framework.domain.area.node.data.TableAnalysisModel;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
 import cn.spider.framework.domain.sdk.data.ParamPack;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
@@ -83,8 +85,8 @@ public class SpiderAreaFunctionVersion{
     @TableField(value = "son_domain_functions", typeHandler = FastjsonTypeHandler.class)
     private SonDomainInfoFunction sonDomainFunctions;
 
-    @TableField(value = "table_analysis_info", typeHandler = FastjsonTypeHandler.class)
-    private TableAnalysisModel tableAnalysisInfo;
+    @TableField(value = "result_analysis", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject resultAnalysis;
 
     /**
      * 创建时间
@@ -216,11 +218,11 @@ public class SpiderAreaFunctionVersion{
         this.sonDomainFunctions = sonDomainFunctions;
     }
 
-    public TableAnalysisModel getTableAnalysisInfo() {
-        return tableAnalysisInfo;
+    public JSONObject getResultAnalysis() {
+        return resultAnalysis;
     }
 
-    public void setTableAnalysisInfo(TableAnalysisModel tableAnalysisInfo) {
-        this.tableAnalysisInfo = tableAnalysisInfo;
+    public void setResultAnalysis(JSONObject resultAnalysis) {
+        this.resultAnalysis = resultAnalysis;
     }
 }

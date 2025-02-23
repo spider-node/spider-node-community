@@ -649,11 +649,12 @@ public class FlowExampleManager {
             } else {
                 writeBackParam.setResult(JsonObject.mapFrom(result));
             }
-
             writeBackParam.setTaskComponent(serviceTask.getTaskComponent());
             writeBackParam.setTaskService(serviceTask.getTaskService());
             writeBackParam.setRequestId(example.getRequestId());
             writeBackParam.setVersion(serviceTask.getVersion());
+            writeBackParam.setFunctionType(serviceTask.queryFunctionType());
+            writeBackParam.setFunctionVersionId(serviceTask.queryFunctionVersionId());
             paramInterface.writeBack(JsonObject.mapFrom(writeBackParam)).onSuccess(suss -> {
                 promise.complete();
             }).onFailure(fail -> {
