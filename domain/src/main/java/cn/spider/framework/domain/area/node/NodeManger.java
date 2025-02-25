@@ -297,8 +297,8 @@ public class NodeManger {
                 }
                 functionVersion.setVersionDesc(nodeParamInfo.getDesc());
                 functionVersion.setVersion(nodeParamInfo.getVersion());
-                functionVersion.setRunMapping(new ParamPack(nodeParamInfo.getOutputParamDefs()));
-                functionVersion.setResultMapping(new ParamPack(nodeParamInfo.getInputParamDefs()));
+                /*functionVersion.setRunMapping(new ParamPack(nodeParamInfo.getOutputParamDefs()));
+                functionVersion.setResultMapping(new ParamPack(nodeParamInfo.getInputParamDefs()));*/
                 functionVersion.setStatus(NodeStatus.DEPLOY);
                 updateList.add(functionVersion);
             }
