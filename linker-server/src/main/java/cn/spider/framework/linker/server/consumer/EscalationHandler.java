@@ -2,6 +2,7 @@ package cn.spider.framework.linker.server.consumer;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
+import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.param.result.build.enventData.EscalationData;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
@@ -17,11 +18,11 @@ public class EscalationHandler {
 
     private EventBus eventBus;
 
-    private WorkerRegisterManager workerRegisterManager;
+    private BaseManager baseManager;
 
-    public EscalationHandler(EventBus eventBus, WorkerRegisterManager workerRegisterManager) {
+    public EscalationHandler(EventBus eventBus, BaseManager baseManager) {
         this.eventBus = eventBus;
-        this.workerRegisterManager = workerRegisterManager;
+        this.baseManager = baseManager;
         registerHandler();
     }
 
@@ -32,7 +33,7 @@ public class EscalationHandler {
             EscalationData data = JSON.parseObject(message.body(), EscalationData.class);
             ReportParamInfo refreshAreaParam = JSON.parseObject(JSON.toJSONString(data.getRefreshAreaParam()),ReportParamInfo.class);
             try {
-                workerRegisterManager.escalationAreaInfo(refreshAreaParam,data.getIp(), FunctionEscalationType.valueOf(data.getFunctionEscalationType()));
+                baseManager.escalationAreaInfo(refreshAreaParam,data.getIp(), FunctionEscalationType.valueOf(data.getFunctionEscalationType()));
             } catch (IllegalArgumentException e) {
                 log.info("escalationAreaInfo error {} data {}", ExceptionMessage.getStackTrace(e),message.body());
             }

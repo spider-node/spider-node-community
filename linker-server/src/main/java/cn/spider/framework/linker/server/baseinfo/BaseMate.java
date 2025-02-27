@@ -2,7 +2,6 @@ package cn.spider.framework.linker.server.baseinfo;
 
 import cn.spider.framework.common.utils.TaskKeyUtil;
 import cn.spider.framework.db.util.RocksdbUtil;
-import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
 import cn.spider.framework.param.result.build.model.NodeParamInfo;
 import cn.spider.framework.param.result.build.model.NodeParamInfoBath;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
@@ -10,6 +9,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -20,33 +20,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class BaseMate {
-    /**
-     * 版本号的缓存 key为ip + set
-     */
-    private final Cache<String, Set<String>> ipCache = CacheBuilder.newBuilder()
-            //设置cache的初始大小为10，要合理设置该值
-            .initialCapacity(10)
-            //设置并发数为10，即同一时间最多只能有10个线程往cache执行写入操作
-            .concurrencyLevel(2)
-            //设置cache中的数据在写入之后的存活时间为1分钟
-            .expireAfterWrite(1, TimeUnit.MINUTES)
-            //构建cache实例
-            .build();
 
 
     /**
      * 版本号的缓存 key为ip + set
      */
-    private final Cache<String, Set<String>> functionKeyCache = CacheBuilder.newBuilder()
-            //设置cache的初始大小为10，要合理设置该值
-            .initialCapacity(10)
-            //设置并发数为10，即同一时间最多只能有10个线程往cache执行写入操作
-            .concurrencyLevel(2)
-            //设置cache中的数据在写入之后的存活时间为1分钟
-            .expireAfterWrite(1, TimeUnit.MINUTES)
-            //构建cache实例
-            .build();
+    private Cache<String, Set<String>> functionKeyCache;
+
 
     private final String IP_CNAME = "IP_CNAME";
 
@@ -56,24 +38,17 @@ public class BaseMate {
 
     public BaseMate(RocksdbUtil rocksdbUtil) {
         this.rocksdbUtil = rocksdbUtil;
+        this.functionKeyCache = CacheBuilder.newBuilder()
+                //设置cache的初始大小为10，要合理设置该值
+                .initialCapacity(10)
+                //设置并发数为10，即同一时间最多只能有10个线程往cache执行写入操作
+                .concurrencyLevel(2)
+                //设置cache中的数据在写入之后的存活时间为1分钟
+                .expireAfterWrite(1, TimeUnit.MINUTES)
+                //构建cache实例
+                .build();
     }
 
-    /**
-     * 注册功能信息
-     */
-    public void escalationAreaInfo(ReportParamInfo refreshAreaParam, String ip, FunctionEscalationType functionEscalationType) {
-        if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getNodeParamInfoBathList())) {
-            return;
-        }
-        switch (functionEscalationType) {
-            case DEPLOY:
-                deploy(refreshAreaParam, ip);
-                break;
-            case UNLOCK:
-                offline(refreshAreaParam, ip);
-                break;
-        }
-    }
 
     /**
      * 当ip下线的时候，需要做ip对应的信息处理
@@ -85,20 +60,7 @@ public class BaseMate {
         }
 
         try {
-            Set<String> functionKeys = ipCache.getIfPresent(ip);
-
-            if (CollectionUtils.isEmpty(functionKeys)) {
-                return;
-            }
-
-            for (String functionKey : functionKeys) {
-                Set<String> ips = functionKeyCache.getIfPresent(functionKey);
-                ips.remove(ip);
-                functionKeyCache.put(functionKey, ips);
-                deleteFunctionInfo(functionKey, ip);
-            }
             deployOfflineRocksdb(ip);
-            ipCache.put(ip, Sets.newHashSet());
         } catch (Exception e) {
             throw new RuntimeException("deployOffline_error", e);
         }
@@ -149,7 +111,7 @@ public class BaseMate {
         for (NodeParamInfoBath areaModel : areaModels) {
             Set<String> functionKeys = areaModel.getNodeParamInfoList()
                     .stream()
-                    .map(nodeParamInfo -> TaskKeyUtil.buildTaskKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService()))
+                    .map(nodeParamInfo -> TaskKeyUtil.buildComponentKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion()))
                     .collect(Collectors.toSet());
             try {
                 putIpInfo(ip, functionKeys);
@@ -192,28 +154,15 @@ public class BaseMate {
 
     private void putIpInfo(String ip, Set<String> functionKeys) throws Exception {
         put(IP_CNAME, ip, functionKeys);
-        Set<String> valuesSet = ipCache.getIfPresent(ip);
-        if (CollectionUtils.isEmpty(valuesSet)) {
-            ipCache.put(ip, functionKeys);
-        } else {
-            valuesSet.addAll(functionKeys);
-            ipCache.put(ip, valuesSet);
-        }
     }
 
     private void removeIpInfo(String ip, Set<String> functionKeys) throws Exception {
         remove(IP_CNAME, ip, functionKeys);
-        Set<String> valuesSet = ipCache.getIfPresent(ip);
-        if (CollectionUtils.isEmpty(valuesSet)) {
-            ipCache.put(ip, functionKeys);
-        } else {
-            valuesSet.removeAll(functionKeys);
-            ipCache.put(ip, valuesSet);
-        }
     }
 
     private void putFunctionInfo(String functionKey, Set<String> ips) throws Exception {
         put(FUNCTION_KEY_CNAME, functionKey, ips);
+        // 查询 functionKey 对应的ip
         Set<String> valuesSet = functionKeyCache.getIfPresent(functionKey);
         if (CollectionUtils.isEmpty(valuesSet)) {
             functionKeyCache.put(functionKey, ips);
@@ -270,15 +219,18 @@ public class BaseMate {
         return rocksdbUtil.get(cfName, key);
     }
 
+
     /**
-     * 根据功能key查询ip
-     *
-     * @param functionKey
+     * 根据functionKey查询ip
+     * @param componentName 组件名称
+     * @param taskServiceName 组件中功能名称
+     * @param version 组件版本信息
      * @return
-     * @throws Exception
+     * @throws Exception rocksdb的异常
      */
-    public Set<String> queryIpByFunctionKey(String functionKey) throws Exception {
+    public Set<String> queryIpByFunctionKey(String componentName, String taskServiceName, String version) throws Exception {
         // 查询缓存，缓存查不到，调用getRocksDb
+        String functionKey = TaskKeyUtil.buildComponentKey(componentName, taskServiceName, version);
         Set<String> valuesSet = functionKeyCache.getIfPresent(functionKey);
         if (CollectionUtils.isEmpty(valuesSet)) {
             String values = getRocksDb(FUNCTION_KEY_CNAME, functionKey);

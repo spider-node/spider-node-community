@@ -1,6 +1,7 @@
 package cn.spider.framework.linker.server.socket;
 
 import cn.spider.framework.common.utils.TaskKeyUtil;
+import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.socket.data.HostApplication;
 import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
 import com.alibaba.fastjson.JSON;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class HostWorkerRegisterManager {
@@ -19,9 +21,12 @@ public class HostWorkerRegisterManager {
 
     private Map<String, HostApplication> hostApplicationMap;
 
-    public HostWorkerRegisterManager(Vertx vertx) {
+    private BaseManager baseManager;
+
+    public HostWorkerRegisterManager(Vertx vertx,BaseManager baseManager) {
         this.vertx = vertx;
         this.hostApplicationMap = new HashMap<>();
+        this.baseManager = baseManager;
     }
 
     /**
@@ -84,21 +89,24 @@ public class HostWorkerRegisterManager {
     }
 
     // 根据String taskComponent, String taskService, String version 查询出 HostApplication
-    private List<HostApplication> queryHostApplication(String taskComponent, String taskService, String version) {
-        String functionKey = TaskKeyUtil.buildTaskKey(taskComponent, taskService, version);
-        List<HostApplication> hostApplications = new ArrayList<>();
-        hostApplicationMap.forEach((key, value) -> {
-            if (value.getFunctionInfo().containsKey(functionKey)) {
-                hostApplications.add(value);
-            }
-        });
-        return hostApplications;
+    private List<HostApplication> queryHostApplication(String taskComponent, String taskService, String version) throws Exception {
+        Set<String> ipSet = this.baseManager.queryIpByFunctionKey(taskComponent, taskService, version);
+        if(CollectionUtils.isEmpty(ipSet)){
+            throw new Exception("没有查询到对应的宿主应用");
+        }
+        return ipSet.stream().map(item -> hostApplicationMap.get(item)).collect(Collectors.toList());
     }
 
 
-
-
-    public HostApplication queryClientInfo(String taskComponent, String taskService, String version) {
+    /**
+     * 随机获取宿主应用信息 去做执行
+     * @param taskComponent 任务组件
+     * @param taskService 任务方法
+     * @param version 版本
+     * @return HostApplication 返回宿主应用信息
+     * @throws Exception 获取宿主应用信息异常
+     */
+    public HostApplication queryClientInfo(String taskComponent, String taskService, String version) throws Exception {
         List<HostApplication> hostApplications = queryHostApplication(taskComponent, taskService, version);
         if (CollectionUtils.isEmpty(hostApplications)) {
             return null;
@@ -107,7 +115,6 @@ public class HostWorkerRegisterManager {
             return hostApplications.get(0);
         }
         int min = 0;
-
         int max = hostApplications.size() - 1;
         Random random = new Random();
         int randomNumber = random.nextInt(max - min + 1) + min;

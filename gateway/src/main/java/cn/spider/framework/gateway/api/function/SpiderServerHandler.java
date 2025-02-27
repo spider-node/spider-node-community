@@ -13,6 +13,7 @@ import cn.spider.framework.gateway.common.ResponseData;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.enventData.EscalationData;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
@@ -963,14 +964,15 @@ public class SpiderServerHandler {
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
                     log.info("上报的数据为 {}", param.toString());
-                    EscalationData escalationData = param.mapTo(EscalationData.class);
+                    EscalationData escalationData = JSON.parseObject(param.toString(), EscalationData.class);
                     eventManager.sendMessage(EventType.ESCALATION_AREA_INFO, escalationData);
+                    response.end(ResponseData.suss());
                     // 刷新数据
-                    nodeInterface.refreshParam(JsonObject.mapFrom(escalationData.getRefreshAreaParam())).onSuccess(suss -> {
+                   /* nodeInterface.refreshParam(JsonObject.mapFrom(escalationData.getRefreshAreaParam())).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
-                    });
+                    });*/
                 });
     }
 

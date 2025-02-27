@@ -10,6 +10,10 @@ public class TaskKeyUtil {
         return taskComponent + segmentation + taskService + VERSION_PARTITION + version;
     }
 
+    public static String buildComponentKey(String componentName,String taskServiceName,String version){
+        return componentName + "_" + taskServiceName + "_" + version;
+    }
+
     public static String buildTaskKey(String taskComponent,String taskService){
         return taskComponent + segmentation + taskService;
     }

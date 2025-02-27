@@ -58,7 +58,7 @@ public class ParamExampleManager {
             .build();
 
 
-    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam,Map<String, Object> conversionParam,String version) {
+    public Future<JsonObject> get(String taskComponent, String taskService, String requestId, Map<String, String> paramsMapping, Map<String, Object> appointParam, Map<String, Object> conversionParam, String version) {
         Promise<JsonObject> promise = Promise.promise();
         // 基于taskComponent+taskService 获取到参数列表
         queryNodeParamMapping(taskComponent, taskService, version)
@@ -116,7 +116,7 @@ public class ParamExampleManager {
 
                         Object value = oNode.toObject();
 
-                        if(Objects.nonNull(conversionParam) && !conversionParam.isEmpty() && Objects.nonNull(value) && conversionParam.containsKey(value.toString())){
+                        if (Objects.nonNull(conversionParam) && !conversionParam.isEmpty() && Objects.nonNull(value) && conversionParam.containsKey(value.toString())) {
                             value = conversionParam.get(value.toString());
                         }
                         param.put(paramConfig.getFieldName(), value);
@@ -265,7 +265,7 @@ public class ParamExampleManager {
     }
 
     // 查询节点的入参信息
-    public Future<NodeParamMapping> queryNodeParamMapping(String taskComponent, String taskService,String version) {
+    public Future<NodeParamMapping> queryNodeParamMapping(String taskComponent, String taskService, String version) {
         String key = taskComponent + taskService;
         NodeParamMapping nodeParamMapping = cache.getIfPresent(key);
         if (Objects.nonNull(nodeParamMapping)) {
@@ -297,10 +297,10 @@ public class ParamExampleManager {
     /**
      * 在参数中新增参数
      */
-    public Future<Void> notifyResult(String taskComponent, String taskService, String requestId, JsonObject result,String version) {
+    public Future<Void> notifyResult(String taskComponent, String taskService, String requestId, JsonObject result, String version) {
         Promise<Void> promise = Promise.promise();
         ParamExample paramExample = buildParamExample(requestId);
-        queryNodeParamMapping(taskComponent, taskService,version)
+        queryNodeParamMapping(taskComponent, taskService, version)
                 .onSuccess(suss -> {
                     NodeParamMapping nodeParamMapping = suss;
                     // 获取参数的值映射

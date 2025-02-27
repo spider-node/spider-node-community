@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 
 /**
@@ -46,9 +47,9 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
         this.schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
     }
 
-    public Future<Object>  runFlowElement(FlowElement flowElement, FlowExample example) {
+    public Future<Object> runFlowElement(FlowElement flowElement, FlowExample example) {
         Promise<Object> flowElementPromise = Promise.promise();
-        doInvoke(flowElement, flowElementPromise,example);
+        doInvoke(flowElement, flowElementPromise, example);
         return flowElementPromise.future();
     }
 
@@ -59,7 +60,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
      * @param promise
      * @return
      */
-    private void doInvoke(FlowElement flowElement, Promise<Object> promise,FlowExample example) {
+    private void doInvoke(FlowElement flowElement, Promise<Object> promise, FlowExample example) {
         if (flowElement.getElementType() != BpmnTypeEnum.SERVICE_TASK) {
             // 通知，执行结束
             promise.complete();
@@ -70,7 +71,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
             example.setRunType(Constant.ACTUAL);
         }
         ServiceTask serviceTask = (ServiceTask) flowElement;
-        doInvokeMethodNew(serviceTask,example,promise);
+        doInvokeMethodNew(serviceTask, example, promise);
     }
 
     /**
@@ -89,7 +90,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
     /**
      * 支持重试、降级调用
      */
-    private void doInvokeMethodNew(ServiceTask serviceTask,FlowExample example,Promise<Object> promise) {
+    private void doInvokeMethodNew(ServiceTask serviceTask, FlowExample example, Promise<Object> promise) {
         // 构造获取方法执行的参数
         QueryRequestParam queryRequestParam = new QueryRequestParam();
         queryRequestParam.setAppointParam(serviceTask.obtainAppointParam());
@@ -100,19 +101,24 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
         queryRequestParam.setConversionParam(serviceTask.getConversionParam());
         queryRequestParam.setVersion(serviceTask.getVersion());
         // 查询调用该方法需要的参数
-        paramInterface.queryRunParam(JsonObject.mapFrom(queryRequestParam))
+        /*paramInterface.queryRunParam(JsonObject.mapFrom(queryRequestParam))
                 .onSuccess(suss -> {
                     QueryRequestResult queryRequestResult = new QueryRequestResult();
                     queryRequestResult.setRunParam(suss.getJsonObject(Constant.RUN_PARAM));
                     queryRequestResult.setTaskMethod(suss.getString(Constant.TASK_METHOD));
                     queryRequestResult.setWorkerId(suss.getString(Constant.WORKER_ID));
                     // 执行调用远端服务执行
-                    invokeMethodNew(serviceTask,Objects.isNull(queryRequestResult.getRunParam()) ? new JsonObject() : queryRequestResult.getRunParam(),queryRequestResult.getTaskMethod(),queryRequestResult.getWorkerId(),example,promise,example.getRequestId());
+                    invokeMethodNew(serviceTask, Objects.isNull(queryRequestResult.getRunParam()) ?
+                                    new JsonObject() : queryRequestResult.getRunParam(), queryRequestResult.getTaskMethod(),
+                            queryRequestResult.getWorkerId(), example, promise, example.getRequestId());
                 }).onFailure(fail -> {
                     // 通知执行失败了。
                     promise.fail(fail);
                     LOGGER.info("doInvokeMethodNew_获取参数失败 {}", ExceptionMessage.getStackTrace(fail));
-                });
+                });*/
+        //
+
+
     }
 
     private void retryInvokeMethod(ServiceTask serviceTask, TaskServiceDef taskServiceDef, StoryBus storyBus, Role role) {
@@ -120,9 +126,9 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
     }
 
 
-    public void invokeMethodNew(ServiceTask serviceTask, JsonObject param,String methodName,String workerName,FlowExample example,Promise<Object> promise,String requestId) {
+    public void invokeMethodNew(ServiceTask serviceTask, JsonObject param, String methodName, String workerName, FlowExample example, Promise<Object> promise, String requestId) {
         try {
-            schedulerManager.invokeNew(param.getMap(), serviceTask,workerName,methodName,example,promise,requestId);
+            schedulerManager.invokeNew(param.getMap(), serviceTask, workerName, methodName, example, promise, requestId);
             // 后续改造- 因为不需要返回数据
         } catch (Throwable e) {
             LOGGER.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));

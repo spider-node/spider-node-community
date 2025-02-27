@@ -1,11 +1,14 @@
 package cn.spider.framework.linker.server.config;
+
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.db.config.DbRocksConfig;
+import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
+import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.consumer.EscalationHandler;
 import cn.spider.framework.linker.server.socket.HostWorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
@@ -52,53 +55,60 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager,HostWorkerRegisterManager hostWorkerRegisterManager){
-        return new WorkerRegisterManager(server,clientRegisterCenter,vertx,eventManager,hostWorkerRegisterManager);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager) {
+        return new WorkerRegisterManager(server, clientRegisterCenter, vertx, eventManager, hostWorkerRegisterManager);
     }
 
     @Bean
     public NodeInterface buildNodeInterface(Vertx vertx) {
-        return NodeInterface.createProxy(vertx,NodeInterface.ADDRESS);
+        return NodeInterface.createProxy(vertx, NodeInterface.ADDRESS);
     }
 
     @Bean
-    public NetServer createNetServer(Vertx vertx){
+    public NetServer createNetServer(Vertx vertx) {
         NetServer server = vertx.createNetServer();
         return server;
     }
 
     /**
      * 注入获取工作服务的节点信息
+     *
      * @param vertx
      * @return
      */
     @Bean
-    public WorkerInterface buildWorkerInterface(Vertx vertx){
+    public WorkerInterface buildWorkerInterface(Vertx vertx) {
         return WorkerInterface.createProxy(vertx, WorkerInterface.ADDRESS);
     }
 
     @Bean
-    public FunctionInterface buildFunctionInterface(Vertx vertx){
-        return FunctionInterface.createProxy(vertx,FunctionInterface.ADDRESS);
-    }
-    @Bean
-    public EscalationHandler buildEscalationHandler(EventBus eventBus, WorkerRegisterManager workerRegisterManager){
-        return new EscalationHandler(eventBus,workerRegisterManager);
+    public FunctionInterface buildFunctionInterface(Vertx vertx) {
+        return FunctionInterface.createProxy(vertx, FunctionInterface.ADDRESS);
     }
 
     @Bean
-    public EventBus buildEventBus(Vertx vertx){
+    public EscalationHandler buildEscalationHandler(EventBus eventBus, BaseManager baseManager) {
+        return new EscalationHandler(eventBus, baseManager);
+    }
+
+    @Bean
+    public BaseManager buildBaseManager(RocksdbUtil rocksdbUtil) {
+        return new BaseManager(rocksdbUtil);
+    }
+
+    @Bean
+    public EventBus buildEventBus(Vertx vertx) {
         return vertx.eventBus();
     }
 
     @Bean
-    public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx){
-        return new HostWorkerRegisterManager(vertx);
+    public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx,BaseManager baseManager) {
+        return new HostWorkerRegisterManager(vertx,baseManager);
     }
 
     @Bean
-    public HostPluginInterface buildHostPluginInterface(Vertx vertx){
-        return HostPluginInterface.createProxy(vertx,HostPluginInterface.ADDRESS);
+    public HostPluginInterface buildHostPluginInterface(Vertx vertx) {
+        return HostPluginInterface.createProxy(vertx, HostPluginInterface.ADDRESS);
     }
 
 }

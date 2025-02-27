@@ -158,40 +158,6 @@ public class WorkerRegisterManager {
     }
 
     /**
-     * @param refreshAreaParam 领域信息
-     * @param ip               宿主机的ip
-     */
-    public void escalationAreaInfo(ReportParamInfo refreshAreaParam, String ip, FunctionEscalationType functionEscalationType) {
-        if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getNodeParamInfoBathList())) {
-            return;
-        }
-        switch (functionEscalationType) {
-            case DEPLOY:
-                List<NodeParamInfoBath> areaModels = refreshAreaParam.getNodeParamInfoBathList();
-                for (NodeParamInfoBath areaModel : areaModels) {
-                    // 发送上线的 事件
-                    List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
-                    for(NodeParamInfo nodeParamInfo: nodeParamInfos){
-                        hostWorkerRegisterManager.registerFunction(ip, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion());
-                    }
-                }
-
-                break;
-            case UNLOCK:
-                for (NodeParamInfoBath areaModel : refreshAreaParam.getNodeParamInfoBathList()) {
-                    // 下线
-                    // 发送下线的事件
-                    List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
-                    for(NodeParamInfo nodeParamInfo: nodeParamInfos){
-                        hostWorkerRegisterManager.cancelFunction(ip, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion());
-                    }
-                }
-                break;
-        }
-
-    }
-
-    /**
      * 获取宿主应用/服务的client
      * @param taskComponent 组件
      * @param taskService 组件方法
@@ -200,7 +166,7 @@ public class WorkerRegisterManager {
      * @param providerType 服务类型
      * @return grpc的通道
      */
-    public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName, ApplicationProviderType providerType) {
+    public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName, ApplicationProviderType providerType) throws Exception {
         switch (providerType){
             case SPIDER_HOST_APPLICATION:
                 return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
