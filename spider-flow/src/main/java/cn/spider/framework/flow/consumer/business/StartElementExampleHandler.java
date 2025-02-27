@@ -13,7 +13,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @BelongsProject: spider-node
@@ -26,13 +26,13 @@ import javax.annotation.Resource;
 @Component
 public class StartElementExampleHandler implements InitializingBean {
 
-    @Resource
+    @Autowired
     private EventBus eventBus;
 
-    @Resource
+    @Autowired
     private TranscriptManager transcriptManager;
 
-    @Resource
+    @Autowired
     private StoryEngine storyEngine;
 
     private EventType eventType = EventType.ELEMENT_START;

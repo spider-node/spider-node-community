@@ -1,8 +1,5 @@
 package cn.spider.framework.flow.funtion;
-
-import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.data.enums.JarStatus;
-import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.data.SdkInfo;
 import cn.spider.framework.domain.sdk.data.SdkUrlQueryResult;
@@ -12,16 +9,12 @@ import cn.spider.framework.flow.funtion.data.SdkRow;
 import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.shareddata.LocalMap;
-import io.vertx.core.shareddata.SharedData;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.templates.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 
 /**
@@ -35,16 +28,16 @@ import java.util.*;
 @Slf4j
 @Component
 public class InitLoaderClassService {
-    @Resource
+    @Autowired
     private ClassLoaderManager classLoaderManager;
 
-    @Resource
+    @Autowired
     private MySQLPool client;
 
-    @Resource
+    @Autowired
     private AreaInterface areaInterface;
 
-    @Resource
+    @Autowired
     private Vertx vertx;
 
     public void init() {

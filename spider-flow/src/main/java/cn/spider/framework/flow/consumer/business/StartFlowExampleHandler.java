@@ -16,7 +16,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @BelongsProject: spider-node
@@ -28,16 +28,16 @@ import javax.annotation.Resource;
  */
 public class StartFlowExampleHandler implements InitializingBean {
 
-    @Resource
+    @Autowired
     private EventBus eventBus;
 
-    @Resource
+    @Autowired
     private TranscriptManager transcriptManager;
 
-    @Resource
+    @Autowired
     private ClassLoaderManager classLoaderManager;
 
-    @Resource
+    @Autowired
     private StoryEngine storyEngine;
 
     private EventType eventType = EventType.START_FLOW_EXAMPLE;

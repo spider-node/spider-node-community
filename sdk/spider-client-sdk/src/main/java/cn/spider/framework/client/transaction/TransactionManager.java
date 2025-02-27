@@ -1,18 +1,10 @@
 package cn.spider.framework.client.transaction;
 
 import cn.spider.framework.transaction.sdk.core.exception.TransactionException;
-import cn.spider.framework.transaction.sdk.datasource.undo.UndoLogManager;
-import cn.spider.framework.transaction.sdk.datasource.undo.UndoLogManagerFactory;
 import cn.spider.framework.transaction.sdk.datasource.util.JdbcUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Objects;
 
 /**
  * @program: spider-node
@@ -20,7 +12,7 @@ import java.util.Objects;
  * @author: dds
  * @create: 2023-03-06 13:55
  */
-public class TransactionManager {
+public class TransactionManager implements InitializingBean {
 
     // 获取 dataSource.url
     private String url;
@@ -36,12 +28,6 @@ public class TransactionManager {
         this.operation = operation;
     }
 
-    @PostConstruct
-    public void init() {
-        this.resourceId = JdbcUtils.buildResourceId(url);
-        dbType = JdbcUtils.getDbType(url);
-        ;
-    }
 
     /**
      * 提交事务
@@ -74,4 +60,9 @@ public class TransactionManager {
     }
 
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.resourceId = JdbcUtils.buildResourceId(url);
+        dbType = JdbcUtils.getDbType(url);
+    }
 }

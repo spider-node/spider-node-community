@@ -19,8 +19,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -28,16 +28,16 @@ import java.util.concurrent.Executor;
 @Component
 public class HostPluginInterfaceImpl implements HostPluginInterface {
 
-    @Resource
+    @Autowired
     private HostApplicationManager hostApplicationManager;
 
-    @Resource
+    @Autowired
     private Executor spiderBusinessPool;
 
-    @Resource
+    @Autowired
     private EventManager eventManager;
 
-    @Resource
+    @Autowired
     private IAreaDomainFunctionInfoService areaDomainFunctionInfoService;
 
     @Override

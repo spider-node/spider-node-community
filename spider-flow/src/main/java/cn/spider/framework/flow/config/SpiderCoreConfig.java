@@ -312,5 +312,4 @@ public class SpiderCoreConfig {
     public SystemTimer buildSystemTimer(Vertx vertx, StartEventFactory startEventFactory, InitLoaderClassService initLoaderClassService){
         return new SystemTimer(vertx,startEventFactory,initLoaderClassService);
     }
-
 }

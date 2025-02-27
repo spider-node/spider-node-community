@@ -11,7 +11,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @BelongsProject: spider-node

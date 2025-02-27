@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 
 /**
@@ -49,16 +49,16 @@ import java.util.*;
 @Component
 public class ContainerServiceImpl implements ContainerService {
 
-    @Resource
+    @Autowired
     private StartEventFactory startEventFactory;
 
-    @Resource
+    @Autowired
     private ClassLoaderManager classLoaderManager;
 
-    @Resource
+    @Autowired
     private EventManager eventManager;
 
-    @Resource
+    @Autowired
     private MySQLPool client;
 
     /**

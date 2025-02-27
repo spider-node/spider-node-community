@@ -18,8 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,16 +26,16 @@ import java.util.stream.Collectors;
 @Component
 public class HostApplicationManager {
 
-    @Resource
+    @Autowired
     private ISpiderHostApplicationService hostApplicationService;
 
-    @Resource
+    @Autowired
     private ISpiderPluginDeployInfoService deployInfoService;
 
-    @Resource
+    @Autowired
     private ISpiderApplicationTaskService taskService;
 
-    @Resource
+    @Autowired
     private IAreaDomainFunctionInfoService infoService;
 
 

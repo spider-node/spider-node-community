@@ -14,14 +14,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
  * @Version: 1.0
  */
 @Slf4j
-public class SpiderFlowElementExampleServiceEsImpl implements SpiderFlowElementExampleService {
+public class SpiderFlowElementExampleServiceEsImpl implements SpiderFlowElementExampleService, InitializingBean {
 
     private ElasticsearchRestTemplate template;
 
@@ -42,12 +41,6 @@ public class SpiderFlowElementExampleServiceEsImpl implements SpiderFlowElementE
     public SpiderFlowElementExampleServiceEsImpl(ElasticsearchRestTemplate template, SpiderFlowElementExampleLogDao spiderFlowElementExampleLogDao) {
         this.template = template;
         this.spiderFlowElementExampleLogDao = spiderFlowElementExampleLogDao;
-    }
-
-    @PostConstruct
-    public void init() {
-        // 创建索引
-        template.createIndex(SpiderFlowElementExampleLog.class);
     }
 
     /**
@@ -158,4 +151,8 @@ public class SpiderFlowElementExampleServiceEsImpl implements SpiderFlowElementE
     }
 
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        template.createIndex(SpiderFlowElementExampleLog.class);
+    }
 }

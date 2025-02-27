@@ -15,12 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * @Version: 1.0
  */
 @Slf4j
-public class SpiderFlowExampleLogServiceEsImpl implements SpiderFlowExampleLogService {
+public class SpiderFlowExampleLogServiceEsImpl implements SpiderFlowExampleLogService , InitializingBean {
 
     private ElasticsearchRestTemplate template;
 
@@ -46,10 +46,6 @@ public class SpiderFlowExampleLogServiceEsImpl implements SpiderFlowExampleLogSe
         this.spiderFlowExampleLogDao = spiderFlowExampleLogDao;
     }
 
-    @PostConstruct
-    public void init() {
-        template.createIndex(SpiderFlowExampleLog.class);
-    }
 
     /**
      * 批量新增
@@ -139,5 +135,10 @@ public class SpiderFlowExampleLogServiceEsImpl implements SpiderFlowExampleLogSe
             defaultQueryBuilder.should(QueryBuilders.rangeQuery("takeTime").lt(queryFlowExample.getGtTakeTime()));
         }
         return defaultQueryBuilder;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        template.createIndex(SpiderFlowExampleLog.class);
     }
 }

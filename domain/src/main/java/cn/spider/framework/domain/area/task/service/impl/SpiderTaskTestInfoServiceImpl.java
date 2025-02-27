@@ -20,8 +20,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,16 +39,16 @@ import java.util.stream.Collectors;
 @Service
 public class SpiderTaskTestInfoServiceImpl extends ServiceImpl<SpiderTaskTestInfoMapper, SpiderTaskTestInfo> implements ISpiderTaskTestInfoService {
 
-    @Resource
+    @Autowired
     private ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService;
 
-    @Resource
+    @Autowired
     private ISpiderAreaFunctionService spiderAreaFunctionService;
 
-    @Resource
+    @Autowired
     private FlowService flowService;
 
-    @Resource
+    @Autowired
     private ISpiderTaskTestInfoService spiderTaskTestInfoService;
 
     @Override

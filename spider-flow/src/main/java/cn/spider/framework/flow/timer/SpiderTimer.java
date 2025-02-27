@@ -12,9 +12,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -30,12 +30,12 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class SpiderTimer {
+public class SpiderTimer implements InitializingBean {
 
-    @Resource
+    @Autowired
     private Vertx vertx;
 
-    @Resource
+    @Autowired
     private StoryEngine storyEngine;
 
     private FlowService flowService;
@@ -45,19 +45,13 @@ public class SpiderTimer {
      */
     private Map<String, JsonObject> retryCountMap;
 
-    @Resource
+    @Autowired
     private WorkerExecutor businessExecute;
 
-    @Resource
+    @Autowired
     private DelayQueueManager delayQueueManager;
 
     private String brokerName;
-
-    @PostConstruct
-    public void init() {
-        this.retryCountMap = new HashMap<>();
-        this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
-    }
 
     public void registerRetry(String requestId, JsonObject param) {
         if (retryCountMap.size() > 800) {
@@ -105,5 +99,11 @@ public class SpiderTimer {
     public void registerExampleMonitor(String flowExampleId) {
         FlowDelayExample flowDelayExample = FlowDelayExample.builder().exampleId(flowExampleId).brokerName(brokerName).build();
         delayQueueManager.addDelayQueue(flowDelayExample,120 * 1000, TimeUnit.MILLISECONDS, DelayQueueEnum.FLOW_REMOVE_DELAY.getCode());
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.retryCountMap = new HashMap<>();
+        this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
     }
 }

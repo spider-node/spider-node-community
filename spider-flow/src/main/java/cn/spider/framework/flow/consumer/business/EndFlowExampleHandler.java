@@ -12,7 +12,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @BelongsProject: spider-node
@@ -25,13 +25,13 @@ import javax.annotation.Resource;
 @Component
 public class EndFlowExampleHandler implements InitializingBean {
 
-    @Resource
+    @Autowired
     private EventBus eventBus;
 
-    @Resource
+    @Autowired
     private StoryEngine storyEngine;
 
-    @Resource
+    @Autowired
     private TranscriptManager transcriptManager;
 
     private EventType eventType = EventType.END_FLOW_EXAMPLE;

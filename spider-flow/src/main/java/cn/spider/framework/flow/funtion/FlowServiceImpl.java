@@ -28,7 +28,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Objects;
 
 /**
@@ -43,21 +43,21 @@ import java.util.Objects;
 @Component
 public class FlowServiceImpl implements FlowService {
 
-    @Resource
+    @Autowired
     private StoryEngine storyEngine;
 
-    @Resource
+    @Autowired
     private BusinessManager businessManager;
-    @Resource
+    @Autowired
     private SpiderTimer spiderTimer;
 
-    @Resource
+    @Autowired
     private ParamInterface paramInterface;
 
-    @Resource
+    @Autowired
     private FunctionInterface functionInterface;
 
-    @Resource
+    @Autowired
     private SchedulerManager schedulerManager;
 
     private final String REQUEST_PARAM_NAME = "param";

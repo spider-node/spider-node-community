@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @BelongsProject: spider-node
@@ -27,15 +27,15 @@ import javax.annotation.Resource;
 @Component
 public class TranscriptReplaceHandler implements InitializingBean {
 
-    @Resource
+    @Autowired
     private EventBus eventBus;
 
-    @Resource
+    @Autowired
     private TranscriptManager transcriptManager;
 
     private String brokerName;
 
-    @Resource
+    @Autowired
     private Vertx vertx;
 
     private EventType eventType = EventType.LEADER_REPLACE_CHANGE;

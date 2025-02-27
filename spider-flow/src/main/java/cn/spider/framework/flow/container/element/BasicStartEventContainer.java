@@ -23,15 +23,12 @@ import cn.spider.framework.flow.container.processor.StartEventProcessor;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
 import cn.spider.framework.flow.util.AssertUtil;
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -63,7 +60,6 @@ public class BasicStartEventContainer implements StartEventContainer {
         this.globalStartEventMap = Maps.newHashMap();
     }
 
-    @PostConstruct
     public void refreshStartEvent() {
         List<StartEvent> resourceList = this.startEventFactory.getResourceList();
         Map<String, StartEvent> startEventMap = Maps.newHashMap();

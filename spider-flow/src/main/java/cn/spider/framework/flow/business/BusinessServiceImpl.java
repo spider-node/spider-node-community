@@ -17,9 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,10 +34,10 @@ import java.util.stream.Collectors;
 @Component
 public class BusinessServiceImpl implements BusinessService {
 
-    @Resource
+    @Autowired
     private BusinessManager businessManager;
 
-    @Resource
+    @Autowired
     private EventManager eventManager;
 
 
