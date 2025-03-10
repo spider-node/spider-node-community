@@ -46,6 +46,8 @@ public class CreateCoderParam {
 
     private String datasource;
 
+    private String serviceName;
+
     public CreateCoderParam(String projectName, JsonObject sonDomainInfo, List<String> businessRequirements) {
         this.projectName = projectName;
         this.sonDomainInfo = sonDomainInfo;
@@ -162,5 +164,13 @@ public class CreateCoderParam {
 
     public void setDatasource(String datasource) {
         this.datasource = datasource;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 }

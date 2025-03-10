@@ -2,7 +2,8 @@ package cn.spider.framework.param.sdk.data;
 
 import cn.spider.framework.param.sdk.data.enums.FunctionType;
 import io.vertx.core.json.JsonObject;
-import lombok.Data;
+
+import java.math.BigDecimal;
 
 
 public class WriteBackParam {
@@ -33,6 +34,8 @@ public class WriteBackParam {
      * 返回的参数
      */
     private JsonObject result;
+
+    private BigDecimal costTime;
 
     public String getRequestId() {
         return requestId;

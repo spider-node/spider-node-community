@@ -55,28 +55,6 @@ public class K8sManager {
         }
     }
 
-    private InputStream getInputStream(String ymlUrl) throws IOException {
-        try {
-            // 创建URL对象
-            URL url = new URL(ymlUrl);
-            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-            int responseCode = httpConn.getResponseCode();
-
-            // 确认服务器响应是HTTP OK
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                // 打开输入流来读取远程文件内容
-                try (InputStream inputStream = httpConn.getInputStream()) {
-                    return inputStream;
-                }
-            } else {
-                throw new RuntimeException("获取文件异常");
-            }
-        } catch (Exception e) {
-            // 抛异常
-            throw new RuntimeException("获取文件异常", e);
-        }
-    }
-
     /**
      * 删除
      *

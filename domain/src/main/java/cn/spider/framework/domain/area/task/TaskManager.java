@@ -120,7 +120,7 @@ public class TaskManager {
                 Preconditions.checkArgument(StringUtils.isNotEmpty(selectedVersion), "请选择版本");
                 reuseFunction = spiderAreaFunctionVersionService.lambdaQuery()
                         .eq(SpiderAreaFunctionVersion::getDomainFunctionId, functionVersion.getDomainFunctionId())
-                        .eq(SpiderAreaFunctionVersion::getVersion, functionVersion.getVersion()).one();
+                        .eq(SpiderAreaFunctionVersion::getVersion, selectedVersion).one();
                 break;
             //重新创建
             case create:
@@ -130,6 +130,7 @@ public class TaskManager {
                 reuseFunction = functionVersion;
                 break;
         }
+
         // 发起ai生成代码
         if (Objects.nonNull(reuseFunction)) {
             QueryFunctionVersionsParam param = new QueryFunctionVersionsParam(reuseFunction.getId());
@@ -144,13 +145,29 @@ public class TaskManager {
                         domainId,
                         spiderDataFlow,
                         queryFunctionVersionResult.getAreaFunctionParamClass(),
-                        queryFunctionVersionResult.getAreaFunctionResultClass());
+                        queryFunctionVersionResult.getAreaFunctionResultClass(), queryFunctionVersionResult.getServiceName());
             }).onFailure(fail -> {
                 log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
             });
             return;
         }
-        // 发起ai生成代码
+        QueryFunctionVersionsParam param = new QueryFunctionVersionsParam(functionVersion.getId());
+        hostPluginInterface.queryVersionParam(JsonObject.mapFrom(param)).onSuccess(res -> {
+            QueryFunctionVersionResult queryFunctionVersionResult = res.mapTo(QueryFunctionVersionResult.class);
+            createCoder(domainBaseInfoIds,
+                    domainBaseInfos,
+                    areaFunction,
+                    projectName,
+                    functionVersion,
+                    versionId,
+                    domainId,
+                    spiderDataFlow,
+                    null,
+                    null, queryFunctionVersionResult.getServiceName());
+        }).onFailure(fail -> {
+            log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
+        });
+   /*     // 发起ai生成代码
         createCoder(domainBaseInfoIds,
                 domainBaseInfos,
                 areaFunction,
@@ -159,7 +176,7 @@ public class TaskManager {
                 versionId,
                 domainId,
                 spiderDataFlow,
-                null, null);
+                null, null, null);*/
 
     }
 
@@ -170,7 +187,7 @@ public class TaskManager {
                              SpiderAreaFunctionVersion functionVersion,
                              String versionId,
                              String domainId,
-                             SpiderDataFlow spiderDataFlow, String inputParam, String outParam) {
+                             SpiderDataFlow spiderDataFlow, String inputParam, String outParam, String serviceName) {
         List<JsonObject> domainBaseInfoJson = buildDomainInfo(domainBaseInfoIds);
         domainBaseInfos.put("domainBaseInfos", domainBaseInfoJson);
         domainBaseInfos.put("taskComponent", firstLowerCase(areaFunction.getTaskComponent()));
@@ -204,6 +221,9 @@ public class TaskManager {
         createCoderParam.setDataFlow(spiderDataFlow.getData());
         createCoderParam.setNeedDataFlow(Boolean.TRUE);
         createCoderParam.setDomainFunctionVersionId(versionId);
+        if(StringUtils.isEmpty(serviceName)){
+            createCoderParam.setServiceName(serviceName);
+        }
         log.info("create_coder_info {}", JSON.toJSONString(createCoderParam));
         agentVertxClient.createCoder(JsonObject.mapFrom(createCoderParam));
         functionVersion.setStatus(NodeStatus.CODING);
@@ -217,10 +237,10 @@ public class TaskManager {
     }
 
     public void analysisDemand(DemandAnalysisParam param) {
+        log.info("analysis_demand_param {}", JSON.toJSONString(param));
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(param.getFlowId());
         String flowDataResult = spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult();
         AiAnalysisDemandParam analysisDemandParam = new AiAnalysisDemandParam(flowDataResult, param.getDemands(), param.getFunctionVersionId());
-        log.info("analysis_demand_info {}", JSON.toJSONString(analysisDemandParam));
         agentVertxClient.analysisDemand(JsonObject.mapFrom(analysisDemandParam));
     }
 
@@ -250,7 +270,8 @@ public class TaskManager {
                 log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 promise.fail(fail);
             }).onSuccess(deploySuss -> {
-                promise.complete(deploySuss);
+                log.warn("发起部署成功 {}", param.toString());
+                promise.complete();
             });
         }).onFailure(fail -> {
             promise.fail(fail);

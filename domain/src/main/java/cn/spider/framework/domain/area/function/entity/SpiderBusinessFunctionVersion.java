@@ -1,6 +1,8 @@
 package cn.spider.framework.domain.area.function.entity;
 
+import cn.spider.framework.domain.area.data.NodeInfos;
 import cn.spider.framework.domain.area.data.enums.BpmnStatus;
+import cn.spider.framework.domain.area.function.data.FunctionParamConfigModel;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
 import cn.spider.framework.domain.sdk.data.FunctionParamInput;
 import cn.spider.framework.domain.sdk.data.FunctionParamOutput;
@@ -12,6 +14,8 @@ import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -21,7 +25,7 @@ import java.util.Date;
  * @author dds
  * @since 2024-10-13
  */
-@TableName(value = "spider_business_function_version",autoResultMap = true)
+@TableName(value = "spider_business_function_version", autoResultMap = true)
 public class SpiderBusinessFunctionVersion implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -57,6 +61,8 @@ public class SpiderBusinessFunctionVersion implements Serializable {
      */
     private String bpmnUrl;
 
+    private String bpmnXml;
+
     /**
      * 功能启动id
      */
@@ -72,6 +78,9 @@ public class SpiderBusinessFunctionVersion implements Serializable {
      */
     private BpmnStatus bpmnStatus;
 
+    @TableField(value = "node_info", typeHandler = FastjsonTypeHandler.class)
+    private NodeInfos nodeInfos;
+
     /**
      * 返回的字段信息
      */
@@ -83,16 +92,17 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     private String resultClass;
 
     @TableField(value = "run_object_config", typeHandler = FastjsonTypeHandler.class)
-    private JSONObject runObjectConfig;
+    private Map<String, List<FunctionParamConfigModel>> runObjectConfig;
 
     @TableField(value = "result_object_config", typeHandler = FastjsonTypeHandler.class)
-    private JSONObject resultObjectConfig;
+    private Map<String, List<FunctionParamConfigModel>> resultObjectConfig;
 
     /**
      * 返回参数
      */
     @TableField(value = "run_mapping", typeHandler = FastjsonTypeHandler.class)
     private FunctionParamInput runMapping;
+
 
     /**
      * 状态
@@ -118,6 +128,12 @@ public class SpiderBusinessFunctionVersion implements Serializable {
      * 数据流名称
      */
     private String dataFlowName;
+
+    @TableField(value = "input_param_java_class", typeHandler = FastjsonTypeHandler.class)
+    private List<String> inputParamJavaClass;
+
+    @TableField(value = "out_param_java_class", typeHandler = FastjsonTypeHandler.class)
+    private List<String> outputParamJavaClass;
 
     public String getDataFlowName() {
         return dataFlowName;
@@ -263,19 +279,51 @@ public class SpiderBusinessFunctionVersion implements Serializable {
         this.resultClass = resultClass;
     }
 
-    public JSONObject getRunObjectConfig() {
+    public Map<String, List<FunctionParamConfigModel>> getRunObjectConfig() {
         return runObjectConfig;
     }
 
-    public void setRunObjectConfig(JSONObject runObjectConfig) {
+    public void setRunObjectConfig(Map<String, List<FunctionParamConfigModel>> runObjectConfig) {
         this.runObjectConfig = runObjectConfig;
     }
 
-    public JSONObject getResultObjectConfig() {
+    public Map<String, List<FunctionParamConfigModel>> getResultObjectConfig() {
         return resultObjectConfig;
     }
 
-    public void setResultObjectConfig(JSONObject resultObjectConfig) {
+    public void setResultObjectConfig(Map<String, List<FunctionParamConfigModel>> resultObjectConfig) {
         this.resultObjectConfig = resultObjectConfig;
+    }
+
+    public String getBpmnXml() {
+        return bpmnXml;
+    }
+
+    public void setBpmnXml(String bpmnXml) {
+        this.bpmnXml = bpmnXml;
+    }
+
+    public NodeInfos getNodeInfos() {
+        return nodeInfos;
+    }
+
+    public void setNodeInfos(NodeInfos nodeInfos) {
+        this.nodeInfos = nodeInfos;
+    }
+
+    public List<String> getInputParamJavaClass() {
+        return inputParamJavaClass;
+    }
+
+    public void setInputParamJavaClass(List<String> inputParamJavaClass) {
+        this.inputParamJavaClass = inputParamJavaClass;
+    }
+
+    public List<String> getOutputParamJavaClass() {
+        return outputParamJavaClass;
+    }
+
+    public void setOutputParamJavaClass(List<String> outputParamJavaClass) {
+        this.outputParamJavaClass = outputParamJavaClass;
     }
 }

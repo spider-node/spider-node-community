@@ -39,4 +39,10 @@ public interface VersionInterface {
 
     // 根据功能id查询版本信息
     Future<JsonObject> queryVersionByFunctionId(JsonObject data);
+
+    // ai根据配置生成java代码
+    Future<Void> configToJavaEntity(JsonObject data);
+
+    // 回写java生成数据
+    Future<Void> writeJavaEntity(JsonObject data);
 }

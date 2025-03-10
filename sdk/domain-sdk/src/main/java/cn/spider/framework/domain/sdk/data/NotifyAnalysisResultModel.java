@@ -1,11 +1,12 @@
 package cn.spider.framework.domain.sdk.data;
 
+import java.util.List;
 import java.util.Map;
 
 public class NotifyAnalysisResultModel {
     private String sourceFiled;
 
-    private Map<String,String> fields;
+    private List<Map<String,String>> fields;
 
     private String type;
 
@@ -19,11 +20,12 @@ public class NotifyAnalysisResultModel {
         this.sourceFiled = sourceFiled;
     }
 
-    public Map<String, String> getFields() {
+
+    public List<Map<String, String>> getFields() {
         return fields;
     }
 
-    public void setFields(Map<String, String> fields) {
+    public void setFields(List<Map<String, String>> fields) {
         this.fields = fields;
     }
 

@@ -202,6 +202,8 @@ public class SpiderServerHandler {
         notifyAiAnalysisResult();
         queryParamConfig();
         demandAiParse();
+        configToJavaEntity();
+        writeJavaEntity();
     }
 
     public void selectBpmn() {
@@ -1616,5 +1618,40 @@ public class SpiderServerHandler {
                     });
                 });
     }
+
+    /**
+     * configToJavaEntity
+     */
+    private void configToJavaEntity() {
+        router.post("/config_to_java_entity")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.configToJavaEntity(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * writeJavaEntity
+     */
+    private void writeJavaEntity() {
+        router.post("/write_java_entity")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.writeJavaEntity(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
 
 }

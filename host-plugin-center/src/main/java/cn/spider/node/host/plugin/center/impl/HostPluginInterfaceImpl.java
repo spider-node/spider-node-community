@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 @Slf4j
@@ -44,7 +45,7 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     public Future<Void> hostOnline(JsonObject data) {
         HostOnlineParam hostOnlineParam = data.mapTo(HostOnlineParam.class);
         try {
-           // hostApplicationManager.online(hostOnlineParam.getIp());
+            // hostApplicationManager.online(hostOnlineParam.getIp());
         } catch (Exception e) {
             return Future.failedFuture(e);
         }
@@ -144,9 +145,14 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
             QueryFunctionVersionsParam queryFunctionVersionParam = data.mapTo(QueryFunctionVersionsParam.class);
             AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService.lambdaQuery()
                     .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, queryFunctionVersionParam.getDomainFunctionVersionId()).one();
+            if (Objects.isNull(areaDomainFunctionInfo)) {
+                promise.complete(new JsonObject());
+                return;
+            }
             QueryFunctionVersionResult queryFunctionVersionResult = new QueryFunctionVersionResult();
             queryFunctionVersionResult.setAreaFunctionResultClass(areaDomainFunctionInfo.getAreaFunctionResultClass());
             queryFunctionVersionResult.setAreaFunctionParamClass(areaDomainFunctionInfo.getAreaFunctionParamClass());
+            queryFunctionVersionResult.setServiceName(areaDomainFunctionInfo.getFunctionName());
             log.info("==查询到的版本信息为 {}", JSON.toJSONString(queryFunctionVersionResult));
             promise.complete(JsonObject.mapFrom(queryFunctionVersionResult));
         });
@@ -163,5 +169,19 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
                 .eq(AreaDomainFunctionInfo::getId, updateCoderParam.getId())
                 .update();
         return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<JsonObject> queryInputParam(JsonObject data) {
+        QueryInputParam queryInputParam = data.mapTo(QueryInputParam.class);
+        List<AreaDomainFunctionInfo> areaDomainFunctionInfos = areaDomainFunctionInfoService
+                .lambdaQuery()
+                .in(AreaDomainFunctionInfo::getDomainFunctionVersionId, queryInputParam.getDomainFunctionVersionId())
+                .list();
+        JsonObject result = new JsonObject();
+        areaDomainFunctionInfos.forEach(areaDomainFunctionInfo -> {
+            result.put(areaDomainFunctionInfo.getDomainFunctionVersionId(), areaDomainFunctionInfo.getAreaFunctionParamClass());
+        });
+        return Future.succeededFuture(result);
     }
 }

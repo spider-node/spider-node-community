@@ -50,6 +50,8 @@ public class AgentVertxClient {
 
     private String analysisDemandInfo;
 
+    private String jsonToJavaEntity;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
@@ -65,6 +67,7 @@ public class AgentVertxClient {
         this.analysisDataFlowUrl = "/analysis_domain_info";
         this.analysisParamInfo = "/analysis_param";
         this.analysisDemandInfo = "/demand_analysis";
+        this.jsonToJavaEntity = "/json_to_entity";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");
@@ -104,7 +107,7 @@ public class AgentVertxClient {
         return send(param, this.updatePluginUrl, this.agentPort, this.agentHost);
     }
 
-    public Future<JsonObject> createCoder(JsonObject param){
+    public Future<JsonObject> createCoder(JsonObject param) {
         return send(param, this.coderApi, this.aiCodePort, this.aiCodeHost);
     }
 
@@ -118,10 +121,15 @@ public class AgentVertxClient {
 
     /**
      * 解析 需求
+     *
      * @return
      */
     public Future<JsonObject> analysisDemand(JsonObject param) {
         return send(param, this.analysisDemandInfo, this.aiCodePort, this.aiCodeHost);
+    }
+
+    public Future<JsonObject> jsonToJavaEntity(JsonObject param) {
+        return send(param, this.jsonToJavaEntity, this.aiCodePort, this.aiCodeHost);
     }
 
 

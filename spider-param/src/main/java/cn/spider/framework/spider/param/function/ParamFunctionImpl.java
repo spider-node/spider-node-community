@@ -49,7 +49,7 @@ public class ParamFunctionImpl implements ParamInterface {
                     queryRequestParam.getRequestId(),
                     queryRequestParam.getParamsMapping(),
                     queryRequestParam.getAppointParam(),
-                    queryRequestParam.getConversionParam(),queryRequestParam.getVersion()).onSuccess(suss -> {
+                    queryRequestParam.getConversionParam(), queryRequestParam.getVersion()).onSuccess(suss -> {
                 promise.complete(suss);
             }).onFailure(fail -> {
                 promise.fail(fail);
@@ -58,6 +58,7 @@ public class ParamFunctionImpl implements ParamInterface {
         return promise.future();
     }
 
+    // TODO 改造写入数组
     @Override
     public Future<Void> writeBack(JsonObject param) {
         Promise<Void> promise = Promise.promise();
@@ -68,6 +69,7 @@ public class ParamFunctionImpl implements ParamInterface {
                 promise.complete();
                 return;
             }
+            // 获取到config配置
             // 查询配置 配置放入缓存中
             /*paramExampleManager.notifyResult(writeBackParam.getTaskComponent(),
                     writeBackParam.getTaskService(), writeBackParam.getRequestId(), new JsonObject(writeBackParam.getResult().toString()),writeBackParam.getVersion()).onSuccess(suss -> {
@@ -258,12 +260,11 @@ public class ParamFunctionImpl implements ParamInterface {
             case Constant.CONTAIN:
                 return value.contains(valueOne);
             case Constant.CONTAIN_SET:
-                Set<String> data = JSON.parseObject(valueOne,Set.class);
+                Set<String> data = JSON.parseObject(valueOne, Set.class);
                 return data.contains(value);
         }
         return false;
     }
-
 
 
     private String queryAreaParam(String expression) {

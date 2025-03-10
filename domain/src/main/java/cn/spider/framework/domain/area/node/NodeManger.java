@@ -403,7 +403,7 @@ public class NodeManger {
 
         IPage page = spiderAreaFunctionVersionService.page(rowPage, queryWrapper);
 
-        return new QueryDomainFunctionVersionResult(page.getRecords(),page.getTotal());
+        return new QueryDomainFunctionVersionResult(page.getRecords(), page.getTotal());
     }
 
     public Future<Void> checkDeployInfo() {
@@ -426,5 +426,17 @@ public class NodeManger {
             promise.fail(fail);
         });
         return promise.future();
+    }
+
+    /**
+     * 基于set的id查询SpiderAreaFunctionVersion
+     */
+    public List<SpiderAreaFunctionVersion> queryDomainFunctionVersionByIds(Set<String> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return null;
+        }
+        return spiderAreaFunctionVersionService.lambdaQuery()
+                .in(SpiderAreaFunctionVersion::getId, ids)
+                .list();
     }
 }

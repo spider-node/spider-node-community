@@ -3,20 +3,34 @@ package cn.spider.framework.domain.area.function.version;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.data.UnloadBpmnParam;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
+import cn.spider.framework.domain.area.agent.AgentVertxClient;
+import cn.spider.framework.domain.area.data.AiNodeInfo;
+import cn.spider.framework.domain.area.data.NodeInfo;
+import cn.spider.framework.domain.area.data.NodeInfos;
 import cn.spider.framework.domain.area.data.enums.BpmnStatus;
-import cn.spider.framework.domain.area.function.FunctionManger;
-import cn.spider.framework.domain.area.function.data.QueryFunctionParam;
-import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
+import cn.spider.framework.domain.area.data.enums.FunctionNodeType;
+import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
+import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
+import cn.spider.framework.domain.area.function.data.FunctionParamConfigModel;
+import cn.spider.framework.domain.area.function.data.GenerateJavaCodeParam;
+import cn.spider.framework.domain.area.function.data.GenerateJavaCodeResult;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
+import cn.spider.framework.domain.area.function.enums.GenerateCoderType;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
 import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
 import cn.spider.framework.domain.area.function.version.data.QueryFunctionVersionResult;
 import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
 import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
+import cn.spider.framework.domain.area.node.NodeManger;
+import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
+import cn.spider.framework.domain.sdk.data.NotifyAnalysisResultModel;
 import cn.spider.framework.domain.sdk.data.RefreshBpmnParam;
 import cn.spider.framework.domain.sdk.data.enums.UploadBpmnStatus;
+import cn.spider.node.host.plugin.center.sdk.data.QueryInputParam;
+import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -37,6 +51,9 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -53,12 +70,18 @@ public class VersionManager {
 
     private ContainerService containerService;
 
+    private NodeManger nodeManger;
+
+    private AgentVertxClient agentVertxClient;
+
     private ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService;
 
-    public VersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService) {
+    public VersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,NodeManger nodeManger,AgentVertxClient agentVertxClient) {
         this.client = client;
         this.containerService = containerService;
         this.spiderBusinessFunctionVersionService = spiderBusinessFunctionVersionService;
+        this.nodeManger = nodeManger;
+        this.agentVertxClient = agentVertxClient;
     }
 
     private RowMapper<FunctionVersionModel> ROW_BUSINESS = row -> {
@@ -405,7 +428,7 @@ public class VersionManager {
         // 通过表达式来获取正确的版本
         Optional<SpiderBusinessFunctionVersion> businessFunctionVersion = functionVersions
                 .stream()
-                .filter(item-> elQueryFunctionVersion(item.getRule(), param))
+                .filter(item -> elQueryFunctionVersion(item.getRule(), param))
                 .findFirst();
         Preconditions.checkArgument(businessFunctionVersion.isPresent(), "没有找到对应的功能版本,请检查");
         return businessFunctionVersion.get();
@@ -419,5 +442,75 @@ public class VersionManager {
         StandardEvaluationContext context = new StandardEvaluationContext(param);
         return parser.parseExpression(rule).getValue(context, Boolean.class);
     }
+
+    private HostPluginInterface hostPluginInterface;
+
+    private ISpiderDataFlowService spiderDataFlowService;
+
+    /**
+     * @param id 功能版本的id
+     *           构造为流程中各个节点构造参数
+     */
+    public void paramBuild(String id) throws ExecutionException, InterruptedException {
+        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(id);
+        if (Objects.isNull(spiderBusinessFunctionVersion.getNodeInfos()) || CollectionUtils.isEmpty(spiderBusinessFunctionVersion.getNodeInfos().getNodeInfos())) {
+            Preconditions.checkArgument(false, "节点信息为空");
+        }
+        NodeInfos nodeInfos = spiderBusinessFunctionVersion.getNodeInfos();
+        List<NodeInfo> nodeInfoList = nodeInfos.getNodeInfos();
+        // 把nodeInfoList转成map按照functionType
+        Map<FunctionNodeType, List<NodeInfo>> nodeInfoMap = nodeInfoList.stream().collect(Collectors.groupingBy(NodeInfo::getFunctionType));
+        List<AiNodeInfo> aiNodeInfoList = new ArrayList<>();
+        if (nodeInfoMap.containsKey(FunctionNodeType.DOMAIN_FUNCTION)) {
+            List<NodeInfo> domainFunctionNodeInfoList = nodeInfoMap.get(FunctionNodeType.DOMAIN_FUNCTION);
+            // 获取domainFunctionNodeInfoList中的functionVersionId
+            Set<String> domainFunctionNodeInfoListVersionId = domainFunctionNodeInfoList.stream().map(NodeInfo::getFunctionVersionId).collect(Collectors.toSet());
+            QueryInputParam queryInputParam = new QueryInputParam(domainFunctionNodeInfoListVersionId);
+            Future<JsonObject> inputParamFunctionVersion = hostPluginInterface.queryInputParam(JsonObject.mapFrom(queryInputParam));
+            JsonObject inputParams = inputParamFunctionVersion.toCompletionStage().toCompletableFuture().get();
+            List<SpiderAreaFunctionVersion> areaFunctionVersions = nodeManger.queryDomainFunctionVersionByIds(domainFunctionNodeInfoListVersionId);
+            // areaFunctionVersions按照id进行转map
+            Map<String, SpiderAreaFunctionVersion> areaFunctionVersionMap = areaFunctionVersions
+                    .stream()
+                    .collect(Collectors.toMap(SpiderAreaFunctionVersion::getId, Function.identity()));
+            for (NodeInfo nodeInfo : domainFunctionNodeInfoList) {
+                SpiderAreaFunctionVersion functionVersion = areaFunctionVersionMap.get(nodeInfo.getFunctionVersionId());
+                JSONObject resultAnalysis = functionVersion.getResultAnalysis();
+                List<NotifyAnalysisResultModel> analysisResults = resultAnalysis.getJSONArray("analysisResult").toJavaList(NotifyAnalysisResultModel.class);
+                Map<String, List<Map<String, String>>> tableFiledMap = new HashMap<>();
+                for (NotifyAnalysisResultModel analysisResult : analysisResults) {
+                    if (tableFiledMap.containsKey(analysisResult.getTable())) {
+                        tableFiledMap.get(analysisResult.getTable()).addAll(analysisResult.getFields());
+                        continue;
+                    }
+                    tableFiledMap.put(analysisResult.getTable(), analysisResult.getFields());
+                }
+                AiNodeInfo aiNodeInfo = new AiNodeInfo(tableFiledMap, inputParams.getString(nodeInfo.getFunctionVersionId()), nodeInfo.getId(), nodeInfo.getName(), nodeInfo.getFunctionVersionId());
+                aiNodeInfoList.add(aiNodeInfo);
+            }
+        }
+        SpiderDataFlow spiderDataFlow = spiderDataFlowService.getById(spiderBusinessFunctionVersion.getDataFlowId());
+        String bpmnString = spiderBusinessFunctionVersion.getBpmnXml();
+    }
+
+    public void configToJavaEntity(String functionVersionId) {
+        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(functionVersionId);
+        Map<String, List<FunctionParamConfigModel>> runObjectConfig = spiderBusinessFunctionVersion.getRunObjectConfig();
+        GenerateJavaCodeParam generateJavaCodeParam = new GenerateJavaCodeParam(functionVersionId, runObjectConfig, GenerateCoderType.INPUT);
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam));
+        Map<String, List<FunctionParamConfigModel>> resultObjectConfig = spiderBusinessFunctionVersion.getResultObjectConfig();
+        GenerateJavaCodeParam generateJavaCodeParam2 = new GenerateJavaCodeParam(functionVersionId, resultObjectConfig, GenerateCoderType.OUTPUT);
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam2));
+    }
+
+    public void writeJavaEntity(JsonObject param) {
+        GenerateJavaCodeResult generateJavaCodeResult = param.mapTo(GenerateJavaCodeResult.class);
+        spiderBusinessFunctionVersionService.lambdaUpdate()
+                .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.INPUT), SpiderBusinessFunctionVersion::getInputParamJavaClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
+                .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.OUTPUT), SpiderBusinessFunctionVersion::getOutputParamJavaClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
+                .eq(SpiderBusinessFunctionVersion::getId, generateJavaCodeResult.getFunctionVersionId())
+                .update();
+    }
+
 
 }

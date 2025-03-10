@@ -20,6 +20,7 @@ public interface AreaInterface {
 
     /**
      * 上传sdk
+     *
      * @param data
      * @return
      */
@@ -27,6 +28,7 @@ public interface AreaInterface {
 
     /**
      * 上传sdk
+     *
      * @param data
      * @return
      */
@@ -51,6 +53,7 @@ public interface AreaInterface {
 
     /**
      * 查询领域信息
+     *
      * @param data
      * @return
      */
@@ -61,6 +64,7 @@ public interface AreaInterface {
 
     /**
      * 查询领域信息
+     *
      * @param data
      * @return
      */
@@ -69,6 +73,7 @@ public interface AreaInterface {
 
     /**
      * 查询子域的base信息
+     *
      * @param data
      * @return
      */
@@ -76,6 +81,7 @@ public interface AreaInterface {
 
     /**
      * 查询子域的base信息
+     *
      * @param data
      * @return
      */
@@ -106,7 +112,6 @@ public interface AreaInterface {
      */
     Future<Void> upsertDatasource(JsonObject data);
 
-
     /**
      * 查询表信息
      */
@@ -114,12 +119,11 @@ public interface AreaInterface {
 
     /**
      * update updateSonDomainField
+     *
      * @param data
      * @return
      */
     Future<JsonObject> updateSonDomainField(JsonObject data);
 
     Future<JsonObject> querySonAreaBaseV2(JsonObject data);
-
-
 }

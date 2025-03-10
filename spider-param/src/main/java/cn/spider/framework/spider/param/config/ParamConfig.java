@@ -1,10 +1,14 @@
 package cn.spider.framework.spider.param.config;
+
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.db.config.DbRocksConfig;
 import cn.spider.framework.db.config.MysqlConfig;
+import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import cn.spider.framework.spider.param.ParamVerticle;
+import cn.spider.framework.spider.param.engine.metadata.Table;
+import cn.spider.framework.spider.param.engine.util.TableRocksdbUtil;
 import cn.spider.framework.spider.param.example.ParamExample;
 import cn.spider.framework.spider.param.factory.ScopeDataFactory;
 import cn.spider.framework.spider.param.function.ParamFunctionImpl;
@@ -32,10 +36,11 @@ public class ParamConfig {
 
     /**
      * 构建参数的对象池
+     *
      * @return
      */
     @Bean
-    public GenericObjectPool<ParamExample> buildGenericObjectPoolConfig(){
+    public GenericObjectPool<ParamExample> buildGenericObjectPoolConfig() {
         // 创建对象池配置
         GenericObjectPoolConfig<ParamExample> poolConfig = new GenericObjectPoolConfig<>();
         // 对象池中最大对象数
@@ -64,22 +69,23 @@ public class ParamConfig {
 
     /**
      * 构建node节点的访问接口
+     *
      * @param vertx
      * @return
      */
     @Bean
-    public NodeInterface buildNodeInterface(Vertx vertx){
-        return NodeInterface.createProxy(vertx,NodeInterface.ADDRESS);
+    public NodeInterface buildNodeInterface(Vertx vertx) {
+        return NodeInterface.createProxy(vertx, NodeInterface.ADDRESS);
     }
 
     @Bean
-    public ParamExampleManager buildParamExampleManager(NodeInterface nodeInterface){
+    public ParamExampleManager buildParamExampleManager(NodeInterface nodeInterface) {
         return new ParamExampleManager(nodeInterface);
     }
 
     @Bean
-    public ParamInterface buildParamInterface(ParamExampleManager paramExampleManager,Executor spiderParamPool){
-        return new ParamFunctionImpl(paramExampleManager,spiderParamPool);
+    public ParamInterface buildParamInterface(ParamExampleManager paramExampleManager, Executor spiderParamPool) {
+        return new ParamFunctionImpl(paramExampleManager, spiderParamPool);
     }
 
     @Bean(name = "spiderParamPool")
@@ -101,5 +107,15 @@ public class ParamConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.initialize();
         return executor;
+    }
+
+    @Bean
+    public TableRocksdbUtil buildTableRocksdbUtil(RocksdbUtil rocksdbUtil) {
+        return new TableRocksdbUtil(rocksdbUtil);
+    }
+
+    @Bean
+    public Table buildTable(TableRocksdbUtil tableRocksdbUtil) {
+        return new Table(tableRocksdbUtil);
     }
 }

@@ -4,7 +4,6 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.FunctionStartStopEventData;
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.domain.area.datasource.entity.AreaDatasourceInfo;
 import cn.spider.framework.domain.area.function.data.*;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunction;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;

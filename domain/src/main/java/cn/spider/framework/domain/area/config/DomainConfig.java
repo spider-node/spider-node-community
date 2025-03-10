@@ -93,8 +93,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService) {
-        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService);
+    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,NodeManger nodeManger,AgentVertxClient agentVertxClient) {
+        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService,nodeManger,agentVertxClient);
     }
 
     @Bean

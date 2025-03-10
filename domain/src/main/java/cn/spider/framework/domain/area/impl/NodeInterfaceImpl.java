@@ -362,19 +362,9 @@ public class NodeInterfaceImpl implements NodeInterface {
         Promise<Void> promise = Promise.promise();
         NotifyAnalysisResultParam notifyAnalysisResultParam = JSON.parseObject(param.toString(), NotifyAnalysisResultParam.class);
         spiderBusinessPool.execute(() -> {
-            Map<String, Set<String>> analysisResultTable = new HashMap<>();
-            notifyAnalysisResultParam.getAnalysisResult().forEach(item -> {
-                NotifyAnalysisResultModel resultModel = item;
-                Set<String> tableMap = !analysisResultTable.containsKey(resultModel.getTable()) ? new HashSet<>() : analysisResultTable.get(resultModel.getTable());
-                tableMap.addAll(resultModel.getFields().values());
-                if (!analysisResultTable.containsKey(resultModel.getTable())) {
-                    analysisResultTable.put(resultModel.getTable(), tableMap);
-                }
-            });
             // 解析 notifyAnalysisResultParam.getAnalysisResult();
             JsonObject analysisResult = new JsonObject();
             analysisResult.put("analysis", new JsonArray(JSON.toJSONString(notifyAnalysisResultParam.getAnalysisResult())));
-            analysisResult.put("tables",analysisResultTable);
             spiderAreaFunctionVersionService.lambdaUpdate()
                     .set(SpiderAreaFunctionVersion::getResultAnalysis, analysisResult.toString())
                     .eq(SpiderAreaFunctionVersion::getId, notifyAnalysisResultParam.getFunctionVersionId()).update();

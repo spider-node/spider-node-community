@@ -17,10 +17,7 @@ import cn.spider.framework.domain.area.sondomain.entity.QuerySonAreaInfoParam;
 import cn.spider.framework.domain.area.sondomain.entity.*;
 import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.area.sondomain.service.ISpiderSonAreaService;
-import cn.spider.framework.domain.sdk.data.RefreshSdkParam;
-import cn.spider.framework.domain.sdk.data.SdkInfo;
-import cn.spider.framework.domain.sdk.data.SdkUrlQueryResult;
-import cn.spider.framework.domain.sdk.data.UploadSdkParam;
+import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.interfaces.AreaInterface;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -174,7 +171,7 @@ public class AreaImpl implements AreaInterface {
         if (CollectionUtils.isNotEmpty(param.getSonBaseIds())) {
             List<AreaDomainBaseInfo> areaDomainBaseInfos = areaDomainBaseInfoService.lambdaQuery().in(AreaDomainBaseInfo::getId, param.getSonBaseIds()).select(AreaDomainBaseInfo::getSonAreaId).list();
             // 获取areaDomainBaseInfos中的SonAreaId 转为list 把
-            List<Long> sonAreaIds = areaDomainBaseInfos.stream().map(item->Long.valueOf(item.getSonAreaId().intValue())).collect(Collectors.toList());
+            List<Long> sonAreaIds = areaDomainBaseInfos.stream().map(item -> Long.valueOf(item.getSonAreaId().intValue())).collect(Collectors.toList());
             param.setSonIds(sonAreaIds);
         }
         List<SpiderSonArea> spiderSonAreas = spiderSonAreaService.lambdaQuery().in(SpiderSonArea::getId, param.getSonIds()).list();

@@ -81,8 +81,8 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
                 taskManager.analysisDemand(demandAnalysisParam);
                 promise.complete();
             } catch (Exception e) {
+                log.error("demandAiParse_error {}", ExceptionMessage.getStackTrace(e));
                 promise.fail(e);
-                log.error("demandAiParse_error", ExceptionMessage.getStackTrace(e));
             }
         });
         return promise.future();

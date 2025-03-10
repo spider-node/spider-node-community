@@ -70,4 +70,7 @@ public interface HostPluginInterface {
 
     // 更新功能代码
     Future<Void> updateFunctionCode(JsonObject data);
+
+    // 查询入参代码
+    Future<JsonObject> queryInputParam(JsonObject data);
 }

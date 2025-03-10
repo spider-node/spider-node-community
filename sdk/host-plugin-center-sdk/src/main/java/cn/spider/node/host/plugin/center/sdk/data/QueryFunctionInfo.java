@@ -1,5 +1,7 @@
 package cn.spider.node.host.plugin.center.sdk.data;
 
+import java.util.Set;
+
 public class QueryFunctionInfo {
 
     /**

@@ -11,6 +11,8 @@ public class QueryFunctionVersionResult {
      */
     private String areaFunctionResultClass;
 
+    private String serviceName;
+
     public String getAreaFunctionParamClass() {
         return areaFunctionParamClass;
     }
@@ -25,5 +27,13 @@ public class QueryFunctionVersionResult {
 
     public void setAreaFunctionResultClass(String areaFunctionResultClass) {
         this.areaFunctionResultClass = areaFunctionResultClass;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 }

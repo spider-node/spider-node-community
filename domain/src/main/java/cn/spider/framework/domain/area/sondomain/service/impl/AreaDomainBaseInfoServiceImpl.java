@@ -4,6 +4,7 @@ import cn.spider.framework.domain.area.sondomain.entity.*;
 import cn.spider.framework.domain.area.sondomain.mapper.AreaDomainBaseInfoMapper;
 import cn.spider.framework.domain.area.sondomain.service.IAreaDomainBaseInfoService;
 import cn.spider.framework.domain.area.util.ClassUtil;
+import cn.spider.framework.domain.sdk.data.QueryTableOnlyParam;
 import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
@@ -11,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -29,9 +31,9 @@ public class AreaDomainBaseInfoServiceImpl extends ServiceImpl<AreaDomainBaseInf
     @Override
     public QuerySonAreaVersionResult querySonAreaVersion(QuerySonAreaVersionParam param) {
         List<AreaDomainBaseInfo> areaDomainBaseInfoList = lambdaQuery()
-                .eq(Objects.nonNull(param.getSonAreaId()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaId())
-                .in(CollectionUtils.isNotEmpty(param.getSonAreaIds()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaIds())
-                .in(CollectionUtils.isNotEmpty(param.getIds()),AreaDomainBaseInfo::getId, param.getIds())
+                .eq(Objects.nonNull(param.getSonAreaId()), AreaDomainBaseInfo::getSonAreaId, param.getSonAreaId())
+                .in(CollectionUtils.isNotEmpty(param.getSonAreaIds()), AreaDomainBaseInfo::getSonAreaId, param.getSonAreaIds())
+                .in(CollectionUtils.isNotEmpty(param.getIds()), AreaDomainBaseInfo::getId, param.getIds())
                 .list();
         return new QuerySonAreaVersionResult(areaDomainBaseInfoList);
     }
@@ -39,10 +41,10 @@ public class AreaDomainBaseInfoServiceImpl extends ServiceImpl<AreaDomainBaseInf
     @Override
     public QuerySonAreaVersionResultV2 querySonAreaBaseV2(QuerySonAreaVersionParam param) {
         List<AreaDomainBaseInfo> areaDomainBaseInfoList = lambdaQuery()
-                .eq(Objects.nonNull(param.getSonAreaId()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaId())
-                .in(CollectionUtils.isNotEmpty(param.getSonAreaIds()),AreaDomainBaseInfo::getSonAreaId, param.getSonAreaIds())
+                .eq(Objects.nonNull(param.getSonAreaId()), AreaDomainBaseInfo::getSonAreaId, param.getSonAreaId())
+                .in(CollectionUtils.isNotEmpty(param.getSonAreaIds()), AreaDomainBaseInfo::getSonAreaId, param.getSonAreaIds())
                 .list();
-        List<AreaDomainBaseInfoModel> baseInfoModels = areaDomainBaseInfoList.stream().map(item->{
+        List<AreaDomainBaseInfoModel> baseInfoModels = areaDomainBaseInfoList.stream().map(item -> {
             AreaDomainBaseInfoModel baseInfoModel = new AreaDomainBaseInfoModel();
             // 使用beanUtil进行把item copy到baseInfoModel
             BeanUtils.copyProperties(item, baseInfoModel);
@@ -54,5 +56,14 @@ public class AreaDomainBaseInfoServiceImpl extends ServiceImpl<AreaDomainBaseInf
             return baseInfoModel;
         }).collect(Collectors.toList());
         return new QuerySonAreaVersionResultV2(baseInfoModels);
+    }
+
+    @Override
+    public Map<String, String> queryTableOnlyKeys(QueryTableOnlyParam param) {
+        List<AreaDomainBaseInfo> areaDomainBaseInfos = super.lambdaQuery()
+                .in(CollectionUtils.isNotEmpty(param.getTables()), AreaDomainBaseInfo::getTableName, param.getTables())
+                .list();
+
+        return null;
     }
 }

@@ -53,7 +53,6 @@ public class VersionImpl implements VersionInterface {
         spiderBusinessPool.execute(() -> {
             try {
                 SpiderBusinessFunctionVersion functionVersion = JSON.parseObject(data.toString(), SpiderBusinessFunctionVersion.class);
-
                 versionManager.addVersion(functionVersion);
                 promise.complete();
             } catch (Exception e) {
@@ -114,6 +113,36 @@ public class VersionImpl implements VersionInterface {
                 promise.complete(JsonObject.mapFrom(queryFunctionVersionResult));
             } catch (Exception e) {
                 log.error("queryFunctionVersionError {}", ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> configToJavaEntity(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                versionManager.configToJavaEntity(data.getString("functionVersionId"));
+                promise.complete();
+            } catch (Exception e) {
+                log.error("configToJavaEntityError {}", ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            }
+        });
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> writeJavaEntity(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(()->{
+            try {
+                versionManager.writeJavaEntity(data);
+                promise.complete();
+            } catch (Exception e) {
+                log.error("writeJavaEntityError {}", ExceptionMessage.getStackTrace(e));
                 promise.fail(e);
             }
         });
