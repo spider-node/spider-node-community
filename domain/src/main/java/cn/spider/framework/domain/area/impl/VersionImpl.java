@@ -3,24 +3,29 @@ package cn.spider.framework.domain.area.impl;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
 import cn.spider.framework.domain.area.function.version.data.QueryFunctionVersionResult;
+import cn.spider.framework.domain.sdk.data.NodeJsFunctionInfo;
 import cn.spider.framework.domain.sdk.data.QueryBpmnUrlResult;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
 import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
 import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
 import cn.spider.framework.domain.sdk.data.RefreshBpmnParam;
+import cn.spider.framework.domain.sdk.data.StartNodeJsParam;
 import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
+import cn.spider.framework.param.sdk.data.TestJsRuntimeModel;
+import cn.spider.framework.param.sdk.data.TestJsRuntimeParam;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -37,9 +42,12 @@ public class VersionImpl implements VersionInterface {
 
     private Executor spiderBusinessPool;
 
-    public VersionImpl(VersionManager versionManager, Executor spiderBusinessPool) {
+    private ParamInterface paramInterface;
+
+    public VersionImpl(VersionManager versionManager, Executor spiderBusinessPool, ParamInterface paramInterface) {
         this.versionManager = versionManager;
         this.spiderBusinessPool = spiderBusinessPool;
+        this.paramInterface = paramInterface;
     }
 
     @Override
@@ -137,7 +145,7 @@ public class VersionImpl implements VersionInterface {
     @Override
     public Future<Void> writeJavaEntity(JsonObject data) {
         Promise<Void> promise = Promise.promise();
-        spiderBusinessPool.execute(()->{
+        spiderBusinessPool.execute(() -> {
             try {
                 versionManager.writeJavaEntity(data);
                 promise.complete();
@@ -149,5 +157,35 @@ public class VersionImpl implements VersionInterface {
         return promise.future();
     }
 
+    @Override
+    public Future<Void> createNodeParamCoder(JsonObject data) {
+        Promise<Void> promise = Promise.promise();
+        spiderBusinessPool.execute(() -> {
+            try {
+                StartNodeJsParam startNodeJsParam = data.mapTo(StartNodeJsParam.class);
+                versionManager.paramBuild(startNodeJsParam);
+                promise.complete();
+            } catch (Exception e) {
+                log.error("createCoderError {}", ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            }
+        });
+        return promise.future();
+    }
 
+    @Override
+    public Future<JsonObject> writeJsFunctionInfo(JsonObject data) {
+        NodeJsFunctionInfo nodeJsFunctionInfo = data.mapTo(NodeJsFunctionInfo.class);
+        List<TestJsRuntimeModel> testJsRuntimeModelList = nodeJsFunctionInfo.getNodeParamConfigList().stream().map(nodeParamConfig -> new TestJsRuntimeModel(nodeParamConfig.getJsFunctionalName(), nodeParamConfig.getJsFunction(), nodeParamConfig.getJsFunctionParams(), nodeParamConfig.getRealRequiredNodeParameters(), nodeParamConfig.getMockData(), nodeParamConfig.getNodeId())
+        ).collect(Collectors.toList());
+        TestJsRuntimeParam testJsRuntimeParam = new TestJsRuntimeParam(testJsRuntimeModelList);
+        // 发起js的mock数据执行
+        Future<JsonObject> runtimeResult = paramInterface.testJsRuntime(JsonObject.mapFrom(testJsRuntimeParam));
+        runtimeResult.onSuccess(suss -> {
+            log.info("test_data_result {}", suss.toString());
+        });
+        versionManager.writeJsFunctionInfo(nodeJsFunctionInfo);
+        // 调用param进行发起测试,把失败的信息,回写,让ai进行修改。
+        return Future.succeededFuture();
+    }
 }

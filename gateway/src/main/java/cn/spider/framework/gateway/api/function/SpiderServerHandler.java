@@ -10,6 +10,7 @@ import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.BrokerInfoService;
 import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.common.ResponseData;
+import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.framework.param.result.build.enventData.EscalationData;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
@@ -66,6 +67,8 @@ public class SpiderServerHandler {
 
     private HostPluginInterface hostPluginInterface;
 
+    private LinkerService linkerService;
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
@@ -77,7 +80,8 @@ public class SpiderServerHandler {
                                VersionInterface versionInterface,
                                Vertx vertx,
                                EventManager eventManager, DataFlowInterface dataFlowInterface,
-                               AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface) {
+                               AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface,
+                               LinkerService linkerService) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -92,6 +96,7 @@ public class SpiderServerHandler {
         this.dataFlowInterface = dataFlowInterface;
         this.aiTaskInterface = aiTaskInterface;
         this.hostPluginInterface = hostPluginInterface;
+        this.linkerService = linkerService;
     }
 
     public void init(Router router) {
@@ -204,6 +209,9 @@ public class SpiderServerHandler {
         demandAiParse();
         configToJavaEntity();
         writeJavaEntity();
+        createNodeParamCoder();
+        writeJsFunctionInfo();
+        queryTaskDeploy();
     }
 
     public void selectBpmn() {
@@ -1647,6 +1655,56 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     versionInterface.writeJavaEntity(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * createNodeParamCoder
+     */
+    private void createNodeParamCoder() {
+        router.post("/create_node_param_coder")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    versionInterface.createNodeParamCoder(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // writeJsFunctionInfo
+    private void writeJsFunctionInfo() {
+        router.post("/write_js_function_info")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    log.info("writeJsFunctionInfo param:{}", param);
+                    versionInterface.writeJsFunctionInfo(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * queryTaskDeploy
+     */
+    private void queryTaskDeploy() {
+        router.post("/query/task_deploy")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    linkerService.queryTaskDeploy(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
                     });

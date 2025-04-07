@@ -20,11 +20,11 @@ public class SpiderTransactionOperation {
     public void commit(TransactionOperateModel operateModel) throws TransactionException {
 
         // 根据 branchId xid查询是否存在
-        defaultResourceManager.branchCommit(BranchType.AT,operateModel.getXid(),Long.parseLong(operateModel.getBranchId()), operateModel.getResourceId(),null);
+        defaultResourceManager.branchCommit(BranchType.AT,operateModel.getXid(),operateModel.getBranchId(), operateModel.getResourceId(),null);
     }
 
     public void rollBack(TransactionOperateModel operateModel) throws TransactionException {
         // 根据 branchId xid查询是否存在
-        defaultResourceManager.branchRollback(BranchType.AT,operateModel.getXid(),Long.parseLong(operateModel.getBranchId()),operateModel.getResourceId(),null);
+        defaultResourceManager.branchRollback(BranchType.AT,operateModel.getXid(),operateModel.getBranchId(),operateModel.getResourceId(),null);
     }
 }

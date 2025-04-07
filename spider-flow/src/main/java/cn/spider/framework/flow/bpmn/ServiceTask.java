@@ -27,6 +27,7 @@ import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * ServiceTask
@@ -153,6 +154,24 @@ public interface ServiceTask extends Task {
 
     // 查询功能类型
     FunctionType queryFunctionType ();
+
+    String queryJsCode();
+
+    String queryJsFunctionName();
+
+    Set<String>  queryJsParams();
+
+    Set<String> queryJsParamReal();
+
+    String queryPollElExpression();
+
+    String queryFunctionId();
+
+    /**
+     * 获取数据源id
+     * @return datasourceId
+     */
+    String queryDatasourceId();
 
     /**
      * 获取Service Task 构造器

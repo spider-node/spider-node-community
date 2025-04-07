@@ -107,10 +107,9 @@ public class StoryEngine {
             Future<Void> future = flowExample.getFuture();
             // 最终执行完成的结果执行--
             future.onSuccess(suss -> {
-                TaskServiceUtil.getResultObject(storyRequest.getResultMapping(),paramInterface,flowExample.getRequestId()).onSuccess(resultSuss->{
+                TaskServiceUtil.getResultObject(storyRequest.getNodeParamConfig(),paramInterface,flowExample.getRequestId()).onSuccess(resultSuss->{
                     Optional.ofNullable(storyRequest.getRecallStoryHook()).ifPresent(c -> c.accept(new RecallStory(storyBusAsync)));
                     TaskResponse<Object> response = TaskResponseBox.buildSuccess(resultSuss);
-                    flowRegisterAsync.getMonitorTracking().trackingLog();
                     promise.complete(response);
                 });
             }).onFailure(fail -> {

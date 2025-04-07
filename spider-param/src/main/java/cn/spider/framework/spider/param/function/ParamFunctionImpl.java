@@ -2,23 +2,30 @@ package cn.spider.framework.spider.param.function;
 
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.param.sdk.data.*;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
+import cn.spider.framework.spider.param.config.Constants;
+import cn.spider.framework.spider.param.engine.JsEngine;
+import cn.spider.framework.spider.param.engine.JsRunResult;
+import cn.spider.framework.spider.param.engine.metadata.MetadataManager;
 import cn.spider.framework.spider.param.manager.ParamExampleManager;
 import com.alibaba.fastjson.JSON;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
+import org.rocksdb.RocksDBException;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * 实现类
@@ -29,15 +36,18 @@ public class ParamFunctionImpl implements ParamInterface {
     private ParamExampleManager paramExampleManager;
 
     private Executor executor;
+
+    private JsEngine jsEngine;
     // REQUEST_PARAM_NAME
-    private final String REQUEST_PARAM_NAME = "param";
 
-    private final String REQUEST_ID = "requestId";
+    private MetadataManager metadataManager;
 
 
-    public ParamFunctionImpl(ParamExampleManager paramExampleManager, Executor executor) {
+    public ParamFunctionImpl(ParamExampleManager paramExampleManager, Executor executor, JsEngine jsEngine, MetadataManager metadataManager) {
         this.paramExampleManager = paramExampleManager;
         this.executor = executor;
+        this.jsEngine = jsEngine;
+        this.metadataManager = metadataManager;
     }
 
     @Override
@@ -63,20 +73,22 @@ public class ParamFunctionImpl implements ParamInterface {
     public Future<Void> writeBack(JsonObject param) {
         Promise<Void> promise = Promise.promise();
         executor.execute(() -> {
-            WriteBackParam writeBackParam = JSON.parseObject(param.toString(), WriteBackParam.class);
-            writeBackParam.setResult(param.getJsonObject("result"));
+            WriteBackParam writeBackParam = param.mapTo(WriteBackParam.class);
             if (Objects.isNull(writeBackParam.getResult())) {
                 promise.complete();
                 return;
             }
-            // 获取到config配置
-            // 查询配置 配置放入缓存中
-            /*paramExampleManager.notifyResult(writeBackParam.getTaskComponent(),
-                    writeBackParam.getTaskService(), writeBackParam.getRequestId(), new JsonObject(writeBackParam.getResult().toString()),writeBackParam.getVersion()).onSuccess(suss -> {
+            writeBackParam.setNodeId(removeLastChar(writeBackParam.getNodeId()));
+            String paramValue = writeBackParam.getResult().toString();
+            log.info("notify_标识 {} 参数信息我为 {} nodeId {}", writeBackParam.getRequestId(),paramValue, writeBackParam.getNodeId());
+            try {
+                metadataManager.insert(writeBackParam.getRequestId(), writeBackParam.getNodeId(), paramValue);
                 promise.complete();
-            }).onFailure(fail -> {
-                promise.fail(fail);
-            });*/
+                log.info("notify_suss {} 写入信息为 {}", writeBackParam.getRequestId(), paramValue);
+            } catch (Exception e) {
+                log.info("notify_fail_标识 {}  {} 异常信息 {}", writeBackParam.getRequestId(), JSON.toJSONString(writeBackParam), ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            }
         });
         return promise.future();
     }
@@ -121,12 +133,9 @@ public class ParamFunctionImpl implements ParamInterface {
         Promise<Void> promise = Promise.promise();
         executor.execute(() -> {
             // TODO 写入请求
-            if (!param.containsKey(REQUEST_PARAM_NAME)) {
-                promise.complete();
-                return;
-            }
+            WriteRequestInfo writeRequestInfo = param.mapTo(WriteRequestInfo.class);
             try {
-                paramExampleManager.insertRequestParam(param.getString(REQUEST_ID), param.getJsonObject(REQUEST_PARAM_NAME));
+                metadataManager.insert(writeRequestInfo.getRequestId(), Constants.REQUEST_KEY, JSON.toJSONString(writeRequestInfo.getRequest()));
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -146,23 +155,205 @@ public class ParamFunctionImpl implements ParamInterface {
         Promise<JsonObject> promise = Promise.promise();
         QueryFunctionParam queryFunctionParam = JSON.parseObject(param.toString(), QueryFunctionParam.class);
         executor.execute(() -> {
-            Map<String, Object> resultMap = new HashMap<>(queryFunctionParam.getParams().size());
-            queryFunctionParam.getParams().forEach((key, value) -> {
-                try {
-                    ONode result = paramExampleManager.queryValueByExpression(value, queryFunctionParam.getRequestId());
-                    resultMap.put(key, result.toObject());
-                } catch (Exception e) {
-                    log.error("查询参数失败 {}", ExceptionMessage.getStackTrace(e));
-                    promise.fail(e);
-                    throw new RuntimeException(e);
-                }
-            });
-            promise.complete(JsonObject.mapFrom(resultMap));
+            promise.complete();
         });
         return promise.future();
     }
 
+    @Override
+    public Future<JsonObject> testJsRuntime(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        executor.execute(() -> {
+            TestJsRuntimeParam testJsRuntimeParam = param.mapTo(TestJsRuntimeParam.class);
+            List<TestJsRuntimeModel> testJsRuntimeModelList = testJsRuntimeParam.getTestJsRuntimeModelList();
+            List<Future> needFutures = new ArrayList<>();
+            for (TestJsRuntimeModel testJsRuntimeModel : testJsRuntimeModelList) {
+                JsonObject mockData = testJsRuntimeModel.mockDataJson();
+                Map<String, Object> mockDataMap = new HashMap<>();
+                // 判断mock数据是否包含request数据
+                if (mockData.containsKey(Constants.REQUEST_KEY)) {
+                    mockDataMap.put(Constants.REQUEST_KEY, mockData.getJsonObject(Constants.REQUEST_KEY).getMap());
+                    // 判断参数列表是否包含request数据
+                } else if (testJsRuntimeModel.getJsFunctionParam().contains(Constants.REQUEST_KEY)) {
+                    mockDataMap.put(Constants.REQUEST_KEY, new HashMap<>());
+                }
+                mockData.remove(Constants.REQUEST_KEY);
+                // 判断mock数据是否包含context数据
+                if (!mockData.isEmpty()) {
+                    mockDataMap.put(Constants.CONTEXT_KEY, mockData.getMap());
+                    // 判断参数列表是否包含context数据
+                } else if (testJsRuntimeModel.getJsFunctionParam().contains(Constants.CONTEXT_KEY)) {
+                    mockDataMap.put(Constants.CONTEXT_KEY, new HashMap<>());
+                }
 
+                Future<JsRunResult> future = jsEngine.run(testJsRuntimeModel.getJsFunctionCode(), testJsRuntimeModel.getJsFunctionName(), mockDataMap, testJsRuntimeModel.getNodeId());
+                needFutures.add(future);
+            }
+            CompositeFuture.all(needFutures).onSuccess(suss -> {
+                int size = suss.size();
+                List<TestJsRuntimeResultModel> testJsRuntimeResultModelList = new ArrayList<>(size);
+                for (int i = 0; i < size; i++) {
+                    JsRunResult result = suss.resultAt(i);
+                    TestJsRuntimeResultModel testJsRuntimeResultModel = new TestJsRuntimeResultModel();
+                    testJsRuntimeResultModel.setRunStatus(result.getRunStatus());
+                    testJsRuntimeResultModel.setNodeId(result.getNodeId());
+                    testJsRuntimeResultModel.setJsFunctionName(result.getFunctionName());
+                    testJsRuntimeResultModelList.add(testJsRuntimeResultModel);
+                }
+                TestJsRuntimeResult testJsRuntimeResult = new TestJsRuntimeResult(testJsRuntimeResultModelList);
+                promise.complete(JsonObject.mapFrom(testJsRuntimeResult));
+            }).onFailure(fail -> {
+                promise.fail(fail);
+            });
+        });
+
+        return promise.future();
+    }
+
+    public String removeLastChar(String str) {
+        if (str.contains("-")) {
+            String[] parts = str.split("-");
+            if (parts.length > 1 && parts[1].matches("\\d+")) {
+                return parts[0];
+            }
+        }
+        return str;
+    }
+
+    @Override
+    public Future<JsonObject> queryRunParamJs(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        QueryJsRequestParam queryJsRequestParam = param.mapTo(QueryJsRequestParam.class);
+        queryJsRequestParam.setNodeId(removeLastChar(queryJsRequestParam.getNodeId()));
+        baseRunJs(queryJsRequestParam).onSuccess(suss -> {
+            JsRunResult Jsresult = suss;
+            if (!Jsresult.getRunStatus()) {
+                log.info("js执行失败 {}", Jsresult.getErrorMsg());
+                promise.fail(Jsresult.getErrorMsg());
+                return;
+            }
+            Object result = Jsresult.getResult();
+            if (Objects.isNull(result)) {
+                promise.fail("没有获取到参数信息");
+                return;
+            }
+            QueryRequestResult queryRequestResult = new QueryRequestResult();
+            queryRequestResult.setRunParam(JsonObject.mapFrom(result));
+            promise.complete(JsonObject.mapFrom(queryRequestResult));
+        }).onFailure(fail -> {
+            // js执行失败
+            log.info("js执行失败 {}", ExceptionMessage.getStackTrace(fail));
+            promise.fail(fail);
+        });
+
+        return promise.future();
+    }
+
+    /**
+     * 提供 给条件线路
+     *
+     * @param param 条件
+     * @return Future
+     */
+    @Override
+    public Future<JsonObject> getExpression(JsonObject param) {
+        Promise<JsonObject> promise = Promise.promise();
+        QueryJsRequestParam queryJsRequestParam = param.mapTo(QueryJsRequestParam.class);
+        queryJsRequestParam.setNodeId(removeLastChar(queryJsRequestParam.getNodeId()));
+        baseRunJs(queryJsRequestParam)
+                .onSuccess(suss -> {
+                    JsRunResult Jsresult = suss;
+                    if (!Jsresult.getRunStatus()) {
+                        log.info("js执行失败 {}", Jsresult.getErrorMsg());
+                        promise.fail(Jsresult.getErrorMsg());
+                        return;
+                    }
+                    Object result = Jsresult.getResult();
+                    if (Objects.isNull(result)) {
+                        promise.fail("没有获取到参数信息");
+                        return;
+                    }
+                    // 构造返回的对象信息
+                    QueryExpressionResult results = new QueryExpressionResult();
+                    results.setResult((Boolean) Jsresult.getResult());
+                    promise.complete(JsonObject.mapFrom(results));
+                })
+                .onFailure(fail -> {
+                    promise.fail(fail);
+                });
+        return promise.future();
+    }
+
+    public Future<JsRunResult> baseRunJs(QueryJsRequestParam queryJsRequestParam) {
+        Set<String> realParamKey = queryJsRequestParam.getJsFunctionParamReal();
+        Set<String> jsFunctionParams = queryJsRequestParam.getJsFunctionParam();
+        Map<String, Object> runJsFunctionParam = new HashMap<>();
+        // 获取参数节点信息
+        if (jsFunctionParams.contains(Constants.REQUEST_KEY)) {
+            Set<String> queryRequestParam = new HashSet<>();
+            queryRequestParam.add(Constants.REQUEST_KEY);
+            Map<String, Map<String, Object>> requestParam = queryNodeValue(queryRequestParam, queryJsRequestParam.getRequestId());
+            runJsFunctionParam.put(Constants.REQUEST_KEY, requestParam.get(Constants.REQUEST_KEY));
+        }
+        if (jsFunctionParams.contains(Constants.CONTEXT_KEY)) {
+            if (CollectionUtils.isEmpty(realParamKey)) {
+                runJsFunctionParam.put(Constants.CONTEXT_KEY, new HashMap<>());
+            } else {
+                Set<String> convertRealKey = convertArrayToBaseKey(realParamKey);
+                Map<String, Map<String, Object>> nodeParam = queryNodeValue(convertRealKey, queryJsRequestParam.getRequestId());
+                runJsFunctionParam.put(Constants.CONTEXT_KEY, buildResult(nodeParam));
+            }
+        }
+        log.info("执行js的参数为 {}", JSON.toJSONString(runJsFunctionParam));
+        // 执行获取参数信息
+        return jsEngine.run(queryJsRequestParam.getJsFunctionCode(), queryJsRequestParam.getJsFunctionName(), runJsFunctionParam, queryJsRequestParam.getNodeId());
+    }
+
+    private Set<String> convertArrayToBaseKey(Set<String> inputArray) {
+        return inputArray.stream()
+                .map(s -> s.substring(0, s.lastIndexOf('.')))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 根据real的值获取到rocksdb中存的内容
+     *
+     * @param convertRealKey
+     * @param requestId
+     * @return
+     */
+    private Map<String, Map<String, Object>> queryNodeValue(Set<String> convertRealKey, String requestId) {
+        Map<String, Map<String, Object>> resultMap = new HashMap<>(convertRealKey.size());
+        convertRealKey.forEach(key -> {
+            try {
+                resultMap.put(key, metadataManager.query(requestId, key).getMap());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return resultMap;
+    }
+
+    /**
+     * 转换结果,新增一层result
+     */
+    private Map<String, Object> buildResult(Map<String, Map<String, Object>> resultMap) {
+
+        Map<String, Object> result = new HashMap<>();
+        resultMap.forEach((key, value) -> {
+            Map<String, Map<String, Object>> resultConversion = new HashMap<>();
+            resultConversion.put("result", value);
+            result.put(key, resultConversion);
+        });
+        return result;
+    }
+
+
+    /**
+     *
+     * @param expression
+     * @return
+     */
     private String buildFinalExpression(String expression) {
         String finalExpression = expression;
         if (finalExpression.startsWith("sta.")) {

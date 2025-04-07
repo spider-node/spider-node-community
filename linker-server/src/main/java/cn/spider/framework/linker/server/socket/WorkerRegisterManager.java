@@ -11,6 +11,7 @@ import cn.spider.framework.domain.sdk.data.RefreshAreaParam;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
 import cn.spider.framework.linker.sdk.data.emuns.FunctionEscalationType;
+import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.enums.ClientStatus;
 import cn.spider.framework.linker.server.socket.data.HostApplication;
 import cn.spider.framework.param.result.build.model.NodeParamInfo;
@@ -60,13 +61,16 @@ public class WorkerRegisterManager {
 
     private HostWorkerRegisterManager hostWorkerRegisterManager;
 
-    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager) {
+    private BaseManager baseManager;
+
+    public WorkerRegisterManager(NetServer netServer, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager,BaseManager baseManager) {
         this.netServer = netServer;
         this.clientRegisterCenter = clientRegisterCenter;
         this.vertx = vertx;
         this.eventManager = eventManager;
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
         this.hostWorkerRegisterManager = hostWorkerRegisterManager;
+        this.baseManager = baseManager;
         init();
     }
 
@@ -106,6 +110,31 @@ public class WorkerRegisterManager {
         socket.closeHandler(close -> {
             // 移除ip对应的数据,防止下次被选中
             clientRegisterCenter.removeClient(clientInfo.getIp(), clientInfo.getWorkerName());
+            // 下线ip与源数据
+            log.info("宿主机 {} 下线", clientInfo.getIp());
+           // baseManager.offlineIp(clientInfo.getIp());
+            // 通知下线
+            HostApplicationOfflineData offlineData = HostApplicationOfflineData.builder()
+                    .ip(clientInfo.getIp())
+                    .brokerName(this.brokerName)
+                    .build();
+            eventManager.sendMessage(EventType.HOST_OFFLINE, offlineData);
+        });
+    }
+
+    /**
+     * 监听 宿主机 是否断开
+     *
+     * @param socket     跟宿主机的通道
+     * @param clientInfo 宿主机客户端信息
+     */
+    private void monitorSocketCloseHost(NetSocket socket, ClientInfo clientInfo) {
+        socket.closeHandler(close -> {
+            // 移除ip对应的数据,防止下次被选中
+            hostWorkerRegisterManager.offline(clientInfo.getIp());
+            // 下线ip与源数据
+            log.info("monitorSocketCloseHost-宿主机 {} 下线", clientInfo.getIp());
+            baseManager.offlineIp(clientInfo.getIp());
             // 通知下线
             HostApplicationOfflineData offlineData = HostApplicationOfflineData.builder()
                     .ip(clientInfo.getIp())
@@ -148,7 +177,7 @@ public class WorkerRegisterManager {
                 // 注册到应用中
                 hostWorkerRegisterManager.register(clientInfo);
                 // 校验是建立链接还是 心跳。如果是建立链接发出的信息，就注册关闭
-                monitorSocketClose(socket, clientInfo);
+                monitorSocketCloseHost(socket, clientInfo);
                 break;
             case INTERFACE:
                 clientRegisterCenter.registerClient(clientInfo);
@@ -159,21 +188,25 @@ public class WorkerRegisterManager {
 
     /**
      * 获取宿主应用/服务的client
+     *
      * @param taskComponent 组件
-     * @param taskService 组件方法
-     * @param version 版本
-     * @param workerName 提供能力的服务
-     * @param providerType 服务类型
+     * @param taskService   组件方法
+     * @param version       版本
+     * @param workerName    提供能力的服务
+     * @param providerType  服务类型
      * @return grpc的通道
      */
     public ClientInfo queryClientInfo(String taskComponent, String taskService, String version, String workerName, ApplicationProviderType providerType) throws Exception {
-        switch (providerType){
+        switch (providerType) {
             case SPIDER_HOST_APPLICATION:
                 return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
             case SERVICE_APPLICATION:
                 return clientRegisterCenter.queryClientInfo(workerName);
         }
         return hostWorkerRegisterManager.queryClientInfo(taskComponent, taskService, version).getClientInfo();
+    }
 
+    public ClientInfo queryRandom(){
+       return hostWorkerRegisterManager.queryClientRandom().getClientInfo();
     }
 }

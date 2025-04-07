@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.task;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
+import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.node.data.QueryDomainFunctionResult;
@@ -26,6 +27,7 @@ import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionAiCoderSt
 import cn.spider.framework.domain.area.task.entity.SpiderDomainFunctionTask;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoderStepService;
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
+import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.sdk.data.DemandAnalysisParam;
 import cn.spider.framework.domain.sdk.data.UpdateDemandsParam;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
@@ -45,10 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +79,14 @@ public class TaskManager {
     private ISpiderDataFlowService dataFlowService;
 
     private HostPluginInterface hostPluginInterface;
+    // 锁更新code的操作
+    private LockManager lockManager;
+
+    private DatasourceManager datasourceManager;
+
+    private final String codeCreateType = "codeCreateType";
+
+    private final String updateCode = "updateCode";
 
     public TaskManager(ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,
                        ISpiderAreaFunctionService spiderAreaFunctionService,
@@ -87,7 +94,7 @@ public class TaskManager {
                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
                        AgentVertxClient agentVertxClient,
                        ISpiderDomainFunctionAiCoderStepService stepService,
-                       ISpiderDataFlowService dataFlowService, HostPluginInterface hostPluginInterface) {
+                       ISpiderDataFlowService dataFlowService, HostPluginInterface hostPluginInterface, LockManager lockManager) {
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
         this.baseInfoService = baseInfoService;
@@ -96,17 +103,21 @@ public class TaskManager {
         this.stepService = stepService;
         this.dataFlowService = dataFlowService;
         this.hostPluginInterface = hostPluginInterface;
+        this.lockManager = lockManager;
     }
 
     // 新增领域功能的任务
     public void runDomainFunctionTask(String versionId, CodeCreateType codeCreateType, String selectedVersion) {
         // 判断下状态，如果是编译通过，就不能进行代码生成
-        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
-        if (functionVersion.getStatus().equals(NodeStatus.CODING)) {
-            //Preconditions.checkArgument(false, "当前版本正在编译中，请稍后再试");
-            //return;
+        String lockKye = this.codeCreateType + versionId;
+        if (!lockManager.lock(lockKye)) {
+            Preconditions.checkArgument(false, "当前版本在代码生成中，请稍后再试");
+            return;
         }
-
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
+        /*if (functionVersion.getStatus().equals(NodeStatus.CODING)) {
+            Preconditions.checkArgument(false, "当前版本正在编译中，请稍后再试");
+        }*/
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
         Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(), Set.class);
         SpiderAreaFunction areaFunction = spiderAreaFunctionService.getById(functionVersion.getDomainFunctionId());
@@ -145,7 +156,8 @@ public class TaskManager {
                         domainId,
                         spiderDataFlow,
                         queryFunctionVersionResult.getAreaFunctionParamClass(),
-                        queryFunctionVersionResult.getAreaFunctionResultClass(), queryFunctionVersionResult.getServiceName());
+                        queryFunctionVersionResult.getAreaFunctionResultClass(),
+                        queryFunctionVersionResult.getServiceName());
             }).onFailure(fail -> {
                 log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
             });
@@ -167,17 +179,6 @@ public class TaskManager {
         }).onFailure(fail -> {
             log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
         });
-   /*     // 发起ai生成代码
-        createCoder(domainBaseInfoIds,
-                domainBaseInfos,
-                areaFunction,
-                projectName,
-                functionVersion,
-                versionId,
-                domainId,
-                spiderDataFlow,
-                null, null, null);*/
-
     }
 
     private void createCoder(Set<Integer> domainBaseInfoIds,
@@ -214,14 +215,21 @@ public class TaskManager {
         createCoderParam.setTaskId(domainFunctionTask.getId());
         createCoderParam.setBaseInfoIds(domainBaseInfoIds);
         Integer baseInfoId = domainBaseInfoIds.stream().findFirst().orElse(null);
-        createCoderParam.setDatasource(queryDatasource(baseInfoId));
+        String datasource = queryDatasource(baseInfoId);
+        String datasourceId = queryDatasourceId(datasource);
+        // 更新datasource
+        spiderAreaFunctionVersionService.lambdaUpdate()
+                .set(SpiderAreaFunctionVersion::getDatasourceId, datasourceId)
+                .eq(SpiderAreaFunctionVersion::getId, versionId)
+                .update();
+        createCoderParam.setDatasource(datasource);
 
         createCoderParam.setDomainInfoAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getDomainInfoResult());
         createCoderParam.setDataFlowAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult());
         createCoderParam.setDataFlow(spiderDataFlow.getData());
         createCoderParam.setNeedDataFlow(Boolean.TRUE);
         createCoderParam.setDomainFunctionVersionId(versionId);
-        if(StringUtils.isEmpty(serviceName)){
+        if (StringUtils.isEmpty(serviceName)) {
             createCoderParam.setServiceName(serviceName);
         }
         log.info("create_coder_info {}", JSON.toJSONString(createCoderParam));
@@ -259,9 +267,19 @@ public class TaskManager {
         return domainBaseInfo.getDatasourceName();
     }
 
+    public String queryDatasourceId(String datasource) {
+        return datasourceManager.queryDatasourceId(datasource);
+    }
+
     public Future<Void> updateCoder(JsonObject param) {
-        Promise<Void> promise = Promise.promise();
+
         log.info("update_coder_info {}", param);
+        String domainFunctionVersionId = this.updateCode + param.getString("domainFunctionVersionId");
+        if (!lockManager.lock(domainFunctionVersionId)) {
+            return Future.failedFuture("在更新中,请稍后在世");
+        }
+
+        Promise<Void> promise = Promise.promise();
         agentVertxClient.updatePlugin(param).onSuccess(suss -> {
             // 发起跟k8s交互
             // 构造基础信息成功- 开始发起部署
@@ -269,13 +287,16 @@ public class TaskManager {
             hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
                 log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 promise.fail(fail);
+                lockManager.unLock(domainFunctionVersionId);
             }).onSuccess(deploySuss -> {
                 log.warn("发起部署成功 {}", param.toString());
                 promise.complete();
+                lockManager.unLock(domainFunctionVersionId);
             });
         }).onFailure(fail -> {
             promise.fail(fail);
             log.error("更新插件失败 {}", ExceptionMessage.getStackTrace(fail));
+            lockManager.unLock(domainFunctionVersionId);
         });
         return promise.future();
     }

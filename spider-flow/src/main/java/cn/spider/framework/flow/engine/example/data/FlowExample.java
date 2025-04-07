@@ -375,11 +375,7 @@ public class FlowExample {
     }
 
     public Map<String, String> getTransactionGroupMap() {
-        return transactionGroupMap;
-    }
-
-    public void setTransactionGroupMap(Map<String, String> transactionGroupMap) {
-        this.transactionGroupMap = transactionGroupMap;
+        return this.transactionGroupMap;
     }
 
     public void init() {

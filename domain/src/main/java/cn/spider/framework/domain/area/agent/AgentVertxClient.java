@@ -52,6 +52,8 @@ public class AgentVertxClient {
 
     private String jsonToJavaEntity;
 
+    private String buildNodeParam;
+
     public AgentVertxClient(WebClient webClient, String agentPrefix, String aiCodePrefix) {
 
         this.webClient = webClient;
@@ -68,6 +70,7 @@ public class AgentVertxClient {
         this.analysisParamInfo = "/analysis_param";
         this.analysisDemandInfo = "/demand_analysis";
         this.jsonToJavaEntity = "/json_to_entity";
+        this.buildNodeParam = "/build_node_param";
 
 
         String ipWithPort = agentPrefix.replace("http://", "");
@@ -130,6 +133,10 @@ public class AgentVertxClient {
 
     public Future<JsonObject> jsonToJavaEntity(JsonObject param) {
         return send(param, this.jsonToJavaEntity, this.aiCodePort, this.aiCodeHost);
+    }
+
+    public Future<JsonObject> buildNodeParam(JsonObject param) {
+        return send(param, this.buildNodeParam, this.aiCodePort, this.aiCodeHost);
     }
 
 

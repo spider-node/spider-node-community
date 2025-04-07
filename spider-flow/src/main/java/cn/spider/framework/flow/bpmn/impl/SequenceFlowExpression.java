@@ -33,15 +33,14 @@ import java.util.Optional;
  */
 public class SequenceFlowExpression extends BaseElementImpl implements Expression {
 
-    private static final List<ConditionExpressionImpl> actualWorkExpressionList =
-            Lists.newArrayList(new BooleanConditionExpression(), new RoleConditionExpression(), new SpelConditionExpression());
+    private static final ConditionExpressionImpl actualWorkExpression = new BooleanJsExpression();
 
     /**
      * 表达式
      */
     private final ConditionExpression conditionExpression;
 
-    public SequenceFlowExpression(String expression) {
+    /*public SequenceFlowExpression(String expression) {
         AssertUtil.notBlank(expression);
         expression = expression.trim();
         for (ConditionExpressionImpl cExp : actualWorkExpressionList) {
@@ -52,6 +51,11 @@ public class SequenceFlowExpression extends BaseElementImpl implements Expressio
             }
         }
         throw ExceptionUtil.buildException(null, ExceptionEnum.SYSTEM_ERROR, null);
+    }*/
+
+    public SequenceFlowExpression(String expression, String jsFunctionName, String jsParams, String jsParamReal,String nodeId,String nodeName) {
+        AssertUtil.notBlank(expression);
+        conditionExpression = actualWorkExpression.newWorkExpressionJs(expression, jsFunctionName, jsParams, jsParamReal,nodeId,nodeName);
     }
 
     @Override

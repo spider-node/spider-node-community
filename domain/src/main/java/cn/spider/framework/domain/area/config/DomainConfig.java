@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.config;
 
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.config.MysqlConfig;
@@ -29,10 +30,12 @@ import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoder
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import cn.spider.framework.domain.area.task.service.ISpiderTaskTestInfoService;
 import cn.spider.framework.domain.area.timer.CoderTimer;
+import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
 import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
@@ -79,7 +82,8 @@ import java.util.concurrent.TimeUnit;
         "cn.spider.framework.domain.area.function.mapper",
         "cn.spider.framework.domain.area.node.mapper",
         "cn.spider.framework.domain.area.task.mapper",
-        "cn.spider.framework.domain.area.domain.mapper"})
+        "cn.spider.framework.domain.area.domain.mapper",
+        "cn.spider.framework.domain.area.aiTask.manger"})
 public class DomainConfig {
 
     @Bean
@@ -93,8 +97,9 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,NodeManger nodeManger,AgentVertxClient agentVertxClient) {
-        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService,nodeManger,agentVertxClient);
+    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,LockManager lockManager,AgentVertxClient agentVertxClient,HostPluginInterface hostPluginInterface,
+                                              ISpiderDataFlowService spiderDataFlowService) {
+        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService,lockManager,agentVertxClient,hostPluginInterface,spiderDataFlowService);
     }
 
     @Bean
@@ -151,8 +156,14 @@ public class DomainConfig {
     }
 
     @Bean
-    public VersionInterface buildVersionImpl(VersionManager versionManager,Executor spiderBusinessPool) {
-        return new VersionImpl(versionManager,spiderBusinessPool);
+    public ParamInterface buildParamInterface(Vertx vertx){
+        String addr = BrokerInfoUtil.queryBrokerName(vertx)+ ParamInterface.ADDRESS;
+        return ParamInterface.createProxy(vertx,addr);
+    }
+
+    @Bean
+    public VersionInterface buildVersionImpl(VersionManager versionManager,Executor spiderBusinessPool,ParamInterface paramInterface) {
+        return new VersionImpl(versionManager,spiderBusinessPool,paramInterface);
     }
 
     @Bean
@@ -266,7 +277,7 @@ public class DomainConfig {
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //核心线程池大小
-        executor.setCorePoolSize(6);
+        executor.setCorePoolSize(1);
         //最大线程数
         executor.setMaxPoolSize(12);
         //队列容量-- 用最大程度的
@@ -322,13 +333,18 @@ public class DomainConfig {
                                         HostPluginInterface hostPluginInterface,
                                         IAreaDomainBaseInfoService baseInfoService,
                                         ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService){
-        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService,hostPluginInterface);
+                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService,LockManager lockManager){
+        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService,hostPluginInterface,lockManager);
     }
 
     @Bean
-    public CoderTimer buildCoderTimer(Vertx vertx, ISpiderTaskTestInfoService taskTestInfoService,NodeManger nodeManger){
-        return new CoderTimer(vertx,taskTestInfoService,nodeManger);
+    public CoderTimer buildCoderTimer(Vertx vertx, ISpiderTaskTestInfoService taskTestInfoService){
+        return new CoderTimer(vertx,taskTestInfoService);
+    }
+
+    @Bean
+    public LockManager buildLockManager(CoderTimer coderTimer){
+        return new LockManager(coderTimer);
     }
 
 }

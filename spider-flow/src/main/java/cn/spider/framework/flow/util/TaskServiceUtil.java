@@ -19,6 +19,7 @@ package cn.spider.framework.flow.util;
 
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import cn.spider.framework.flow.bpmn.FlowElement;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.bus.*;
@@ -32,6 +33,7 @@ import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.monitor.ParamTracking;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.param.sdk.data.QueryFunctionParam;
+import cn.spider.framework.param.sdk.data.QueryJsRequestParam;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
@@ -85,21 +87,22 @@ public class TaskServiceUtil {
 
     /**
      * 获取功能执行-返回的参数
-     * @param resultMapping
+     *
+     * @param nodeParamConfig
      * @param paramInterface
      * @param requestId
      * @return
      */
-    public static Future<Map<String, Object>> getResultObject(Map<String, String> resultMapping, ParamInterface paramInterface,String requestId) {
+    public static Future<Map<String, Object>> getResultObject(NodeParamConfig nodeParamConfig, ParamInterface paramInterface, String requestId) {
         Map<String, Object> resultObject = Maps.newHashMap();
-        if (resultMapping.isEmpty()) {
+        if (Objects.isNull(nodeParamConfig)) {
             return Future.succeededFuture(resultObject);
         }
         Promise<Map<String, Object>> promise = Promise.promise();
-        QueryFunctionParam queryFunctionParam = new QueryFunctionParam(resultMapping,requestId);
-        paramInterface.queryFunctionResult(JsonObject.mapFrom(queryFunctionParam)).onSuccess(suss->{
+        QueryJsRequestParam queryJsRequestParam = new QueryJsRequestParam(nodeParamConfig.getJsFunctionalName(), nodeParamConfig.getJsFunction(), nodeParamConfig.getJsFunctionParams(), nodeParamConfig.getRealRequiredNodeParameters(), nodeParamConfig.getNodeId(), requestId);
+        paramInterface.queryRunParamJs(JsonObject.mapFrom(queryJsRequestParam)).onSuccess(suss -> {
             promise.complete(suss.getMap());
-        }).onFailure(fail->{
+        }).onFailure(fail -> {
             log.error("获取返回参数失败-{}", ExceptionMessage.getStackTrace(fail));
             promise.complete(new HashMap<>());
         });
@@ -222,16 +225,16 @@ public class TaskServiceUtil {
                         String targetName = serviceTask.queryConfigFieldName(def.getTargetName());
                         ScopeTypeEnum scopeTypeEnum = def.getScopeDataEnum();
                         Object value = null;
-                        if(targetName.startsWith("spider.")){
-                            Map<String,Object> param = serviceTask.obtainAppointParam();
+                        if (targetName.startsWith("spider.")) {
+                            Map<String, Object> param = serviceTask.obtainAppointParam();
                             targetName = targetName.substring(7);
-                            if(!param.containsKey(targetName)){
+                            if (!param.containsKey(targetName)) {
                                 return;
                             }
                             Object spiderValue = param.get(targetName);
                             ONode node = ONode.loadObj(spiderValue);
                             value = node.toObject(def.getParamType());
-                        }else {
+                        } else {
                             if (targetName.startsWith("req.")) {
                                 targetName = targetName.substring(4);
                                 scopeTypeEnum = ScopeTypeEnum.REQUEST;
@@ -246,7 +249,7 @@ public class TaskServiceUtil {
                                         ParamTracking.build(iDef.getFieldName() + "." + def.getFieldName(), MonitorTracking.BAD_VALUE, def.getScopeDataEnum(), def.getTargetName())));
                                 return;
                             } else if (values instanceof ONode) {
-                                if(Objects.nonNull(values)){
+                                if (Objects.nonNull(values)) {
                                     ONode node = buildConvertParam(targetName, (ONode) values);
 
                                     value = node.toObject(def.getParamType());

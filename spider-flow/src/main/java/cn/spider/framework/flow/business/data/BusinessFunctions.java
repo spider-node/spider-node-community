@@ -1,5 +1,6 @@
 package cn.spider.framework.flow.business.data;
 
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import cn.spider.framework.flow.business.enums.FunctionStatus;
 import cn.spider.framework.flow.business.enums.IsAsync;
 import cn.spider.framework.flow.business.enums.IsRetry;
@@ -67,14 +68,14 @@ public class BusinessFunctions {
 
     private String requestClass;
 
-    private Map<String,String> resultMapping;
+    private NodeParamConfig nodeParamConfig;
 
-    public Map<String, String> getResultMapping() {
-        return resultMapping;
+    public NodeParamConfig getNodeParamConfig() {
+        return nodeParamConfig;
     }
 
-    public void setResultMapping(Map<String, String> resultMapping) {
-        this.resultMapping = resultMapping;
+    public void setNodeParamConfig(NodeParamConfig nodeParamConfig) {
+        this.nodeParamConfig = nodeParamConfig;
     }
 
     public String getRequestClass() {

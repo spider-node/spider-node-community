@@ -32,44 +32,20 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TransactionGroupExample {
 
-    /**
-     * 事务组id
-     */
-    private String groupId;
-
-    /**
-     * 事务组
-     */
-    private List<TransactionExample> transactionExampleList;
-
-    /**
-     * 通知调用方事务执行状态
-     */
-    private Promise<JsonObject> promise;
 
     private EventManager eventManager;
 
-    public TransactionGroupExample(String groupId, List<TransactionExample> transactionExampleList, Promise<JsonObject> promise) {
-        this.groupId = groupId;
-        this.transactionExampleList = transactionExampleList;
-        this.promise = promise;
-        this.eventManager = TransactionServerVerticle.factory.getBean(EventManager.class);
-        // 初始化错误次数
+    private LinkerService linkerService;
+
+
+
+    public TransactionGroupExample(EventManager eventManager, LinkerService linkerService) {
+        this.linkerService = linkerService;
+        this.eventManager = eventManager;
     }
 
-    public void runCommit(LinkerService linkerService) {
-        for(TransactionExample transactionExample : this.transactionExampleList){
-            commit(transactionExample, linkerService);
-        }
-    }
 
-    public void runRollBack(LinkerService linkerService) {
-        for(TransactionExample transactionExample : this.transactionExampleList){
-            rollBack(transactionExample, linkerService);
-        }
-    }
-
-    public void commit(TransactionExample example, LinkerService linkerService) {
+    public void commit(TransactionElement example, LinkerService linkerService) {
         log.info("事务执行内容 {}",JSON.toJSONString(example));
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.SUBMIT);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
@@ -105,7 +81,6 @@ public class TransactionGroupExample {
                 example.setTransactionStatus(TransactionStatus.ROLL_BACK_FAIL);
                 eventManager.sendMessage(EventType.END_TRANSACTION,endTransactionData);
             }
-            checkTransactionIsFinish();
         }).onFailure(fail -> {
             log.error("transaction-BranchId {} xid {} 提交失败 {}",example.getBranchId(),example.getTransactionGroupId(), ExceptionMessage.getStackTrace(fail));
             example.setTransactionStatus(TransactionStatus.COMMIT_FAIL);
@@ -118,12 +93,11 @@ public class TransactionGroupExample {
             }
             example.setTransactionStatus(TransactionStatus.ROLL_BACK_FAIL);
             eventManager.sendMessage(EventType.END_TRANSACTION,endTransactionData);
-            checkTransactionIsFinish();
         });
     }
 
-    private void checkTransactionIsFinish() {
-        Optional<TransactionExample> transactionExample = transactionExampleList
+   /* private void checkTransactionIsFinish() {
+        Optional<TransactionElement> transactionExample = transactionExampleList
                 .stream()
                 .filter(item -> item.getTransactionStatus().equals(TransactionStatus.INIT))
                 .findFirst();
@@ -143,9 +117,9 @@ public class TransactionGroupExample {
         response.setGroupId(this.groupId);
         response.setOperateStatusList(operateStatusList);
         this.promise.complete(JsonObject.mapFrom(response));
-    }
+    }*/
 
-    public void rollBack(TransactionExample example, LinkerService linkerService) {
+    public void rollBack(TransactionElement example, LinkerService linkerService) {
 
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.ROLLBACK);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
@@ -179,7 +153,6 @@ public class TransactionGroupExample {
                 example.setTransactionStatus(TransactionStatus.ROLL_BACK_FAIL);
                 eventManager.sendMessage(EventType.END_TRANSACTION,endTransactionData);
             }
-            checkTransactionIsFinish();
         }).onFailure(fail -> {
             example.setTransactionStatus(TransactionStatus.ROLL_BACK_FAIL);
             example.recordFailNum();
@@ -191,11 +164,10 @@ public class TransactionGroupExample {
             // 发送事务操作失败
             endTransactionData.setTransactionStatus(cn.spider.framework.common.event.enums.TransactionStatus.FAIL);
             eventManager.sendMessage(EventType.END_TRANSACTION,endTransactionData);
-            checkTransactionIsFinish();
         });
     }
 
-    private LinkerServerRequest buildRequestEntity(TransactionExample example, TransactionalType transactionalType) {
+    private LinkerServerRequest buildRequestEntity(TransactionElement example, TransactionalType transactionalType) {
         // 参数中，移除末尾的 Promise<Object> promise
         LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
         TransactionalRequest transactionalRequest = new TransactionalRequest();

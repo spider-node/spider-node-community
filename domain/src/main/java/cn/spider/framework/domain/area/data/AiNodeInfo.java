@@ -1,57 +1,57 @@
 package cn.spider.framework.domain.area.data;
 
-import java.util.List;
-import java.util.Map;
-
 public class AiNodeInfo {
-    private Map<String, List<Map<String, String>>> tableFiledMap;
+    private String returnsClass;
 
-    private String paramClass;
+    private String parametersClass;
 
-    private String id;
+    private String otherClass;
 
-    private String name;
+    private String nodeId;
+
+    private String nodeName;
 
     private String functionVersionId;
 
-    public AiNodeInfo(Map<String, List<Map<String, String>>> tableFiledMap, String paramClass, String id, String name, String functionVersionId) {
-        this.tableFiledMap = tableFiledMap;
-        this.paramClass = paramClass;
-        this.id = id;
-        this.name = name;
+    public AiNodeInfo(String paramClass, String id, String name, String functionVersionId,String returnsClass,String otherClass) {
+        this.returnsClass = returnsClass;
+        this.parametersClass = paramClass;
+        this.nodeId = id;
+        this.nodeName = name;
         this.functionVersionId = functionVersionId;
+        this.otherClass = otherClass;
     }
 
-    public Map<String, List<Map<String, String>>> getTableFiledMap() {
-        return tableFiledMap;
+    public String getReturnsClass() {
+        return returnsClass;
     }
 
-    public void setTableFiledMap(Map<String, List<Map<String, String>>> tableFiledMap) {
-        this.tableFiledMap = tableFiledMap;
+    public void setReturnsClass(String returnsClass) {
+        this.returnsClass = returnsClass;
     }
 
-    public String getParamClass() {
-        return paramClass;
+    public String getParametersClass() {
+        return parametersClass;
     }
 
-    public void setParamClass(String paramClass) {
-        this.paramClass = paramClass;
+    public void setParametersClass(String parametersClass) {
+        this.parametersClass = parametersClass;
     }
 
-    public String getId() {
-        return id;
+    public String getNodeId() {
+        return nodeId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
     }
 
-    public String getName() {
-        return name;
+    public String getNodeName() {
+        return nodeName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public String getFunctionVersionId() {
@@ -60,5 +60,13 @@ public class AiNodeInfo {
 
     public void setFunctionVersionId(String functionVersionId) {
         this.functionVersionId = functionVersionId;
+    }
+
+    public String getOtherClass() {
+        return otherClass;
+    }
+
+    public void setOtherClass(String otherClass) {
+        this.otherClass = otherClass;
     }
 }

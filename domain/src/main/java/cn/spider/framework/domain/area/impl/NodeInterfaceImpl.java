@@ -219,7 +219,8 @@ public class NodeInterfaceImpl implements NodeInterface {
         pluginManager.buildPlugin(param).onSuccess(buildSuss -> {
             CreateProjectResult projectResult = buildSuss.mapTo(CreateProjectResult.class);
             if (StringUtils.isNotEmpty(projectResult.getErrorStackTrace())) {
-                promise.complete(JsonObject.mapFrom(projectResult));
+                log.info("部署失败 {}", param.toString());
+                promise.fail(projectResult.getErrorStackTrace());
                 return;
             }
             promise.complete();
@@ -234,7 +235,6 @@ public class NodeInterfaceImpl implements NodeInterface {
                 hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
                     log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 });
-                // 需要改造,直接调用k8s进行部署
             });
 
         }).onFailure(buildFail -> {
@@ -363,10 +363,9 @@ public class NodeInterfaceImpl implements NodeInterface {
         NotifyAnalysisResultParam notifyAnalysisResultParam = JSON.parseObject(param.toString(), NotifyAnalysisResultParam.class);
         spiderBusinessPool.execute(() -> {
             // 解析 notifyAnalysisResultParam.getAnalysisResult();
-            JsonObject analysisResult = new JsonObject();
-            analysisResult.put("analysis", new JsonArray(JSON.toJSONString(notifyAnalysisResultParam.getAnalysisResult())));
+            NotifyAnalysisResultInfo notifyAnalysisResultInfo = new NotifyAnalysisResultInfo(notifyAnalysisResultParam.getAnalysisResult());
             spiderAreaFunctionVersionService.lambdaUpdate()
-                    .set(SpiderAreaFunctionVersion::getResultAnalysis, analysisResult.toString())
+                    .set(SpiderAreaFunctionVersion::getResultAnalysis, JSON.toJSONString(notifyAnalysisResultInfo))
                     .eq(SpiderAreaFunctionVersion::getId, notifyAnalysisResultParam.getFunctionVersionId()).update();
             promise.complete();
         });
@@ -380,7 +379,7 @@ public class NodeInterfaceImpl implements NodeInterface {
         spiderBusinessPool.execute(() -> {
             SpiderAreaFunctionVersion spiderAreaFunctionVersion = spiderAreaFunctionVersionService.getById(queryAnalysisResult.getFunctionVersionId());
             JsonObject resultAnalysis = Objects.nonNull(spiderAreaFunctionVersion.getResultAnalysis()) ?
-                    new JsonObject(spiderAreaFunctionVersion.getResultAnalysis().toString()) :
+                    new JsonObject(JSONObject.toJSONString(spiderAreaFunctionVersion.getResultAnalysis())) :
                     new JsonObject();
             QueryAnalysisResult queryAnalysisResultParam = new QueryAnalysisResult(resultAnalysis);
             promise.complete(JsonObject.mapFrom(queryAnalysisResultParam));

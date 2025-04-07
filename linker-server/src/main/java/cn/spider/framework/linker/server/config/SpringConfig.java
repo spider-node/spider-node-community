@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @create: 2023-03-02 10:55
  */
 @Configuration
-@Import({EventConfig.class, DbRocksConfig.class})
+@Import({EventConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.linker.server.*"})
 public class SpringConfig {
 
@@ -55,8 +55,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public WorkerRegisterManager createWorkerRegisterManager(NetServer server, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager) {
-        return new WorkerRegisterManager(server, clientRegisterCenter, vertx, eventManager, hostWorkerRegisterManager);
+    public WorkerRegisterManager createWorkerRegisterManager(NetServer server, ClientRegisterCenter clientRegisterCenter, Vertx vertx, EventManager eventManager, HostWorkerRegisterManager hostWorkerRegisterManager,BaseManager baseManager) {
+        return new WorkerRegisterManager(server, clientRegisterCenter, vertx, eventManager, hostWorkerRegisterManager,baseManager);
     }
 
     @Bean
@@ -92,8 +92,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public BaseManager buildBaseManager(RocksdbUtil rocksdbUtil) {
-        return new BaseManager(rocksdbUtil);
+    public BaseManager buildBaseManager() {
+        return new BaseManager();
     }
 
     @Bean
@@ -102,8 +102,8 @@ public class SpringConfig {
     }
 
     @Bean
-    public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx,BaseManager baseManager) {
-        return new HostWorkerRegisterManager(vertx,baseManager);
+    public HostWorkerRegisterManager buildHostWorkerRegisterManager(Vertx vertx, BaseManager baseManager) {
+        return new HostWorkerRegisterManager(vertx, baseManager);
     }
 
     @Bean

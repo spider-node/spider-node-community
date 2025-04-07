@@ -288,6 +288,7 @@ public abstract class AbstractUndoLogManager implements UndoLogManager {
                             TableMeta tableMeta = TableMetaCacheFactory.getTableMetaCache(dataSourceProxy.getDbType()).getTableMeta(
                                     conn, sqlUndoLog.getTableName(), dataSourceProxy.getResourceId());
                             sqlUndoLog.setTableMeta(tableMeta);
+                            // 逆向执行
                             AbstractUndoExecutor undoExecutor = UndoExecutorFactory.getUndoExecutor(
                                     dataSourceProxy.getDbType(), sqlUndoLog);
                             undoExecutor.executeOn(conn);

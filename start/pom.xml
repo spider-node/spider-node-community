@@ -166,7 +166,8 @@
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
                     <include>**/*.properties</include>
-                    <include>*.xml</include>
+                    <!--增加include webroot/dist的文件-->
+                    <include>webroot/dist/**/*</include>
                 </includes>
             </resource>
         </resources>

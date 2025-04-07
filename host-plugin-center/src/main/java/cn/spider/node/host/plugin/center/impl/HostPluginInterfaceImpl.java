@@ -16,6 +16,7 @@ import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -93,6 +94,11 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
         return Future.succeededFuture();
     }
 
+    /**
+     * 需要升本版后,进行扩缩容
+     * @param data 宿主应用信息 扩缩容
+     * @return
+     */
     @Override
     public Future<Void> scalePlugin(JsonObject data) {
         ScalePluginParam scalePluginParam = data.mapTo(ScalePluginParam.class);
@@ -172,15 +178,18 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
     }
 
     @Override
-    public Future<JsonObject> queryInputParam(JsonObject data) {
+    public Future<JsonArray> queryInputParam(JsonObject data) {
         QueryInputParam queryInputParam = data.mapTo(QueryInputParam.class);
         List<AreaDomainFunctionInfo> areaDomainFunctionInfos = areaDomainFunctionInfoService
                 .lambdaQuery()
                 .in(AreaDomainFunctionInfo::getDomainFunctionVersionId, queryInputParam.getDomainFunctionVersionId())
                 .list();
-        JsonObject result = new JsonObject();
+        JsonArray result = new JsonArray();
         areaDomainFunctionInfos.forEach(areaDomainFunctionInfo -> {
-            result.put(areaDomainFunctionInfo.getDomainFunctionVersionId(), areaDomainFunctionInfo.getAreaFunctionParamClass());
+            QueryDomainFunctionClassInfo queryDomainFunctionClassInfo = new QueryDomainFunctionClassInfo(areaDomainFunctionInfo.getDomainFunctionVersionId(),
+                    areaDomainFunctionInfo.getAreaFunctionResultClass(), areaDomainFunctionInfo.getAreaFunctionParamClass(),
+                    areaDomainFunctionInfo.getOtherCode());
+            result.add(JsonObject.mapFrom(queryDomainFunctionClassInfo));
         });
         return Future.succeededFuture(result);
     }

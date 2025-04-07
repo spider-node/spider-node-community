@@ -5,6 +5,7 @@ import cn.spider.framework.domain.area.node.TestCase;
 import cn.spider.framework.domain.area.node.data.FunctionFunctional;
 import cn.spider.framework.domain.area.node.data.TableAnalysisModel;
 import cn.spider.framework.domain.area.node.data.enums.NodeStatus;
+import cn.spider.framework.domain.sdk.data.NotifyAnalysisResultInfo;
 import cn.spider.framework.domain.sdk.data.ParamPack;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -86,7 +87,7 @@ public class SpiderAreaFunctionVersion{
     private SonDomainInfoFunction sonDomainFunctions;
 
     @TableField(value = "result_analysis", typeHandler = FastjsonTypeHandler.class)
-    private JSONObject resultAnalysis;
+    private NotifyAnalysisResultInfo resultAnalysis;
 
     /**
      * 创建时间
@@ -96,6 +97,8 @@ public class SpiderAreaFunctionVersion{
     private Integer dataFlowId;
 
     private String dataFlowName;
+
+    private String datasourceId;
 
     public Integer getDataFlowId() {
         return dataFlowId;
@@ -218,11 +221,19 @@ public class SpiderAreaFunctionVersion{
         this.sonDomainFunctions = sonDomainFunctions;
     }
 
-    public JSONObject getResultAnalysis() {
+    public NotifyAnalysisResultInfo getResultAnalysis() {
         return resultAnalysis;
     }
 
-    public void setResultAnalysis(JSONObject resultAnalysis) {
+    public void setResultAnalysis(NotifyAnalysisResultInfo resultAnalysis) {
         this.resultAnalysis = resultAnalysis;
+    }
+
+    public String getDatasourceId() {
+        return datasourceId;
+    }
+
+    public void setDatasourceId(String datasourceId) {
+        this.datasourceId = datasourceId;
     }
 }

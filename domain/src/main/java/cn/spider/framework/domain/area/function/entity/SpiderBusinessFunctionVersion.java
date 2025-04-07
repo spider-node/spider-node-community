@@ -6,13 +6,14 @@ import cn.spider.framework.domain.area.function.data.FunctionParamConfigModel;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
 import cn.spider.framework.domain.sdk.data.FunctionParamInput;
 import cn.spider.framework.domain.sdk.data.FunctionParamOutput;
-import com.alibaba.fastjson.JSONObject;
+import cn.spider.framework.domain.sdk.data.NodeJsFunctionInfo;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -134,6 +135,9 @@ public class SpiderBusinessFunctionVersion implements Serializable {
 
     @TableField(value = "out_param_java_class", typeHandler = FastjsonTypeHandler.class)
     private List<String> outputParamJavaClass;
+
+    @TableField(value = "node_js_function_info", typeHandler = FastjsonTypeHandler.class)
+    private NodeJsFunctionInfo nodeParamInfo;
 
     public String getDataFlowName() {
         return dataFlowName;
@@ -312,7 +316,7 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     }
 
     public List<String> getInputParamJavaClass() {
-        return inputParamJavaClass;
+        return CollectionUtils.isEmpty(inputParamJavaClass) ? new ArrayList<>() : inputParamJavaClass;
     }
 
     public void setInputParamJavaClass(List<String> inputParamJavaClass) {
@@ -320,10 +324,18 @@ public class SpiderBusinessFunctionVersion implements Serializable {
     }
 
     public List<String> getOutputParamJavaClass() {
-        return outputParamJavaClass;
+        return CollectionUtils.isEmpty(outputParamJavaClass) ? new ArrayList<>() : outputParamJavaClass;
     }
 
     public void setOutputParamJavaClass(List<String> outputParamJavaClass) {
         this.outputParamJavaClass = outputParamJavaClass;
+    }
+
+    public NodeJsFunctionInfo getNodeParamInfo() {
+        return nodeParamInfo;
+    }
+
+    public void setNodeParamInfo(NodeJsFunctionInfo nodeParamInfo) {
+        this.nodeParamInfo = nodeParamInfo;
     }
 }

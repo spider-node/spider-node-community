@@ -220,11 +220,13 @@ public class ConnectionProxy extends AbstractConnectionProxy {
 
 
     private void doCommit() throws SQLException {
+        // 说明存在事务。
         if (context.inGlobalTransaction()) {
             processGlobalTransactionCommit();
         } /*else if (context.isGlobalLockRequire()) {// 取消获取全局锁
             processLocalCommitWithGlobalLocks();
         }*/ else {
+            // 说明没有事务,直接提交
             targetConnection.commit();
         }
     }
@@ -247,7 +249,7 @@ public class ConnectionProxy extends AbstractConnectionProxy {
         }
         try {
             UndoLogManagerFactory.getUndoLogManager(this.getDbType()).flushUndoLogs(this);
-            // 变化
+            // 第一阶段提交
             isolateManager.commitBefore(this);
             targetConnection.commit();
         } catch (Throwable ex) {

@@ -48,6 +48,10 @@ public class TaskManager {
     private TransactionDefinition transactionDefinition;
 
     private HostApplicationService hostApplicationService;
+    // operate
+    private final String TRANSACTION_COMMIT = "commit";
+
+    private final String TRANSACTION_ROLLBACK = "rollBack";
 
     public TaskManager(ApplicationContext applicationContext,
                        Executor taskPool,
@@ -84,7 +88,7 @@ public class TaskManager {
                 response.setResultCode(ResultCode.SUSS);
                 response.setResultData(JSONObject.parseObject(JSON.toJSONString(resultObject)));
             } catch (Exception e) {
-                log.error("执行报错的信息为 {}",ExceptionMessage.getStackTrace(e));
+                log.error("执行报错的信息为 {}", ExceptionMessage.getStackTrace(e));
                 // 异常信息给到返回值当中
                 response = new LinkerServerResponse();
                 response.setResultCode(ResultCode.FAIL);
@@ -129,7 +133,7 @@ public class TaskManager {
             } catch (Exception e) {
                 // 异常信息给到返回值当中
                 message = ExceptionMessage.getStackTrace(e);
-                log.error("执行报错的信息为 {}",message);
+                log.error("执行报错的信息为 {}", message);
                 response = TransferResponse.newBuilder()
                         .setCode(1002)
                         .setMessage(message)
@@ -158,6 +162,7 @@ public class TaskManager {
                 return runServiceApplication(request);
         }
     }
+
     // 宿主机-执行功能
     public Object runHostApplication(LinkerServerRequest request) {
         if (Objects.isNull(hostApplicationService)) {
@@ -193,11 +198,11 @@ public class TaskManager {
         // 获取事务的xid
         String xid = request.getFunctionRequest().getXid();
         // 获取事务的 branchId
-        String branchId = request.getFunctionRequest().getBranchId();
+        Long branchId = request.getFunctionRequest().getBranchId();
         /**
          * 当需要事务的情况下，使用编程事务
          */
-        if (StringUtils.isNotEmpty(xid) && StringUtils.isNotEmpty(branchId)) {
+        if (StringUtils.isNotEmpty(xid) && Objects.nonNull(branchId)) {
             TransactionStatus transaction = platformTransactionManager.getTransaction(transactionDefinition);
             try {
                 Object result = ReflectionUtils.invokeMethod(methodNew, target, params);
@@ -214,7 +219,7 @@ public class TaskManager {
     }
 
     /**
-     * 事务操作
+     * 执行分布式事务的操作
      *
      * @param request
      * @return object
@@ -224,12 +229,11 @@ public class TaskManager {
         Object target = applicationContext.getBean(TRANSACTION_MANAGER);
         Method method = null;
 
-        String methodName = request.getTransactionalRequest().getTransactionalType().equals(TransactionalType.ROLLBACK) ? "rollBack" : "commit";
+        String methodName = request.getTransactionalRequest().getTransactionalType().equals(TransactionalType.ROLLBACK) ? this.TRANSACTION_ROLLBACK : this.TRANSACTION_COMMIT;
         if (methodMap.containsKey(methodName)) {
             method = methodMap.get(methodName);
         } else {
             Method[] methods = target.getClass().getMethods();
-
             for (Method methodNew : methods) {
                 if (StringUtils.equals(methodNew.getName(), methodName)) {
                     method = methodNew;
@@ -239,10 +243,12 @@ public class TaskManager {
             methodMap.put(methodName, method);
         }
         String transactionId = request.getTransactionalRequest().getTransactionId();
-        String brushId = request.getTransactionalRequest().getBranchId();
-        Object[] params = new Object[2];
+        Long brushId = request.getTransactionalRequest().getBranchId();
+        String resourceId = request.getTransactionalRequest().getResourceId();
+        Object[] params = new Object[3];
         params[0] = transactionId;
         params[1] = brushId;
+        params[2] = resourceId;
         return ReflectionUtils.invokeMethod(method, target, params);
     }
 

@@ -2,11 +2,7 @@ package cn.spider.framework.flow.business;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
-import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
-import cn.spider.framework.flow.business.data.BusinessFunctions;
-import cn.spider.framework.flow.business.data.DerailFunctionVersion;
-import cn.spider.framework.flow.business.data.ExecuteFunctionInfo;
-import cn.spider.framework.flow.business.data.FunctionWeight;
+import cn.spider.framework.flow.business.data.*;
 import cn.spider.framework.flow.business.enums.FunctionStatus;
 import cn.spider.framework.flow.business.enums.IsAsync;
 import cn.spider.framework.flow.business.enums.IsRetry;
@@ -42,6 +38,8 @@ public class BusinessManager {
 
     private FunctionInterface functionInterface;
 
+    private final String FUNCTION_VERSION_ID = "functionVersionId";
+
     private RowMapper<BusinessFunctions> ROW_BUSINESS = row -> {
         BusinessFunctions businessFunctions = new BusinessFunctions();
         businessFunctions.setId(row.getString("id"));
@@ -67,7 +65,7 @@ public class BusinessManager {
             //构建cache实例
             .build();
 
-    public BusinessManager(MySQLPool client,FunctionInterface functionInterface) {
+    public BusinessManager(MySQLPool client, FunctionInterface functionInterface) {
         this.client = client;
         this.functionInterface = functionInterface;
     }
@@ -246,8 +244,34 @@ public class BusinessManager {
             businessFunctions.setStartId(functionInfo.getStartId());
             businessFunctions.setName(functionInfo.getFunctionName());
             businessFunctions.setIsAsync(IsAsync.AYNC);
-            businessFunctions.setResultMapping(functionInfo.getResultMapping());
-            businessFunctions.setRequestClass(functionInfo.getRequestClass());
+            businessFunctions.setNodeParamConfig(functionInfo.getNodeParamConfig());
+            cache.put(businessFunctions.getId(), businessFunctions);
+            promise.complete(businessFunctions);
+        }).onFailure(fail -> {
+            promise.fail(fail);
+        });
+        return promise.future();
+    }
+
+    /**
+     * 从域中获取可执行的-BusinessFunctions 信息
+     */
+    public Future<BusinessFunctions> queryBusinessFunctionsV2(QueryBusinessVersionParam param) {
+        // 该spider-node版本没有支持功能多版本，-需要下个版本的规划
+        BusinessFunctions functions = cache.getIfPresent(param.getFunctionVersionId());
+        if (Objects.nonNull(functions)) {
+            return Future.succeededFuture(functions);
+        }
+        Promise<BusinessFunctions> promise = Promise.promise();
+        Future<JsonObject> functionObject = functionInterface.findExecuteFunction(new JsonObject().put(FUNCTION_VERSION_ID, param.getFunctionVersionId()));
+        functionObject.onSuccess(suss -> {
+            ExecuteFunctionInfo functionInfo = suss.mapTo(ExecuteFunctionInfo.class);
+            BusinessFunctions businessFunctions = new BusinessFunctions();
+            businessFunctions.setId(param.getFunctionVersionId());
+            businessFunctions.setStartId(functionInfo.getStartId());
+            businessFunctions.setName(functionInfo.getFunctionName());
+            businessFunctions.setIsAsync(IsAsync.AYNC);
+            businessFunctions.setNodeParamConfig(functionInfo.getNodeParamConfig());
             cache.put(businessFunctions.getId(), businessFunctions);
             promise.complete(businessFunctions);
         }).onFailure(fail -> {

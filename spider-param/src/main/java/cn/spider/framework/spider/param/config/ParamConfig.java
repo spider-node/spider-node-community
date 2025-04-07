@@ -7,7 +7,9 @@ import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.domain.sdk.interfaces.NodeInterface;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import cn.spider.framework.spider.param.ParamVerticle;
-import cn.spider.framework.spider.param.engine.metadata.Table;
+import cn.spider.framework.spider.param.engine.JsEngine;
+import cn.spider.framework.spider.param.engine.function.js.JsFunctionExecutor;
+import cn.spider.framework.spider.param.engine.metadata.MetadataManager;
 import cn.spider.framework.spider.param.engine.util.TableRocksdbUtil;
 import cn.spider.framework.spider.param.example.ParamExample;
 import cn.spider.framework.spider.param.factory.ScopeDataFactory;
@@ -84,8 +86,23 @@ public class ParamConfig {
     }
 
     @Bean
-    public ParamInterface buildParamInterface(ParamExampleManager paramExampleManager, Executor spiderParamPool) {
-        return new ParamFunctionImpl(paramExampleManager, spiderParamPool);
+    public ParamInterface buildParamInterface(ParamExampleManager paramExampleManager, Executor spiderParamPool, JsEngine jsEngine,MetadataManager metadataManager) {
+        return new ParamFunctionImpl(paramExampleManager, spiderParamPool, jsEngine,metadataManager);
+    }
+
+    @Bean
+    public MetadataManager buildMetadataManager(RocksdbUtil rocksdbUtil) {
+        return new MetadataManager(rocksdbUtil);
+    }
+
+    @Bean
+    public JsEngine buildJsEngine(Executor spiderJsPool, JsFunctionExecutor jsFunctionExecutor) {
+        return new JsEngine(jsFunctionExecutor, spiderJsPool);
+    }
+
+    @Bean
+    public JsFunctionExecutor buildJsFunctionExecutor() {
+        return new JsFunctionExecutor();
     }
 
     @Bean(name = "spiderParamPool")
@@ -94,7 +111,7 @@ public class ParamConfig {
         //核心线程池大小
         executor.setCorePoolSize(2);
         //最大线程数
-        executor.setMaxPoolSize(12);
+        executor.setMaxPoolSize(4);
         //队列容量-- 用最大程度的
         executor.setQueueCapacity(20);
         //活跃时间
@@ -109,13 +126,29 @@ public class ParamConfig {
         return executor;
     }
 
-    @Bean
-    public TableRocksdbUtil buildTableRocksdbUtil(RocksdbUtil rocksdbUtil) {
-        return new TableRocksdbUtil(rocksdbUtil);
+    @Bean(name = "spiderJsPool")
+    public Executor jsExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        //核心线程池大小
+        executor.setCorePoolSize(8);
+        //最大线程数
+        executor.setMaxPoolSize(8);
+        //队列容量-- 用最大程度的
+        executor.setQueueCapacity(800);
+        //活跃时间
+        executor.setKeepAliveSeconds(2000);
+        //线程名字前缀
+        executor.setThreadNamePrefix("spider-js-pool");
+        // 拒绝直接报错
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        // 等待所有任务结束后再关闭线程池
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
     }
 
     @Bean
-    public Table buildTable(TableRocksdbUtil tableRocksdbUtil) {
-        return new Table(tableRocksdbUtil);
+    public TableRocksdbUtil buildTableRocksdbUtil(RocksdbUtil rocksdbUtil) {
+        return new TableRocksdbUtil(rocksdbUtil);
     }
 }

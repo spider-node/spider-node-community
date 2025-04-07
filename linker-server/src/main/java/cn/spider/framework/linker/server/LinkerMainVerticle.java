@@ -2,6 +2,7 @@ package cn.spider.framework.linker.server;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
+import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.config.SpringConfig;
 import cn.spider.framework.linker.server.external.LinkerServiceImpl;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
@@ -49,7 +50,8 @@ public class LinkerMainVerticle extends AbstractVerticle {
         FunctionInterface functionInterface = factory.getBean(FunctionInterface.class);
         WorkerRegisterManager workerRegisterManager = factory.getBean(WorkerRegisterManager.class);
         HostPluginInterface hostPluginInterface = factory.getBean(HostPluginInterface.class);
-        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface,workerRegisterManager,hostPluginInterface);
+        BaseManager baseManager = factory.getBean(BaseManager.class);
+        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface,workerRegisterManager,hostPluginInterface,baseManager);
         // 发布接口
         this.binder = new ServiceBinder(vertx);
         MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(LinkerService.ADDRESS)

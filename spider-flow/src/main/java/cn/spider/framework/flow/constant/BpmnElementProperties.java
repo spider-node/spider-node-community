@@ -94,7 +94,7 @@ public interface BpmnElementProperties {
      */
     String ITERATE_STRIDE = "ite-stride";
 
-    String TASK_TRANSACTION_GROUP_ID = "transaction-group-id";
+    String TASK_TRANSACTION_GROUP_ID = "transaction_group_id";
 
     String RETRY_COUNT = "retry-count";
 
@@ -102,9 +102,11 @@ public interface BpmnElementProperties {
 
     String SERVICE_TASK_TYPE = "service_task_type";
 
-    String SERVICE_TASK_TYPE_NEW = "service-task-type";
+    String SERVICE_TASK_TYPE_NEW = "service_task_type";
 
     String POLL_COUNT = "poll_count";
+    // expression
+    String POLL_EL_EXPRESSION = "poll_el_expression";
 
     String VERIFY_COUNT = "verify_count";
 
@@ -120,4 +122,20 @@ public interface BpmnElementProperties {
     String CONVERSION_PARAM = "conversion_param";
 
     String VERSION = "version";
+
+    //condition
+    String CONDITION_JS_FUNCTION = "js_function";
+
+    String CONDITION_JS_NAME = "js_functional_name";
+
+    String JS_FUNCTION_PARAM_LIST = "js_function_params";
+
+    String JS_FUNCTION_PARAM_LIST_REAL = "real_required_node_parameters";
+
+    String FUNCTION_TYPE = "function_type";
+
+    String FUNCTION_VERSION_ID = "function_version_id";
+
+    String DATASOURCE_ID = "datasource_id";
+
 }

@@ -44,4 +44,19 @@ public interface ParamInterface {
      * 获取返回值
      */
     Future<JsonObject> queryFunctionResult(JsonObject param);
+
+    /**
+     * 测试js函数
+     */
+    Future<JsonObject> testJsRuntime(JsonObject param);
+
+    /**
+     * 查询可执行的参数信息
+     */
+    Future<JsonObject> queryRunParamJs(JsonObject param);
+
+    /**
+     * 获取条件表达式
+     */
+    Future<JsonObject> getExpression(JsonObject param);
 }

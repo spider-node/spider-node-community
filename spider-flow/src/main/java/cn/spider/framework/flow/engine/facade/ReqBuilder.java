@@ -19,6 +19,7 @@ package cn.spider.framework.flow.engine.facade;
 
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.container.sdk.data.StartFlowRequest;
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import cn.spider.framework.flow.bus.ScopeData;
 import cn.spider.framework.flow.component.bpmn.lambda.LambdaParam;
 import cn.spider.framework.flow.engine.example.enums.FlowExampleRole;
@@ -87,8 +88,8 @@ public class ReqBuilder<T> {
         return this;
     }
 
-    public ReqBuilder<T> resultClassMapping(Map<String,String> resultMapping) {
-        this.storyRequest.setResultMapping(resultMapping);
+    public ReqBuilder<T> resultClassMapping(NodeParamConfig nodeParamConfig) {
+        this.storyRequest.setNodeParamConfig(nodeParamConfig);
         return this;
     }
 

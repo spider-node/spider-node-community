@@ -23,7 +23,10 @@ public class DomainFieldInfo {
 
     private String areaFiled;
 
-    private Boolean uniqueIndex;
+    /**
+     * 是否必须
+     */
+    private Boolean must;
 
     public String getAreaFiled() {
         return areaFiled;
@@ -65,11 +68,11 @@ public class DomainFieldInfo {
         this.tableField = tableField;
     }
 
-    public Boolean getUniqueIndex() {
-        return uniqueIndex;
+    public Boolean getMust() {
+        return must;
     }
 
-    public void setUniqueIndex(Boolean uniqueIndex) {
-        this.uniqueIndex = uniqueIndex;
+    public void setMust(Boolean must) {
+        this.must = must;
     }
 }

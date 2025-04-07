@@ -5,6 +5,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @ProxyGen
@@ -72,5 +73,5 @@ public interface HostPluginInterface {
     Future<Void> updateFunctionCode(JsonObject data);
 
     // 查询入参代码
-    Future<JsonObject> queryInputParam(JsonObject data);
+    Future<JsonArray> queryInputParam(JsonObject data);
 }

@@ -33,6 +33,11 @@ public class IsolateManager {
 
     private static IsolateManager ISOLATE_MANAGER = new IsolateManager();
 
+    /**
+     * 第一阶段提交执行的方法
+     * @param cp
+     * @throws SQLException
+     */
     public void commitBefore(ConnectionProxy cp) throws SQLException {
         ConnectionContext connectionContext = cp.getContext();
         if (!connectionContext.hasUndoLog()) {
@@ -44,6 +49,14 @@ public class IsolateManager {
 
     }
 
+    /**
+     * 第二阶段提交执行的方法
+     * @param partition
+     * @param undoLogManager
+     * @param conn
+     * @param status
+     * @throws Exception
+     */
     public void updateDataValidStatus(List<Phase2Context> partition, UndoLogManager undoLogManager, Connection conn, TransactionOperationStatus status) throws Exception {
         for (Phase2Context phase2Context : partition) {
             BranchUndoLog branchUndoLog = undoLogManager.selectBranchUndoLog(phase2Context.getXid(), phase2Context.getBranchId(), conn);
@@ -67,9 +80,16 @@ public class IsolateManager {
         isolateDataOperation(sqlUndoLogs, conn, null, status);
     }
 
-
+    /**
+     * 这里做过改造，为了兼容同样的数据被是,修改多次
+     * @param sqlUndoLogs
+     * @param conn
+     * @param branchId
+     * @param operationStatus
+     * @throws SQLException
+     */
     private void isolateDataOperation(List<SQLUndoLog> sqlUndoLogs, Connection conn, String branchId, TransactionOperationStatus operationStatus) throws SQLException {
-        for (SQLUndoLog item : sqlUndoLogs) {
+        /*for (SQLUndoLog item : sqlUndoLogs) {
             try {
                 if (item.getSqlType().equals(SQLType.INSERT) || item.getSqlType().equals(SQLType.UPDATE)) {
                     if (conn.getAutoCommit()) {
@@ -81,11 +101,12 @@ public class IsolateManager {
                         String validDataSql = buildValidDataSql(afterTableRecords, rows1.size());
                         PreparedStatement updatePST = conn.prepareStatement(validDataSql);
                         if (operationStatus.equals(TransactionOperationStatus.COMMIT)) {
-                            TableRecords tableRecords = item.getBeforeImage();
-                            Row rowAfter = tableRecords.getRows().get(0);
-                            String afterBranchId = queryBranchId(rowAfter);
-                            if(StringUtils.isNotEmpty(afterBranchId)){
-                                Preconditions.checkArgument(!afterBranchId.equals(branchId), "分支事务对应的branchId不一致");
+                            TableRecords tableBeforeRecords = item.getBeforeImage();
+                            Row rowBefore = tableBeforeRecords.getRows().get(0);
+                            String beforeBranchId = queryBranchId(rowBefore);
+                            if (StringUtils.isNotEmpty(beforeBranchId)) {
+                                // 看当前的branchId是否与当前一致,不一致就提示不能操作
+                                Preconditions.checkArgument(!beforeBranchId.equals(branchId), "分支事务对应的branchId不一致");
                                 Row rowFirst = rows1.get(0);
                                 branchId = queryBranchId(rowFirst);
                             }
@@ -112,7 +133,7 @@ public class IsolateManager {
                 }
                 throw throwables;
             }
-        }
+        }*/
     }
 
     private String queryBranchId(Row row) {

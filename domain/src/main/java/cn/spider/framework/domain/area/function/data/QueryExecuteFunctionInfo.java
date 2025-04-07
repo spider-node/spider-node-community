@@ -13,4 +13,5 @@ import lombok.Data;
 @Data
 public class QueryExecuteFunctionInfo {
     private String functionId;
+    private String functionVersionId;
 }

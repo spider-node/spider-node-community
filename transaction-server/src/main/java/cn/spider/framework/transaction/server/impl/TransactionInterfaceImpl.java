@@ -26,20 +26,21 @@ public class TransactionInterfaceImpl implements TransactionInterface {
 
     private TranscriptManager transcriptManager;
 
-    public TransactionInterfaceImpl(TransactionManager transactionManager,TranscriptManager transcriptManager) {
+    public TransactionInterfaceImpl(TransactionManager transactionManager, TranscriptManager transcriptManager) {
         this.transactionManager = transactionManager;
         this.transcriptManager = transcriptManager;
     }
 
     @Override
     public Future<JsonObject> registerTransaction(JsonObject data) {
-        RegisterTransactionRequest request = data.mapTo(RegisterTransactionRequest.class);
-        RegisterTransactionResponse response = transactionManager.registerTransaction(request.getRequestId(),request.getGroupId(),request.getTaskId(),request.getWorkerName());
-        return Future.succeededFuture(JsonObject.mapFrom(response));
+        /*RegisterTransactionRequest request = data.mapTo(RegisterTransactionRequest.class);
+        RegisterTransactionResponse response = transactionManager.registerTransactionV2(request);*/
+        return Future.succeededFuture();
     }
 
     /**
      * 只会给出 groupId,做整体提交
+     *
      * @param data
      * @return
      */
@@ -47,12 +48,13 @@ public class TransactionInterfaceImpl implements TransactionInterface {
     public Future<JsonObject> commit(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
         TransactionOperateRequest request = data.mapTo(TransactionOperateRequest.class);
-        transactionManager.transactionOperate(request.getGroupId(),promise, TransactionalType.SUBMIT);
+        //transactionManager.transactionOperate(request.getGroupId(), promise, TransactionalType.SUBMIT);
         return promise.future();
     }
 
     /**
      * 只会给出 groupId,做出整体回滚
+     *
      * @param data
      * @return
      */
@@ -60,7 +62,7 @@ public class TransactionInterfaceImpl implements TransactionInterface {
     public Future<JsonObject> rollBack(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
         TransactionOperateRequest request = data.mapTo(TransactionOperateRequest.class);
-        this.transactionManager.transactionOperate(request.getGroupId(),promise, TransactionalType.ROLLBACK);
+        //this.transactionManager.transactionOperate(request.getGroupId(), promise, TransactionalType.ROLLBACK);
         return promise.future();
     }
 

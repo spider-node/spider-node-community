@@ -22,7 +22,6 @@ public class ClientRegisterCenter {
     private Map<String, RoundRobinLoadBalancer<ClientInfo>> roundRobinLoadBalancerMap;
 
     // 并于通过ip找到client
-
     private Vertx vertx;
 
     public ClientRegisterCenter(Vertx vertx) {
@@ -109,7 +108,6 @@ public class ClientRegisterCenter {
         // 设置代理,方便后续调用
         clientInfo.setServerVertxStub(serverVertxStub);
     }
-
 
     private RoundRobinLoadBalancer<ClientInfo> buildRoundRobinLoadBalancer() {
         return RoundRobinLoadBalancer

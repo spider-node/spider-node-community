@@ -36,10 +36,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -151,22 +148,122 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     // 节点类型
     private FunctionType functionType;
 
-    private void setFunctionVersionId(String functionVersionId){
+    /**
+     * 原表达式
+     */
+    private String jsCode;
+
+    /**
+     * js的功能名称
+     */
+    private String jsFunctionName;
+
+    /**
+     * js的参数列表
+     */
+    private Set<String> jsParams;
+
+    /**
+     * JS的真实参数列表
+     */
+    private Set<String> jsParamReal;
+
+    /**
+     * 轮询节点的el表达式
+     */
+    private String pollElExpression;
+
+    /**
+     * 数据源url的前置部分
+     */
+    private String datasourceId;
+
+    public void setDatasourceId(String datasourceId) {
+        this.datasourceId = datasourceId;
+    }
+
+    public String queryDatasourceId() {
+        return this.datasourceId;
+    }
+
+    public void setPollElExpression(String pollElExpression) {
+        this.pollElExpression = pollElExpression;
+    }
+
+    public void setJsCode(String jsCode) {
+        this.jsCode = jsCode;
+    }
+
+    public void setJsFunctionName(String jsFunctionName) {
+        this.jsFunctionName = jsFunctionName;
+    }
+
+    public void setJsParams(String jsParams) {
+        if (StringUtils.isEmpty(jsParams)) {
+            return;
+        }
+        // 去除前后的空格并按逗号分割
+        String[] paramsArray = jsParams.trim().split(",");
+        // 将数组转换为 Set
+        this.jsParams = new HashSet<>(Arrays.asList(paramsArray));
+    }
+
+
+   public void setJsParamReal(String jsParamReal) {
+    if (StringUtils.isEmpty(jsParamReal)) {
+        return;
+    }
+    // 去除前后的空格并按逗号分割
+    String[] paramsArray = jsParamReal.trim().split(",");
+    // 将数组转换为 Set
+    this.jsParamReal = new HashSet<>(Arrays.asList(paramsArray));
+}
+
+
+
+    public void setFunctionVersionId(String functionVersionId) {
         this.functionVersionId = functionVersionId;
     }
 
-    private void setFunctionType(String functionType) {
+    public void setFunctionType(String functionType) {
         this.functionType = FunctionType.valueOf(functionType);
     }
 
-    public String queryFunctionVersionId () {
+    public String queryFunctionVersionId() {
         return this.functionVersionId;
     }
 
-    public FunctionType queryFunctionType () {
+    public FunctionType queryFunctionType() {
         return this.functionType;
     }
 
+    @Override
+    public String queryJsCode() {
+        return this.jsCode;
+    }
+
+    @Override
+    public String queryJsFunctionName() {
+        return this.jsFunctionName;
+    }
+
+    @Override
+    public Set<String> queryJsParams() {
+        return this.jsParams;
+    }
+
+    @Override
+    public Set<String> queryJsParamReal() {
+        return this.jsParamReal;
+    }
+
+    public String queryPollElExpression(){
+        return this.pollElExpression;
+    }
+
+    public String queryFunctionId() {
+        return this.functionVersionId;
+    }
 
 
     public void setProviderType(String providerType) {
@@ -176,7 +273,6 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     public ApplicationProviderType queryProviderType() {
         return this.providerType;
     }
-
 
 
     public void setVersion(String version) {

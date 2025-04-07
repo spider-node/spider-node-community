@@ -150,6 +150,7 @@ public class AsyncWorker {
                     if (CollectionUtils.isEmpty(partitionNew)) {
                         continue;
                     }
+                    // 第二阶段提交
                     isolateManager.updateDataValidStatus(partitionNew, undoLogManager, conn, TransactionOperationStatus.COMMIT);
                     deleteUndoLog(conn, undoLogManager, partitionNew);
                 } catch (Exception e) {

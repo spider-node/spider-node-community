@@ -12,19 +12,15 @@ import java.sql.SQLException;
  * @author: dds
  * @create: 2023-03-06 13:55
  */
-public class TransactionManager implements InitializingBean {
+public class TransactionManager {
 
     // 获取 dataSource.url
-    private String url;
 
     private SpiderTransactionOperation operation;
 
-    private String resourceId;
+    //private String dbType;
 
-    private String dbType;
-
-    public TransactionManager(String url, SpiderTransactionOperation operation) {
-        this.url = url;
+    public TransactionManager(SpiderTransactionOperation operation) {
         this.operation = operation;
     }
 
@@ -35,11 +31,11 @@ public class TransactionManager implements InitializingBean {
      * @param xid,brushId
      * @throws TransactionException
      */
-    public void commit(String xid, String brushId) throws TransactionException, SQLException {
+    public void commit(String xid, Long branchId, String resourceId) throws TransactionException {
         // 当 xid与brushId不存在的情况下，直接return
         TransactionOperateModel operateModel = new TransactionOperateModel();
         operateModel.setXid(xid);
-        operateModel.setBranchId(brushId);
+        operateModel.setBranchId(branchId);
         operateModel.setResourceId(resourceId);
         operation.commit(operateModel);
     }
@@ -50,19 +46,12 @@ public class TransactionManager implements InitializingBean {
      * @param xid
      * @throws TransactionException
      */
-    public void rollBack(String xid, String brushId) throws TransactionException, SQLException {
+    public void rollBack(String xid, Long branchId, String resourceId) throws TransactionException {
         // 当 xid与brushId不存在的情况下，直接return
         TransactionOperateModel operateModel = new TransactionOperateModel();
         operateModel.setXid(xid);
-        operateModel.setBranchId(brushId);
+        operateModel.setBranchId(branchId);
         operateModel.setResourceId(resourceId);
         operation.rollBack(operateModel);
-    }
-
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.resourceId = JdbcUtils.buildResourceId(url);
-        dbType = JdbcUtils.getDbType(url);
     }
 }

@@ -1,5 +1,6 @@
 package cn.spider.framework.flow.business.data;
 
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,5 +50,6 @@ public class ExecuteFunctionInfo {
     /**
      * 返回参数的映射
      */
-    private Map<String,String> resultMapping;
+    private NodeParamConfig nodeParamConfig;
+
 }

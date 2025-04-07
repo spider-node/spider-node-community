@@ -93,7 +93,7 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
         log.info("case_data {}", param.toString());
         StartTestCaseParam startTestCaseParam = JSON.parseObject(param.toString(), StartTestCaseParam.class);
         // startTestCaseParam.getCaseSqlModels() 使用caseCode 作为key，caseSql 作为value 转为map
-        Map<String, CaseSqlModel> caseSqlModelMap = CollectionUtils.isNotEmpty(startTestCaseParam.getCaseSql()) ? startTestCaseParam.getCaseSql().stream().collect(Collectors.toMap(CaseSqlModel::getSceneCode, Function.identity())) : new HashMap<>();
+        Map<String, CaseSqlModel> caseSqlModelMap = CollectionUtils.isNotEmpty(startTestCaseParam.getCaseSql()) ? startTestCaseParam.getCaseSql().stream().collect(Collectors.toMap(CaseSqlModel::getSceneCode, Function.identity(), (v1, v2) -> v2)) : new HashMap<>();
         // 根据startTestCaseParam.getMethodInputModes() 使用 sceneCode 作为key，MethodInputModel 作为value 转为map
         Map<String, MethodInputModel> methodInputModelMap = CollectionUtils.isNotEmpty(startTestCaseParam.getMethodInputModes()) ? startTestCaseParam.getMethodInputModes().stream().collect(Collectors.toMap(MethodInputModel::getSceneCode, Function.identity())) : new HashMap<>();
         methodInputModelMap.forEach((key, value) -> {

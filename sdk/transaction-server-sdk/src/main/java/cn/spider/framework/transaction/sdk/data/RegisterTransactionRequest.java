@@ -16,7 +16,17 @@ public class RegisterTransactionRequest {
 
     private String taskId;
 
-    private String taskGroupId;
+    private String resourceId;
+
+    private String parentGroupId;
+
+    public String getParentGroupId() {
+        return parentGroupId;
+    }
+
+    public void setParentGroupId(String parentGroupId) {
+        this.parentGroupId = parentGroupId;
+    }
 
     public String getWorkerName() {
         return workerName;
@@ -50,11 +60,12 @@ public class RegisterTransactionRequest {
         this.taskId = taskId;
     }
 
-    public String getTaskGroupId() {
-        return taskGroupId;
+
+    public String getResourceId() {
+        return resourceId;
     }
 
-    public void setTaskGroupId(String taskGroupId) {
-        this.taskGroupId = taskGroupId;
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 }

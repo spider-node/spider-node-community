@@ -63,7 +63,7 @@ public class FunctionManger {
         return businessFunctions;
     };
 
-    public FunctionManger(MySQLPool client, EventManager eventManager,VersionManager versionManager,ISpiderBusinessFunctionService spiderBusinessFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+    public FunctionManger(MySQLPool client, EventManager eventManager, VersionManager versionManager, ISpiderBusinessFunctionService spiderBusinessFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
         this.client = client;
         this.eventManager = eventManager;
         this.versionManager = versionManager;
@@ -165,7 +165,7 @@ public class FunctionManger {
         JsonObject params = JsonObject.mapFrom(param);
         Map<String, Object> parameters = params.getMap();
         sql.append("select * from spider_business_function where 1=1 ");
-        if(StringUtils.isNotEmpty(param.getId())){
+        if (StringUtils.isNotEmpty(param.getId())) {
             sql.append(" and id = #{id} ");
         }
         if (StringUtils.isNotEmpty(param.getFunctionName())) {
@@ -203,10 +203,9 @@ public class FunctionManger {
     public Future<ExecuteFunctionInfo> queryFunctionInfo(QueryExecuteFunctionInfo param) {
         Promise<ExecuteFunctionInfo> promise = Promise.promise();
 
-        String sql = "select * from spider_business_function where id = #{id} and status = #{status}";
+        String sql = "select * from spider_business_function where id = #{id}";
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", param.getFunctionId());
-        parameters.put("status", "START");
         SqlTemplate
                 .forQuery(client, sql.toString())
                 .mapTo(ROW_BUSINESS)
@@ -218,27 +217,15 @@ public class FunctionManger {
                     }
                     QueryVersionFunctionParam versionParam = new QueryVersionFunctionParam();
                     versionParam.setFunctionId(param.getFunctionId());
+                    versionParam.setFunctionVersionId(param.getFunctionVersionId());
                     versionParam.setStatus("START");
                     versionParam.setPage(1);
                     versionParam.setSize(10);
-                    Future<List<FunctionVersionModel>> versions = versionManager.selectVersion(versionParam);
-                    versions.onSuccess(versionSuss -> {
-                        List<FunctionVersionModel> functionVersionModels = versionSuss;
-                        if (CollectionUtils.isEmpty(functionVersionModels) || functionVersionModels.size() > 2) {
-                            promise.fail("没有找到可以执行的功能版本，或者找到了多个版本");
-                        }
-                        FunctionVersionModel functionVersionModel = functionVersionModels.get(0);
-                        ExecuteFunctionInfo functionInfo = ExecuteFunctionInfo.builder()
-                                .functionId(functionVersionModel.getFunctionId())
-                                .startId(functionVersionModel.getStartEventId())
-                                .functionName(functionVersionModel.getFunctionName())
-                                .versionId(functionVersionModel.getId())
-                                //.resultMapping(functionVersionModel.getResultMapping())
-                                .build();
-                        promise.complete(functionInfo);
-                    }).onFailure(fail -> {
-                        promise.fail(fail);
-                    });
+                    log.info("查询版本信息-数据 {}", JsonObject.mapFrom(versionParam));
+                    List<ExecuteFunctionInfo> versions = versionManager.selectVersionV2(versionParam);
+                    // TODO 这里需要优化，目前是直接获取第一个版本，需要设计版本命中规则
+                    ExecuteFunctionInfo functionInfo = versions.get(0);
+                    promise.complete(functionInfo);
                 }).onFailure(fail -> {
                     log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
                     promise.fail(fail);
@@ -257,7 +244,7 @@ public class FunctionManger {
     }
 
     public void upsertBusinessFunctionV2(SpiderBusinessFunction param) {
-        if(StringUtils.isEmpty(param.getId())){
+        if (StringUtils.isEmpty(param.getId())) {
             param.setId(UUID.randomUUID().toString());
             spiderBusinessFunctionService.save(param);
             return;
@@ -266,7 +253,7 @@ public class FunctionManger {
     }
 
     public void upsertDomainVersion(SpiderAreaFunctionVersion param) {
-        if(StringUtils.isEmpty(param.getId())){
+        if (StringUtils.isEmpty(param.getId())) {
             param.setId(UUID.randomUUID().toString());
             spiderAreaFunctionVersionService.save(param);
         }

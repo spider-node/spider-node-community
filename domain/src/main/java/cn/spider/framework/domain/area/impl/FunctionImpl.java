@@ -130,12 +130,6 @@ public class FunctionImpl implements FunctionInterface {
                 functionInfo.setFunctionId(spiderBusinessFunctionVersion.getFunctionId());
                 functionInfo.setFunctionName(spiderBusinessFunctionVersion.getFunctionName());
                 functionInfo.setVersionId(spiderBusinessFunctionVersion.getId());
-                FunctionParamOutput resultMapping  = spiderBusinessFunctionVersion.getResultMapping();
-                Map<String,String> resultMap = new HashMap<>();
-                resultMapping.getOutputParam().stream().forEach(item -> {
-                    resultMap.put(item.getFieldName(),item.getTargetName());
-                });
-                functionInfo.setResultMapping(resultMap);
                 promise.complete(JsonObject.mapFrom(functionInfo));
             } catch (Exception e) {
                 log.error("获取版本出错{}", ExceptionMessage.getStackTrace(e));

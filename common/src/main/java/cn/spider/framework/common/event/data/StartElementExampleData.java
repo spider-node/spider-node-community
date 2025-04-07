@@ -50,4 +50,25 @@ public class StartElementExampleData extends EventData {
      * 是否需要获取下一个节点
      */
     private Boolean isNext;
+
+    /**
+     * js函数
+     */
+    private String jsFunction;
+    /**
+     * js函数名称
+     */
+    private String jsFunctionName;
+
+    /**
+     * 数据源id
+     */
+    private String datasourceId;
+
+    /**
+     *
+     */
+    private String runType;
+
+
 }

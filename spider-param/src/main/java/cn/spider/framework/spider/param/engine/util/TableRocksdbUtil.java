@@ -1,12 +1,10 @@
 package cn.spider.framework.spider.param.engine.util;
 import cn.spider.framework.db.util.RocksdbUtil;
-import cn.spider.framework.spider.param.engine.metadata.convert.SpiderField;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TableRocksdbUtil {

@@ -36,12 +36,17 @@ import cn.spider.framework.transaction.sdk.data.RegisterTransactionRequest;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionResponse;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -247,6 +252,12 @@ public class FlowExampleManager {
             eventManager.sendMessage(EventType.END_FLOW_EXAMPLE, endFlowExampleEventData);
             return;
         }
+
+        // 校验是真实执行，还是虚拟执行（虚拟执行不会真的执行，只是读取日志中执行记过）
+        if (StringUtils.isNotEmpty(example.getRetryNodeId()) && example.getRetryNodeId().equals(flowElement.getId())) {
+            example.setRunType(Constant.ACTUAL);
+        }
+
         // 当是 service_task就继续执行
         if (flowElement.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
             //执行挂起
@@ -263,18 +274,21 @@ public class FlowExampleManager {
                     .flowElementName(flowElement.getName())
                     .functionName(example.getFunctionName())
                     .requestId(example.getRequestId())
+                    .runType(example.getRunType())
                     .functionId(example.getFunctionId())
+                    .datasourceId(serviceTask.queryDatasourceId())
+                    .transactionGroupId(transactionGroupId)
                     .build();
 
             switch (taskType) {
                 // 正常系欸但
                 case NORMAL:
-                    normal(transactionGroupId, serviceTask, example, elementExampleData);
+                    normal(serviceTask, example, elementExampleData);
                     break;
                 //轮询节点
                 case POLL:
                     example.endRequest();
-                    poll(serviceTask, example, isQuit, transactionGroupId, elementExampleData);
+                    poll(serviceTask, example, isQuit, elementExampleData);
                     break;
                 // 审批节点
                 case APPROVE:
@@ -285,7 +299,7 @@ public class FlowExampleManager {
                     break;
                 case DELAY:
                     example.endRequest();
-                    delayRun(serviceTask.queryDelayTime(), isQuit, transactionGroupId, serviceTask, example, elementExampleData);
+                    delayRun(serviceTask.queryDelayTime(), isQuit, serviceTask, example, elementExampleData);
                     break;
             }
 
@@ -296,14 +310,13 @@ public class FlowExampleManager {
 
     private void delayRun(Integer time,
                           Boolean isQuit,
-                          String transactionGroupId,
                           ServiceTask serviceTask,
                           FlowExample example,
                           StartElementExampleData elementExampleData) {
         if (!isQuit) {
             // 设置允许移除
             example.setAllowRemove(true);
-            normal(transactionGroupId, serviceTask, example, elementExampleData);
+            normal(serviceTask, example, elementExampleData);
             return;
         }
         example.setAllowRemove(false);
@@ -359,14 +372,13 @@ public class FlowExampleManager {
     /**
      * 正常
      *
-     * @param transactionGroupId 事务组Id
      * @param serviceTask        task
      * @param example            流程实例
      * @param elementExampleData 实例data
      */
-    private void normal(String transactionGroupId, ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {
+    private void normal(ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {
         // 当组的事务id,不为空的情况下，需要先注册事务信息
-        if (!StringUtils.isEmpty(transactionGroupId)) {
+        /*if (!StringUtils.isEmpty(transactionGroupId)) {
             Future<JsonObject> transaction = registerTransaction(serviceTask, example);
             transaction.onSuccess(suss -> {
                 JsonObject transactionJson = suss;
@@ -386,7 +398,9 @@ public class FlowExampleManager {
                 endFlowExampleFail(example, fail);
             });
             return;
-        }
+        }*/
+        elementExampleData.setJsFunction(serviceTask.queryJsCode());
+        elementExampleData.setJsFunctionName(serviceTask.queryJsFunctionName());
         eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
         runPlan(example);
     }
@@ -394,18 +408,18 @@ public class FlowExampleManager {
     /**
      * 轮询 -节点
      *
-     * @param transactionGroupId
      * @param serviceTask
      * @param example
      * @param elementExampleData
      */
-    public void poll(ServiceTask serviceTask, FlowExample example, Boolean isQuit, String transactionGroupId, StartElementExampleData elementExampleData) {
+    public void poll(ServiceTask serviceTask, FlowExample example, Boolean isQuit, StartElementExampleData elementExampleData) {
         if (!isQuit) {
             // 具体执行
             example.setAllowRemove(true);
-            normal(transactionGroupId, serviceTask, example, elementExampleData);
+            normal(serviceTask, example, elementExampleData);
             return;
         }
+        // 增加轮询次数
         example.autoincrementPollCount();
         example.setAllowRemove(false);
         spiderTimer.registerExampleMonitor(example.getExampleId());
@@ -564,17 +578,20 @@ public class FlowExampleManager {
                             ServerTaskTypeEnum taskType = serviceTask.queryServiceTaskType();
                             // poll-轮询task
                             if (taskType.equals(ServerTaskTypeEnum.POLL)) {
+                                String el = serviceTask.queryPollElExpression();
+                                if (StringUtils.isEmpty(el)) {
+                                    Preconditions.checkArgument(false, "轮询节点中EL表达式为空 requestId" + example.getExampleId());
+                                }
                                 JsonObject param = result instanceof JsonObject ? (JsonObject) result : JsonObject.mapFrom(result);
-                                String status = param.getString(Constant.STATUS);
-                                log.info("轮询节点 {} 返回状态 {}", serviceTask.getTaskService(), status);
-                                if (StringUtils.equals(status, Constant.WAIT)) {
-                                    if (example.getPollRunCount() > serviceTask.queryPollCount()) {
-                                        // TODO 需要设置回 param
-                                        param.put(Constant.STATUS, Constant.FAIL);
-                                    } else {
-                                        // 继续执行当前节点信息
-                                        isNext = false;
-                                    }
+                                log.info("轮询节点 {} 返回状态 {}", serviceTask.getTaskService(), param.toString());
+
+                                Map<String, Object> jsonMap = param.getMap();
+                                ExpressionParser parser = new SpelExpressionParser();
+                                StandardEvaluationContext context = new StandardEvaluationContext(jsonMap);
+                                // 修改表达式为比较操作
+                                boolean isAdult = parser.parseExpression(el).getValue(context, boolean.class);
+                                if (!isAdult && example.getPollRunCount() < serviceTask.queryPollCount()) {
+                                    isNext = false;
                                 }
                             }
                         }
@@ -644,21 +661,18 @@ public class FlowExampleManager {
             // 获取 TaskServiceDef
             // 获取参数域
             WriteBackParam writeBackParam = new WriteBackParam();
-            if (result instanceof JsonObject) {
-                writeBackParam.setResult((JsonObject) result);
-            } else {
-                writeBackParam.setResult(JsonObject.mapFrom(result));
-            }
+            writeBackParam.setResult(result);
             writeBackParam.setTaskComponent(serviceTask.getTaskComponent());
             writeBackParam.setTaskService(serviceTask.getTaskService());
             writeBackParam.setRequestId(example.getRequestId());
+            writeBackParam.setNodeId(flowElement.getId());
             writeBackParam.setVersion(serviceTask.getVersion());
             writeBackParam.setFunctionType(serviceTask.queryFunctionType());
-            writeBackParam.setFunctionVersionId(serviceTask.queryFunctionVersionId());
-            paramInterface.writeBack(JsonObject.mapFrom(writeBackParam)).onSuccess(suss -> {
+            JsonObject param = JsonObject.mapFrom(writeBackParam);
+            paramInterface.writeBack(param).onSuccess(suss -> {
                 promise.complete();
             }).onFailure(fail -> {
-                log.info("notify_fail_标识 {}  {}", flowElement.getId(), JSON.toJSONString(result));
+                log.info("notify_fail_标识 {} 写入信息为 {}", flowElement.getId(), param.toString());
                 promise.fail(fail);
             });
             return promise.future();
@@ -673,7 +687,8 @@ public class FlowExampleManager {
         RegisterTransactionRequest request = new RegisterTransactionRequest();
         request.setRequestId(example.getRequestId());
         request.setTaskId(serviceTask.getId());
-        request.setTaskGroupId(serviceTask.queryTransactionGroup());
+        //request.setTaskGroupId(serviceTask.queryTransactionGroup());
+        request.setResourceId(serviceTask.queryDatasourceId());
         request.setGroupId(example.getTransactionGroupMap().get(serviceTask.queryTransactionGroup()));
         request.setWorkerName(schedulerManager.queryWorkerName(serviceTask.getTaskComponent()));
         return transactionInterface.registerTransaction(JsonObject.mapFrom(request));

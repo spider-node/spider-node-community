@@ -13,6 +13,11 @@ public class WriteBackParam {
     private String requestId;
 
     /**
+     * 节点id
+     */
+    private String nodeId;
+
+    /**
      * task-组件
      */
     private String taskComponent;
@@ -36,6 +41,14 @@ public class WriteBackParam {
     private JsonObject result;
 
     private BigDecimal costTime;
+
+    public BigDecimal getCostTime() {
+        return costTime;
+    }
+
+    public void setCostTime(BigDecimal costTime) {
+        this.costTime = costTime;
+    }
 
     public String getRequestId() {
         return requestId;
@@ -65,8 +78,12 @@ public class WriteBackParam {
         return result;
     }
 
-    public void setResult(JsonObject result) {
-        this.result = result;
+    public void setResult(Object result) {
+        if (result instanceof JsonObject) {
+            this.result = (JsonObject) result;
+            return;
+        }
+        this.result = JsonObject.mapFrom(result);
     }
 
     public String getVersion() {
@@ -91,5 +108,13 @@ public class WriteBackParam {
 
     public void setFunctionType(FunctionType functionType) {
         this.functionType = functionType;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
     }
 }

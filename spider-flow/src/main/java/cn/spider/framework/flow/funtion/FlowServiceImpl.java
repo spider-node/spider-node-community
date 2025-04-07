@@ -10,6 +10,7 @@ import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.flow.bus.InScopeData;
 import cn.spider.framework.flow.business.BusinessManager;
 import cn.spider.framework.flow.business.data.BusinessFunctions;
+import cn.spider.framework.flow.business.data.QueryBusinessVersionParam;
 import cn.spider.framework.flow.business.enums.IsAsync;
 import cn.spider.framework.flow.business.enums.IsRetry;
 import cn.spider.framework.flow.engine.example.enums.FlowExampleRole;
@@ -22,6 +23,7 @@ import cn.spider.framework.flow.engine.facade.StoryRequest;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
 import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.flow.util.SnowflakeIdGenerator;
+import cn.spider.framework.param.sdk.data.WriteRequestInfo;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -29,6 +31,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Objects;
 
 /**
@@ -59,10 +62,6 @@ public class FlowServiceImpl implements FlowService {
 
     @Autowired
     private SchedulerManager schedulerManager;
-
-    private final String REQUEST_PARAM_NAME = "param";
-
-    private final String REQUEST_ID = "requestId";
 
     private final SnowflakeIdGenerator snowflakeIdGenerator = new SnowflakeIdGenerator();
 
@@ -101,6 +100,7 @@ public class FlowServiceImpl implements FlowService {
 
     /**
      * 流程实例执行类
+     *
      * @param data
      * @return
      */
@@ -109,7 +109,8 @@ public class FlowServiceImpl implements FlowService {
         Promise<JsonObject> promise = Promise.promise();
         StartFlowRequest request = data.mapTo(StartFlowRequest.class);
         // 获取配置的功能节点
-        Future<BusinessFunctions> functionsFuture = businessManager.queryBusinessFunctions(request.getFunctionId());
+        QueryBusinessVersionParam queryBusinessVersionParam = new QueryBusinessVersionParam(null, request.getFunctionId());
+        Future<BusinessFunctions> functionsFuture = businessManager.queryBusinessFunctionsV2(queryBusinessVersionParam);
         functionsFuture.onSuccess(querySuss -> {
             // step1: 获取功能信息
             BusinessFunctions functions = querySuss;
@@ -157,11 +158,12 @@ public class FlowServiceImpl implements FlowService {
 
     /**
      * 执行
-     * @param request 执行参数的信息
+     *
+     * @param request   执行参数的信息
      * @param functions 配置的业务功能信息
-     * @param promise 业务功能执行结果
-     * @param isAsync 是否异步
-     * @param data 请求参数
+     * @param promise   业务功能执行结果
+     * @param isAsync   是否异步
+     * @param data      请求参数
      */
     public void run(StartFlowRequest request, BusinessFunctions functions, Promise<JsonObject> promise, Boolean isAsync, JsonObject data) {
         // 获取参数
@@ -179,14 +181,11 @@ public class FlowServiceImpl implements FlowService {
                 .request(requestParam)
                 .staScopeData(new InScopeData(ScopeTypeEnum.STABLE, requestId))
                 .varScopeData(new InScopeData(ScopeTypeEnum.VARIABLE, requestId))
-                .resultClassMapping(functions.getResultMapping())
+                .resultClassMapping(functions.getNodeParamConfig())
                 .build();
-        JsonObject requestParams = new JsonObject().put(REQUEST_ID, requestId);
-        if (Objects.nonNull(requestParam)) {
-            requestParams.put(REQUEST_PARAM_NAME, JsonObject.mapFrom(requestParam));
-        }
+        WriteRequestInfo writeRequestInfo = new WriteRequestInfo(requestId, requestParam);
         // 请求参数写入到rocksdb中
-        paramInterface.writeRequestParam(requestParams).onSuccess(requestSuss -> {
+        paramInterface.writeRequestParam(JsonObject.mapFrom(writeRequestInfo)).onSuccess(requestSuss -> {
             // 具体执行
             Future<TaskResponse<Object>> fire = storyEngine.fire(req);
             // 执行成功的处理
@@ -259,7 +258,7 @@ public class FlowServiceImpl implements FlowService {
     @Override
     public Future<JsonObject> simpleStartNode(JsonObject data) {
         SimpleStartParam simpleStartParam = data.mapTo(SimpleStartParam.class);
-        return schedulerManager.simpleInvoke(simpleStartParam.getParamMap(),simpleStartParam.getWorkerName(),simpleStartParam.getMethod(),simpleStartParam.getTaskComponent(),simpleStartParam.getTaskService(),simpleStartParam.getVersion());
+        return schedulerManager.simpleInvoke(simpleStartParam.getParamMap(), simpleStartParam.getWorkerName(), simpleStartParam.getMethod(), simpleStartParam.getTaskComponent(), simpleStartParam.getTaskService(), simpleStartParam.getVersion());
     }
 
     private String buildRequestId() {

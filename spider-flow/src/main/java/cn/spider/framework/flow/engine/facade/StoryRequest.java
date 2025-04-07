@@ -19,6 +19,7 @@ package cn.spider.framework.flow.engine.facade;
 
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.container.sdk.data.StartFlowRequest;
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import cn.spider.framework.flow.bus.ScopeData;
 import cn.spider.framework.flow.constant.GlobalProperties;
 import cn.spider.framework.flow.engine.StoryEngine;
@@ -119,16 +120,16 @@ public class StoryRequest<T> {
     private FlowExampleRole flowExampleRole;
 
     /**
-     * 返回结果的映射
+     * 返回结果的信息
      */
-    private Map<String,String> resultMapping;
+    private NodeParamConfig nodeParamConfig;
 
-    public Map<String, String> getResultMapping() {
-        return resultMapping;
+    public NodeParamConfig getNodeParamConfig() {
+        return nodeParamConfig;
     }
 
-    public void setResultMapping(Map<String, String> resultMapping) {
-        this.resultMapping = resultMapping;
+    public void setNodeParamConfig(NodeParamConfig nodeParamConfig) {
+        this.nodeParamConfig = nodeParamConfig;
     }
 
     public FlowExampleRole getFlowExampleRole() {

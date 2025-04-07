@@ -1,6 +1,7 @@
 package cn.spider.framework.domain.area.datasource;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.common.utils.JdbcUtil;
 import cn.spider.framework.domain.area.datasource.data.*;
 import cn.spider.framework.domain.area.datasource.entity.AreaDatasourceInfo;
 import cn.spider.framework.domain.area.datasource.service.IAreaDatasourceInfoService;
@@ -122,6 +123,16 @@ public class DatasourceManager {
         this.datasourcePoolMap.put(datasource, client);
         // Create the pooled client
         return client;
+    }
+
+    /**
+     * 查询数据源 基于url拆分
+     * @param datasource
+     * @return
+     */
+    public String queryDatasourceId(String datasource){
+        AreaDatasourceInfo areaDatasourceInfo = datasourceInfoService.lambdaQuery().eq(AreaDatasourceInfo::getDatasource, datasource).one();
+        return JdbcUtil.buildResourceId(areaDatasourceInfo.getUrl());
     }
 
 

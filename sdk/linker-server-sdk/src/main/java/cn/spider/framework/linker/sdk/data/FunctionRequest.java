@@ -1,4 +1,5 @@
 package cn.spider.framework.linker.sdk.data;
+
 import java.util.Map;
 
 /**
@@ -31,12 +32,12 @@ public class FunctionRequest {
 
     private String xid;
 
-    private String branchId;
+    private Long branchId;
 
     /**
      * 请求参数
      */
-    private Map<String,Object> param;
+    private Map<String, Object> param;
 
     /**
      * 版本
@@ -74,7 +75,6 @@ public class FunctionRequest {
     }
 
 
-
     public String getRequestId() {
         return requestId;
     }
@@ -91,11 +91,11 @@ public class FunctionRequest {
         this.xid = xid;
     }
 
-    public String getBranchId() {
+    public Long getBranchId() {
         return branchId;
     }
 
-    public void setBranchId(String branchId) {
+    public void setBranchId(Long branchId) {
         this.branchId = branchId;
     }
 

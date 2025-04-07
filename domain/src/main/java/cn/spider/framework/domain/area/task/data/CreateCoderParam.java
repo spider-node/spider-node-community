@@ -48,6 +48,8 @@ public class CreateCoderParam {
 
     private String serviceName;
 
+    private Integer aiTaskId;
+
     public CreateCoderParam(String projectName, JsonObject sonDomainInfo, List<String> businessRequirements) {
         this.projectName = projectName;
         this.sonDomainInfo = sonDomainInfo;
@@ -172,5 +174,13 @@ public class CreateCoderParam {
 
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
+    }
+
+    public Integer getAiTaskId() {
+        return aiTaskId;
+    }
+
+    public void setAiTaskId(Integer aiTaskId) {
+        this.aiTaskId = aiTaskId;
     }
 }

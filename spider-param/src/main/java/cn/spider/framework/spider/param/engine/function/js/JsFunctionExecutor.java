@@ -1,5 +1,6 @@
 package cn.spider.framework.spider.param.engine.function.js;
 
+import cn.spider.framework.spider.param.config.Constants;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;
@@ -10,22 +11,42 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class JsFunctionExecutor {
 
-    // 全局唯一 Context（启用多线程支持）
-    private Context context;
+    private Map<String, Context> contextMap;
 
-    // 函数缓存：Key=函数名+代码哈希，Value=编译后的函数对象
-    private Map<String, Value> functionCache;
+    private Map<String, Map<String, Value>> threadFunctionCache;
+
 
     public JsFunctionExecutor() {
-        this.context = Context.newBuilder("js")
-                .allowAllAccess(true)
-                .allowExperimentalOptions(true)
-                .allowCreateThread(true) // 关键配置
-                .build();
-        this.functionCache = new ConcurrentHashMap<>();
+        this.contextMap = new ConcurrentHashMap<>();
+        this.threadFunctionCache = new ConcurrentHashMap<>();
+
     }
 
-    public void loadFunction(String functionName, String jsCode) {
+    /**
+     * 通知functionName 失效
+     *
+     * @param functionName js 函数名称
+     */
+    public void functionJsLose(String functionName) {
+        this.threadFunctionCache.forEach((k, v) -> {
+            v.remove(functionName);
+        });
+    }
+
+    public void loadFunction(String functionName, String jsCode, String threadName) {
+        if (jsCode == null) {
+            throw new IllegalArgumentException("JS code cannot be null");
+        }
+        if (!contextMap.containsKey(threadName)) {
+            Context context = Context.newBuilder("js")
+                    .allowAllAccess(true)
+                    .allowExperimentalOptions(true)
+                    .allowCreateThread(true) // 关键配置
+                    .build();
+            contextMap.put(threadName, context);
+        }
+        Context context = contextMap.get(threadName);
+        Map<String, Value> functionCache = threadFunctionCache.computeIfAbsent(threadName, k -> new ConcurrentHashMap<>());
         if (functionCache.containsKey(functionName)) {
             return;
         }
@@ -42,20 +63,27 @@ public class JsFunctionExecutor {
             throw new RuntimeException("Failed to load JS function: " + functionName, e);
         } finally {
             context.leave();
-
         }
     }
 
-    public Object invokeFunction(String functionName, Map<String, Object> parameters) {
+    public Object invokeFunction(String functionName, Map<String, Object> parameters, String threadName) {
+        Context context = contextMap.get(threadName);
         try {
             context.enter();
+            Map<String, Value> functionCache = threadFunctionCache.get(threadName);
             Value function = functionCache.get(functionName);
+
             if (function == null) {
                 throw new IllegalArgumentException("Function not loaded: " + functionName);
             }
-            // 转换参数为JS对象（深度转换）
-            Value jsParams = convertJavaToJs(parameters, context);
-            Value result = function.execute(jsParams);
+            Value result = null;
+            if (parameters.containsKey(Constants.CONTEXT_KEY) && !parameters.containsKey(Constants.REQUEST_KEY)) {
+                result = runContext(function, convertJavaToJS(context, parameters.get(Constants.CONTEXT_KEY)));
+            } else if (parameters.containsKey(Constants.REQUEST_KEY) && !parameters.containsKey(Constants.CONTEXT_KEY)) {
+                result = runRequest(function, convertJavaToJS(context, parameters.get(Constants.REQUEST_KEY)));
+            } else {
+                result = runContextAndRequest(function, convertJavaToJS(context, parameters.get(Constants.CONTEXT_KEY)), convertJavaToJS(context, parameters.get(Constants.REQUEST_KEY)));
+            }
             return convertValueToJava(result);
         } catch (PolyglotException e) {
             throw new RuntimeException("Error invoking JS function: " + functionName, e);
@@ -63,6 +91,50 @@ public class JsFunctionExecutor {
             context.leave();
         }
     }
+
+
+    private Value runContext(Value function, Value context) {
+        return function.execute(context);
+    }
+
+    private Value runRequest(Value function, Value request) {
+        return function.execute(request);
+    }
+
+    private Value runContextAndRequest(Value function, Value context, Value request) {
+        return function.execute(context, request);
+    }
+
+    /**
+     * 递归转换 Java 对象到 GraalVM JS 类型
+     */
+    private Value convertJavaToJS(Context context, Object javaObj) {
+        if (javaObj == null) return null;
+
+        if (javaObj instanceof Map) {
+            // 处理 Map → JS 对象
+            Value jsMap = context.eval("js", "({})");
+            ((Map<?, ?>) javaObj).forEach((k, v) ->
+                    jsMap.putMember(k.toString(), convertJavaToJS(context, v))
+            );
+            return jsMap;
+        } else if (javaObj instanceof Iterable) {
+            // 处理集合 → JS 数组
+            Value jsArray = context.eval("js", "[]");
+            int index = 0;
+            for (Object item : (Iterable<?>) javaObj) {
+                jsArray.setArrayElement(index++, convertJavaToJS(context, item));
+            }
+            return jsArray;
+        } else if (javaObj.getClass().isArray()) {
+            // 处理原生数组（如 String[]）
+            return convertJavaToJS(context, Arrays.asList((Object[]) javaObj));
+        } else {
+            // 基本类型直接传递
+            return context.asValue(javaObj);
+        }
+    }
+
 
     /**
      * 递归将Java对象转换为GraalVM JS可识别的原生类型

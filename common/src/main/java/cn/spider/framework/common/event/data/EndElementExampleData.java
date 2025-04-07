@@ -44,6 +44,11 @@ public class EndElementExampleData extends EventData {
     private String exception;
 
     /**
+     * 事务id
+     */
+    private String transactionGroupId;
+
+    /**
      * 功能执行的状态
      */
     private ElementStatus status;

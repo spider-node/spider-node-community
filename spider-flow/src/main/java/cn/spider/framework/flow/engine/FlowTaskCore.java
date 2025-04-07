@@ -15,6 +15,7 @@ import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.util.GlobalUtil;
 import cn.spider.framework.flow.util.TaskServiceUtil;
+import cn.spider.framework.param.sdk.data.QueryJsRequestParam;
 import cn.spider.framework.param.sdk.data.QueryRequestParam;
 import cn.spider.framework.param.sdk.data.QueryRequestResult;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
@@ -22,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,12 @@ import java.util.Objects;
  *
  * @author dds
  */
+@Slf4j
 public abstract class FlowTaskCore<T> extends BasicTaskCore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FlowTaskCore.class);
+
+    private static final String RUN_PARAM = "runParam";
 
     private ParamInterface paramInterface;
 
@@ -66,10 +71,6 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
             promise.complete();
             return;
         }
-        // 校验是真实执行，还是虚拟执行（虚拟执行不会真的执行，只是读取日志中执行记过）
-        if (StringUtils.isNotEmpty(example.getRetryNodeId()) && example.getRetryNodeId().equals(flowElement.getId())) {
-            example.setRunType(Constant.ACTUAL);
-        }
         ServiceTask serviceTask = (ServiceTask) flowElement;
         doInvokeMethodNew(serviceTask, example, promise);
     }
@@ -92,30 +93,20 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
      */
     private void doInvokeMethodNew(ServiceTask serviceTask, FlowExample example, Promise<Object> promise) {
         // 构造获取方法执行的参数
-        QueryRequestParam queryRequestParam = new QueryRequestParam();
-        queryRequestParam.setAppointParam(serviceTask.obtainAppointParam());
-        queryRequestParam.setParamsMapping(serviceTask.getFiledMapping());
-        queryRequestParam.setRequestId(serviceTask.getRequestId());
-        queryRequestParam.setTaskComponent(serviceTask.getTaskComponent());
-        queryRequestParam.setTaskService(serviceTask.getTaskService());
-        queryRequestParam.setConversionParam(serviceTask.getConversionParam());
-        queryRequestParam.setVersion(serviceTask.getVersion());
+        QueryJsRequestParam queryJsRequestParam = new QueryJsRequestParam(serviceTask.queryJsFunctionName(), serviceTask.queryJsCode(), serviceTask.queryJsParams(), serviceTask.queryJsParamReal(), serviceTask.getId(), example.getRequestId());
         // 查询调用该方法需要的参数
-        /*paramInterface.queryRunParam(JsonObject.mapFrom(queryRequestParam))
+        paramInterface.queryRunParamJs(JsonObject.mapFrom(queryJsRequestParam))
                 .onSuccess(suss -> {
-                    QueryRequestResult queryRequestResult = new QueryRequestResult();
-                    queryRequestResult.setRunParam(suss.getJsonObject(Constant.RUN_PARAM));
-                    queryRequestResult.setTaskMethod(suss.getString(Constant.TASK_METHOD));
-                    queryRequestResult.setWorkerId(suss.getString(Constant.WORKER_ID));
-                    // 执行调用远端服务执行
-                    invokeMethodNew(serviceTask, Objects.isNull(queryRequestResult.getRunParam()) ?
-                                    new JsonObject() : queryRequestResult.getRunParam(), queryRequestResult.getTaskMethod(),
-                            queryRequestResult.getWorkerId(), example, promise, example.getRequestId());
+                    JsonObject runParam = suss.getJsonObject(RUN_PARAM);
+                    // 执行调用远端服务执行 -- 修改后不支持 服务类型的调度
+                    invokeMethodNew(serviceTask, Objects.isNull(runParam) ?
+                                    new JsonObject() : runParam, StringUtils.EMPTY,
+                            StringUtils.EMPTY, example, promise, example.getRequestId());
                 }).onFailure(fail -> {
                     // 通知执行失败了。
                     promise.fail(fail);
                     LOGGER.info("doInvokeMethodNew_获取参数失败 {}", ExceptionMessage.getStackTrace(fail));
-                });*/
+                });
         //
 
 
@@ -128,7 +119,7 @@ public abstract class FlowTaskCore<T> extends BasicTaskCore {
 
     public void invokeMethodNew(ServiceTask serviceTask, JsonObject param, String methodName, String workerName, FlowExample example, Promise<Object> promise, String requestId) {
         try {
-            schedulerManager.invokeNew(param.getMap(), serviceTask, workerName, methodName, example, promise, requestId);
+            schedulerManager.invokeNew(param, serviceTask, workerName, methodName, example, promise, requestId);
             // 后续改造- 因为不需要返回数据
         } catch (Throwable e) {
             LOGGER.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));

@@ -38,6 +38,7 @@ import cn.spider.framework.flow.util.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,7 @@ import java.util.stream.Collectors;
  *
  * @author dds
  */
+@Slf4j
 public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInstance> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CamundaBpmnModelTransfer.class);
@@ -205,7 +207,7 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
                     throw ExceptionUtil.buildException(null, ExceptionEnum.CONFIGURATION_UNSUPPORTED_ELEMENT, GlobalUtil.format("There is an error in the bpmn file! fileName: {}", config.getConfigName()));
                 }
 
-                if ( isBpmnSupportAggregation(targetNode)) {
+                if (isBpmnSupportAggregation(targetNode)) {
                     comingCountMap.merge(targetNode, 1, Integer::sum);
                     if (Objects.equals(comingCountMap.get(targetNode), targetNode.getIncoming().size())) {
                         basicInStack.push(targetNode);
@@ -247,6 +249,27 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
 
         // 设置转换参数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.VERSION).ifPresent(serviceTaskImpl::setVersion);
+
+        // setFunctionVersionId
+
+        // 设置jsCoder
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.CONDITION_JS_FUNCTION).ifPresent(serviceTaskImpl::setJsCode);
+
+        // 设置datasource
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.DATASOURCE_ID).ifPresent(serviceTaskImpl::setDatasourceId);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.POLL_EL_EXPRESSION).ifPresent(serviceTaskImpl::setPollElExpression);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.CONDITION_JS_NAME).ifPresent(serviceTaskImpl::setJsFunctionName);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.FUNCTION_VERSION_ID).ifPresent(serviceTaskImpl::setFunctionVersionId);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.FUNCTION_TYPE).ifPresent(serviceTaskImpl::setFunctionType);
+
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.JS_FUNCTION_PARAM_LIST_REAL).ifPresent(serviceTaskImpl::setJsParamReal);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.JS_FUNCTION_PARAM_LIST).ifPresent(serviceTaskImpl::setJsParams);
 
         // 设置指定参数
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.APPOINT).ifPresent(serviceTaskImpl::setAppointParam);
@@ -352,15 +375,28 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
         setConsumer.accept(elementIterable);
     }
 
+    /**
+     * 改造成了,传入js函数,函数名称,函数需要的参数列表
+     *
+     * @param config
+     * @param sf
+     * @return
+     */
     private SequenceFlow sequenceFlowMapping(ConfigResource config, org.camunda.bpm.model.bpmn.instance.SequenceFlow sf) {
         SequenceFlowImpl sequenceFlow = new SequenceFlowImpl();
         sequenceFlow.setId(sf.getId());
         sequenceFlow.setName(sf.getName());
+
+        Optional<String> js_function_info = ElementPropertyUtil.getSequenceFlowProperty(sf, BpmnElementProperties.CONDITION_JS_FUNCTION);
+        Optional<String> js_function_name_info = ElementPropertyUtil.getSequenceFlowProperty(sf, BpmnElementProperties.CONDITION_JS_NAME);
+        Optional<String> js_function_function_param_list = ElementPropertyUtil.getSequenceFlowProperty(sf, BpmnElementProperties.JS_FUNCTION_PARAM_LIST);
+        Optional<String> js_function_function_param_list_real = ElementPropertyUtil.getSequenceFlowProperty(sf, BpmnElementProperties.JS_FUNCTION_PARAM_LIST_REAL);
+
         AssertUtil.notBlank(sequenceFlow.getId(), ExceptionEnum.CONFIGURATION_ATTRIBUTES_REQUIRED, "The bpmn element id attribute cannot be empty! fileName: {}", config.getConfigName());
-        if (sf.getConditionExpression() != null && StringUtils.isNotBlank(sf.getConditionExpression().getTextContent())) {
-            SequenceFlowExpression sequenceFlowExpression = new SequenceFlowExpression(sf.getConditionExpression().getTextContent());
-            sequenceFlowExpression.setId(sf.getConditionExpression().getId());
-            sequenceFlowExpression.setName(sf.getConditionExpression().getTextContent());
+        if (js_function_info.isPresent() && js_function_name_info.isPresent()) {
+            SequenceFlowExpression sequenceFlowExpression = new SequenceFlowExpression(js_function_info.get(), js_function_name_info.get(), js_function_function_param_list.get(), js_function_function_param_list_real.get(), sf.getId(),sf.getName());
+            sequenceFlowExpression.setId(sf.getId());
+            sequenceFlowExpression.setName(sf.getName());
             sequenceFlow.setExpression(sequenceFlowExpression);
         }
         return sequenceFlow;

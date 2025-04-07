@@ -5,6 +5,7 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
+import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.controller.sdk.interfaces.RoleService;
 import cn.spider.framework.controller.sdk.interfaces.RoleServiceVertxEBProxy;

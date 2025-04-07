@@ -1,4 +1,5 @@
 package com.flow.cloud.start;
+import com.flow.cloud.start.config.EvnConstant;
 import com.flow.cloud.start.role.RoleManager;
 import com.flow.cloud.start.util.ConfigUtil;
 //import com.hazelcast.config.Config;
@@ -9,6 +10,8 @@ import io.vertx.core.spi.cluster.ClusterManager;
 //import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Map;
 import java.util.Objects;
 import static com.flow.cloud.start.util.BannerHelper.banner;
@@ -63,8 +66,9 @@ public class SpiderStart {
 
     private static ClusterManager buildZk(Map<String, String> config) {
         // 获取集群方式
+        String zkUrl = System.getenv(EvnConstant.ZK_ADDR);
         JsonObject zkConfig = new JsonObject();
-        zkConfig.put("zookeeperHosts", config.get("zk-addr"));
+        zkConfig.put("zookeeperHosts", StringUtils.isEmpty(zkUrl) ? config.get("zk-addr") : zkUrl);
         zkConfig.put("rootPath", "spider.node");
         zkConfig.put("retry", new JsonObject()
                 .put("initialSleepTime", 2000)

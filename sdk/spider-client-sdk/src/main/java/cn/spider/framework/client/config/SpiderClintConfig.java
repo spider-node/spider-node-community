@@ -17,12 +17,12 @@ import javax.sql.DataSource;
  */
 public class SpiderClintConfig {
     @Bean
-    public SpiderTransactionOperation buildSpiderTransactionOperation(){
+    public SpiderTransactionOperation buildSpiderTransactionOperation() {
         return new SpiderTransactionOperation();
     }
 
     @Bean("spiderTransactionManager")
-    public TransactionManager buildTransactionManager(@Value("${spider.dataSource.url}") String url, SpiderTransactionOperation operation){
-        return new TransactionManager(url,operation);
+    public TransactionManager buildTransactionManager(SpiderTransactionOperation operation) {
+        return new TransactionManager(operation);
     }
 }

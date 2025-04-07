@@ -17,7 +17,7 @@
           <include>**/*.xml</include>
           <include>**/*.txt</include>
           <include>**/*.properties</include>
-          <include>*.xml</include>
+          <include>webroot/dist/**/*</include>
         </includes>
       </resource>
     </resources>

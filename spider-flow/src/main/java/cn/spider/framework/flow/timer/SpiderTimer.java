@@ -54,7 +54,7 @@ public class SpiderTimer implements InitializingBean {
     private String brokerName;
 
     public void registerRetry(String requestId, JsonObject param) {
-        if (retryCountMap.size() > 800) {
+        if (retryCountMap.size() > 100) {
             log.info("重试数据超过500 请求requestId", requestId);
             return;
         }

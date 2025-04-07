@@ -12,7 +12,9 @@ public class TransactionalRequest {
 
     private TransactionalType transactionalType;
 
-    private String branchId;
+    private Long branchId;
+
+    private String resourceId;
 
     /**
      * 事务操作的workerName
@@ -35,11 +37,11 @@ public class TransactionalRequest {
         this.transactionalType = transactionalType;
     }
 
-    public String getBranchId() {
+    public Long getBranchId() {
         return branchId;
     }
 
-    public void setBranchId(String branchId) {
+    public void setBranchId(Long branchId) {
         this.branchId = branchId;
     }
 
@@ -49,5 +51,13 @@ public class TransactionalRequest {
 
     public void setWorkerName(String workerName) {
         this.workerName = workerName;
+    }
+
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 }

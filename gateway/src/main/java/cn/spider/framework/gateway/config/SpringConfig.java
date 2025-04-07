@@ -11,6 +11,7 @@ import cn.spider.framework.domain.sdk.interfaces.*;
 import cn.spider.framework.gateway.GatewayVerticle;
 import cn.spider.framework.gateway.api.file.FileHandler;
 import cn.spider.framework.gateway.api.function.SpiderServerHandler;
+import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import io.vertx.core.Vertx;
@@ -112,7 +113,7 @@ public class SpringConfig {
                                                         Vertx vertx,
                                                         EventManager eventManager,
                                                         DataFlowInterface dataFlowInterface,
-                                                        AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface) {
+                                                        AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface,LinkerService linkerService) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -121,7 +122,7 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface, vertx, eventManager, dataFlowInterface, aiTaskInterface,hostPluginInterface);
+                versionInterface, vertx, eventManager, dataFlowInterface, aiTaskInterface,hostPluginInterface,linkerService);
     }
 
     @Bean
@@ -161,6 +162,17 @@ public class SpringConfig {
     @Bean
     public AiTaskInterface buildAiTaskInterface(Vertx vertx) {
         return AiTaskInterface.createProxy(vertx, AiTaskInterface.ADDRESS);
+    }
+
+    /**
+     * 跟worker通信 接口
+     *
+     * @param vertx
+     * @return
+     */
+    @Bean
+    public LinkerService buildLinkerService(Vertx vertx) {
+        return LinkerService.createProxy(vertx, LinkerService.ADDRESS);
     }
 
 }

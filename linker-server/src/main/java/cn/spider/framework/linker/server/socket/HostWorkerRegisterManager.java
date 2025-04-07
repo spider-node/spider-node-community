@@ -23,7 +23,7 @@ public class HostWorkerRegisterManager {
 
     private BaseManager baseManager;
 
-    public HostWorkerRegisterManager(Vertx vertx,BaseManager baseManager) {
+    public HostWorkerRegisterManager(Vertx vertx, BaseManager baseManager) {
         this.vertx = vertx;
         this.hostApplicationMap = new HashMap<>();
         this.baseManager = baseManager;
@@ -51,47 +51,11 @@ public class HostWorkerRegisterManager {
         log.info("当前宿主应用的内容为 {}", JSON.toJSONString(hostApplicationMap));
     }
 
-    /**
-     * 宿主应用下线
-     *
-     * @param ip 宿主应用的ip
-     */
-    public void cancellationHost(String ip) {
-        hostApplicationMap.remove(ip);
-    }
-
-    /**
-     * 注销功能
-     *
-     * @param ip            宿主应用ip
-     * @param taskComponent 任务组件
-     * @param taskService   任务service
-     * @param version       版本
-     */
-    public void cancelFunction(String ip, String taskComponent, String taskService, String version) {
-        String functionKey = TaskKeyUtil.buildTaskKey(taskComponent, taskService, version);
-        HostApplication hostApplication = hostApplicationMap.get(ip);
-        hostApplication.getFunctionInfo().remove(functionKey);
-    }
-
-    /**
-     * 注册功能
-     *
-     * @param ip            宿主应用的ip
-     * @param taskComponent 任务组件
-     * @param taskService   任务service
-     * @param version       版本
-     */
-    public void registerFunction(String ip, String taskComponent, String taskService, String version) {
-        String functionKey = TaskKeyUtil.buildTaskKey(taskComponent, taskService, version);
-        HostApplication hostApplication = hostApplicationMap.get(ip);
-        hostApplication.getFunctionInfo().put(functionKey, null);
-    }
 
     // 根据String taskComponent, String taskService, String version 查询出 HostApplication
     private List<HostApplication> queryHostApplication(String taskComponent, String taskService, String version) throws Exception {
         Set<String> ipSet = this.baseManager.queryIpByFunctionKey(taskComponent, taskService, version);
-        if(CollectionUtils.isEmpty(ipSet)){
+        if (CollectionUtils.isEmpty(ipSet)) {
             throw new Exception("没有查询到对应的宿主应用");
         }
         return ipSet.stream().map(item -> hostApplicationMap.get(item)).collect(Collectors.toList());
@@ -100,9 +64,10 @@ public class HostWorkerRegisterManager {
 
     /**
      * 随机获取宿主应用信息 去做执行
+     *
      * @param taskComponent 任务组件
-     * @param taskService 任务方法
-     * @param version 版本
+     * @param taskService   任务方法
+     * @param version       版本
      * @return HostApplication 返回宿主应用信息
      * @throws Exception 获取宿主应用信息异常
      */
@@ -119,6 +84,30 @@ public class HostWorkerRegisterManager {
         Random random = new Random();
         int randomNumber = random.nextInt(max - min + 1) + min;
         return hostApplications.get(randomNumber);
+    }
+
+    /**
+     * 随机获取一个client
+     */
+    public HostApplication queryClientRandom() {
+        // 随机获取一个client
+        int min = 0;
+        int max = hostApplicationMap.size() - 1;
+        Random random = new Random();
+        int randomNumber = random.nextInt(max - min + 1) + min;
+        return (HostApplication) hostApplicationMap.values().toArray()[randomNumber];
+    }
+
+    /**
+     * 宿主应用下线
+     */
+    public void offline(String ip) {
+        HostApplication hostApplication = hostApplicationMap.get(ip);
+        if (Objects.isNull(hostApplication)) {
+            return;
+        }
+        hostApplicationMap.remove(ip);
+        log.info("当前宿主应用的内容为 {}", JSON.toJSONString(hostApplicationMap));
     }
 
 }

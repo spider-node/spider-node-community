@@ -1,7 +1,5 @@
 package cn.spider.framework.param.sdk.data;
 
-import lombok.Data;
-
 import java.util.Map;
 
 public class QueryRequestParam {

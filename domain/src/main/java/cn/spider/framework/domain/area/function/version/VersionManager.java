@@ -4,13 +4,12 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.data.UnloadBpmnParam;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
-import cn.spider.framework.domain.area.data.AiNodeInfo;
-import cn.spider.framework.domain.area.data.NodeInfo;
-import cn.spider.framework.domain.area.data.NodeInfos;
+import cn.spider.framework.domain.area.data.*;
 import cn.spider.framework.domain.area.data.enums.BpmnStatus;
 import cn.spider.framework.domain.area.data.enums.FunctionNodeType;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
+import cn.spider.framework.domain.area.function.data.ExecuteFunctionInfo;
 import cn.spider.framework.domain.area.function.data.FunctionParamConfigModel;
 import cn.spider.framework.domain.area.function.data.GenerateJavaCodeParam;
 import cn.spider.framework.domain.area.function.data.GenerateJavaCodeResult;
@@ -23,10 +22,10 @@ import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctio
 import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
 import cn.spider.framework.domain.area.node.NodeManger;
-import cn.spider.framework.domain.area.node.entity.SpiderAreaFunctionVersion;
-import cn.spider.framework.domain.sdk.data.NotifyAnalysisResultModel;
-import cn.spider.framework.domain.sdk.data.RefreshBpmnParam;
+import cn.spider.framework.domain.area.util.LockManager;
+import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.data.enums.UploadBpmnStatus;
+import cn.spider.node.host.plugin.center.sdk.data.QueryDomainFunctionClassInfo;
 import cn.spider.node.host.plugin.center.sdk.data.QueryInputParam;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
@@ -38,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.RowSet;
@@ -70,17 +70,31 @@ public class VersionManager {
 
     private ContainerService containerService;
 
-    private NodeManger nodeManger;
-
     private AgentVertxClient agentVertxClient;
 
     private ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService;
 
-    public VersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,NodeManger nodeManger,AgentVertxClient agentVertxClient) {
+    private HostPluginInterface hostPluginInterface;
+
+    private ISpiderDataFlowService spiderDataFlowService;
+
+    private LockManager lockManager;
+
+    private final String BUILD_JS_PARAM = "BUILD_JS_PARAM";
+
+    public VersionManager(MySQLPool client,
+                          ContainerService containerService,
+                          ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,
+                          LockManager lockManager,
+                          AgentVertxClient agentVertxClient,
+                          HostPluginInterface hostPluginInterface,
+                          ISpiderDataFlowService spiderDataFlowService) {
+        this.hostPluginInterface = hostPluginInterface;
+        this.spiderDataFlowService = spiderDataFlowService;
         this.client = client;
         this.containerService = containerService;
         this.spiderBusinessFunctionVersionService = spiderBusinessFunctionVersionService;
-        this.nodeManger = nodeManger;
+        this.lockManager = lockManager;
         this.agentVertxClient = agentVertxClient;
     }
 
@@ -235,9 +249,9 @@ public class VersionManager {
             sql.append(" and version = #{version} ");
         }
 
-        if (StringUtils.isNotEmpty(param.getStatus())) {
+        /*if (StringUtils.isNotEmpty(param.getStatus())) {
             sql.append(" and `status` = #{status} ");
-        }
+        }*/
 
         if (StringUtils.isNotEmpty(param.getFunctionName())) {
             sql.append(" and function_name = #{functionName} ");
@@ -266,6 +280,36 @@ public class VersionManager {
                 });
         return promise.future();
     }
+
+
+    /**
+     * 查询版本信息
+     *
+     * @param param
+     * @return
+     */
+    public List<ExecuteFunctionInfo> selectVersionV2(QueryVersionFunctionParam param) {
+
+        List<SpiderBusinessFunctionVersion> businessFunctionVersions = spiderBusinessFunctionVersionService.lambdaQuery()
+                .eq(StringUtils.isNotEmpty(param.getFunctionId()), SpiderBusinessFunctionVersion::getFunctionId, param.getFunctionId())
+                .eq(StringUtils.isNotEmpty(param.getVersionId()), SpiderBusinessFunctionVersion::getId, param.getVersionId())
+                .list();
+        return businessFunctionVersions.stream().map(item -> {
+            Optional<NodeParamConfig> nodeParamConfig = item.getNodeParamInfo().getNodeParamConfigList()
+                    .stream()
+                    .filter(items -> items.getJsFunctionParams()
+                            .contains("result")).findFirst();
+            NodeParamConfig config = nodeParamConfig.isPresent() ? nodeParamConfig.get() : null;
+            return ExecuteFunctionInfo.builder()
+                    .functionId(item.getFunctionId())
+                    .startId(item.getStartEventId())
+                    .versionId(item.getId())
+                    .functionName(item.getFunctionName())
+                    .nodeParamConfig(config)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
 
     // 刷新-bpmn
     public Future<Void> refreshBpmn(RefreshBpmnParam param) {
@@ -365,10 +409,10 @@ public class VersionManager {
     public Future<Set<String>> getBpmnUrl() {
         Promise<Set<String>> promise = Promise.promise();
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("status", VersionStatus.START.name());
+        //parameters.put("status", VersionStatus.START.name());
         parameters.put("bpmnStatus", BpmnStatus.DEPLOY.name());
         SqlTemplate
-                .forQuery(client, "SELECT * FROM spider_business_function_version where status = #{status} and bpmn_status = #{bpmnStatus}")
+                .forQuery(client, "SELECT * FROM spider_business_function_version where bpmn_status = #{bpmnStatus}")
                 .mapTo(ROW_BUSINESS)
                 .execute(parameters)
                 .onSuccess(functions -> {
@@ -443,16 +487,21 @@ public class VersionManager {
         return parser.parseExpression(rule).getValue(context, Boolean.class);
     }
 
-    private HostPluginInterface hostPluginInterface;
-
-    private ISpiderDataFlowService spiderDataFlowService;
-
     /**
-     * @param id 功能版本的id
-     *           构造为流程中各个节点构造参数
+     * @param startNodeJsParam functionId,nodeId,paramJsDemand
+     *                         构造为流程中各个节点构造参数
      */
-    public void paramBuild(String id) throws ExecutionException, InterruptedException {
+    public void paramBuild(StartNodeJsParam startNodeJsParam) throws ExecutionException, InterruptedException {
+        String id = startNodeJsParam.getFunctionVersionId();
+        String lockKye = id + BUILD_JS_PARAM;
+        if (!lockManager.lock(lockKye)) {
+            Preconditions.checkArgument(false, "当前版本在参数构建中，请稍后再试");
+        }
         SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(id);
+        if (StringUtils.isEmpty(startNodeJsParam.getNodeId())) {
+            // 先移除所有的函数信息
+            spiderBusinessFunctionVersionService.lambdaUpdate().set(SpiderBusinessFunctionVersion::getNodeParamInfo, null).eq(SpiderBusinessFunctionVersion::getId, id).update();
+        }
         if (Objects.isNull(spiderBusinessFunctionVersion.getNodeInfos()) || CollectionUtils.isEmpty(spiderBusinessFunctionVersion.getNodeInfos().getNodeInfos())) {
             Preconditions.checkArgument(false, "节点信息为空");
         }
@@ -466,31 +515,63 @@ public class VersionManager {
             // 获取domainFunctionNodeInfoList中的functionVersionId
             Set<String> domainFunctionNodeInfoListVersionId = domainFunctionNodeInfoList.stream().map(NodeInfo::getFunctionVersionId).collect(Collectors.toSet());
             QueryInputParam queryInputParam = new QueryInputParam(domainFunctionNodeInfoListVersionId);
-            Future<JsonObject> inputParamFunctionVersion = hostPluginInterface.queryInputParam(JsonObject.mapFrom(queryInputParam));
-            JsonObject inputParams = inputParamFunctionVersion.toCompletionStage().toCompletableFuture().get();
-            List<SpiderAreaFunctionVersion> areaFunctionVersions = nodeManger.queryDomainFunctionVersionByIds(domainFunctionNodeInfoListVersionId);
+            Future<JsonArray> inputParamFunctionVersion = hostPluginInterface.queryInputParam(JsonObject.mapFrom(queryInputParam));
+            JsonArray inputParams = inputParamFunctionVersion.toCompletionStage().toCompletableFuture().get();
+            List<QueryDomainFunctionClassInfo> functionInfo = JSON.parseArray(inputParams.toString(), QueryDomainFunctionClassInfo.class);
+            //functionInfo 基于 domainFunctionId转成map
+            Map<String, QueryDomainFunctionClassInfo> functionInfoMap = functionInfo.stream().collect(Collectors.toMap(QueryDomainFunctionClassInfo::getDomainFunctionId, Function.identity()));
             // areaFunctionVersions按照id进行转map
-            Map<String, SpiderAreaFunctionVersion> areaFunctionVersionMap = areaFunctionVersions
-                    .stream()
-                    .collect(Collectors.toMap(SpiderAreaFunctionVersion::getId, Function.identity()));
             for (NodeInfo nodeInfo : domainFunctionNodeInfoList) {
-                SpiderAreaFunctionVersion functionVersion = areaFunctionVersionMap.get(nodeInfo.getFunctionVersionId());
-                JSONObject resultAnalysis = functionVersion.getResultAnalysis();
-                List<NotifyAnalysisResultModel> analysisResults = resultAnalysis.getJSONArray("analysisResult").toJavaList(NotifyAnalysisResultModel.class);
-                Map<String, List<Map<String, String>>> tableFiledMap = new HashMap<>();
-                for (NotifyAnalysisResultModel analysisResult : analysisResults) {
-                    if (tableFiledMap.containsKey(analysisResult.getTable())) {
-                        tableFiledMap.get(analysisResult.getTable()).addAll(analysisResult.getFields());
-                        continue;
-                    }
-                    tableFiledMap.put(analysisResult.getTable(), analysisResult.getFields());
+                QueryDomainFunctionClassInfo functionClassInfo = functionInfoMap.get(nodeInfo.getFunctionVersionId());
+                AiNodeInfo aiNodeInfo = new AiNodeInfo(functionClassInfo.getParametersClass(),
+                        nodeInfo.getId(), nodeInfo.getName(),
+                        nodeInfo.getFunctionVersionId(), functionClassInfo.getReturnsClass(),
+                        functionClassInfo.getOtherClass());
+                aiNodeInfoList.add(aiNodeInfo);
+            }
+        }
+        if (nodeInfoMap.containsKey(FunctionNodeType.BUSINESS_FUNCTION)) {
+            List<NodeInfo> domainFunctionNodeInfoList = nodeInfoMap.get(FunctionNodeType.BUSINESS_FUNCTION);
+            // 把domainFunctionNodeInfoList中的functionVersionId 给到一个set当中
+            Set<String> domainFunctionNodeInfoListVersionIds = domainFunctionNodeInfoList
+                    .stream()
+                    .map(NodeInfo::getFunctionVersionId)
+                    .collect(Collectors.toSet());
+            List<SpiderBusinessFunctionVersion> spiderBusinessFunctionVersions = spiderBusinessFunctionVersionService
+                    .lambdaQuery()
+                    .in(SpiderBusinessFunctionVersion::getId, domainFunctionNodeInfoListVersionIds)
+                    .list();
+            // 把spiderBusinessFunctionVersions中数据基于id转成map
+            Map<String, SpiderBusinessFunctionVersion> spiderBusinessFunctionVersionMap = spiderBusinessFunctionVersions
+                    .stream()
+                    .collect(Collectors.toMap(SpiderBusinessFunctionVersion::getId, Function.identity()));
+            for (NodeInfo nodeInfo : domainFunctionNodeInfoList) {
+                if (!spiderBusinessFunctionVersionMap.containsKey(nodeInfo.getFunctionVersionId())) {
+                    continue;
                 }
-                AiNodeInfo aiNodeInfo = new AiNodeInfo(tableFiledMap, inputParams.getString(nodeInfo.getFunctionVersionId()), nodeInfo.getId(), nodeInfo.getName(), nodeInfo.getFunctionVersionId());
+                SpiderBusinessFunctionVersion businessFunctionVersion = spiderBusinessFunctionVersionMap.get(nodeInfo.getFunctionVersionId());
+                String requestClass = JSON.toJSONString(businessFunctionVersion.getInputParamJavaClass());
+                String resultClass = JSON.toJSONString(businessFunctionVersion.getOutputParamJavaClass());
+                AiNodeInfo aiNodeInfo = new AiNodeInfo(requestClass,
+                        nodeInfo.getId(), nodeInfo.getName(),
+                        nodeInfo.getFunctionVersionId(), resultClass,
+                        null);
                 aiNodeInfoList.add(aiNodeInfo);
             }
         }
         SpiderDataFlow spiderDataFlow = spiderDataFlowService.getById(spiderBusinessFunctionVersion.getDataFlowId());
+        DataFlowAnalysisModel dataFlowAnalysisModel = spiderDataFlow.getDataFlowAnalysisModel();
         String bpmnString = spiderBusinessFunctionVersion.getBpmnXml();
+        JSONObject flowData = spiderDataFlow.getData();
+        ParamBuildInfo paramBuildInfo = new ParamBuildInfo(aiNodeInfoList,
+                bpmnString,
+                flowData,
+                id,
+                spiderDataFlow.getFlowDataDesc(),
+                spiderBusinessFunctionVersion.getInputParamJavaClass(),
+                spiderBusinessFunctionVersion.getOutputParamJavaClass(), dataFlowAnalysisModel.getDomainInfoResult(), startNodeJsParam.getNodeId(), startNodeJsParam.getParamJsDemand());
+        log.info("paramBuildInfo {}", JSON.toJSONString(paramBuildInfo));
+        agentVertxClient.buildNodeParam(JsonObject.mapFrom(paramBuildInfo));
     }
 
     public void configToJavaEntity(String functionVersionId) {
@@ -510,6 +591,35 @@ public class VersionManager {
                 .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.OUTPUT), SpiderBusinessFunctionVersion::getOutputParamJavaClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
                 .eq(SpiderBusinessFunctionVersion::getId, generateJavaCodeResult.getFunctionVersionId())
                 .update();
+    }
+
+    public void writeJsFunctionInfo(NodeJsFunctionInfo nodeJsFunctionInfo) {
+        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(nodeJsFunctionInfo.getFunctionVersionId());
+        List<NodeInfo> nodeInfos = spiderBusinessFunctionVersion.getNodeInfos().getNodeInfos();
+        if (Objects.nonNull(spiderBusinessFunctionVersion.getNodeParamInfo()) && CollectionUtils.isNotEmpty(spiderBusinessFunctionVersion.getNodeParamInfo().getNodeParamConfigList())) {
+            List<NodeParamConfig> nodeParamConfigListOld = spiderBusinessFunctionVersion.getNodeParamInfo().getNodeParamConfigList();
+            // nodeParamConfigListOld 基于nodeId 转成map
+            Map<String, NodeParamConfig> nodeParamConfigMap = nodeParamConfigListOld.stream().collect(Collectors.toMap(NodeParamConfig::getNodeId, Function.identity()));
+            List<NodeParamConfig> nodeParamConfigListNew = nodeJsFunctionInfo.getNodeParamConfigList();
+            nodeParamConfigListNew.forEach(nodeParamConfig -> {
+                // 直接替换
+                nodeParamConfigMap.put(nodeParamConfig.getNodeId(), nodeParamConfig);
+            });
+            nodeJsFunctionInfo.setNodeParamConfigList(new ArrayList<>(nodeParamConfigMap.values()));
+        }
+
+        // nodeInfos 基于id 转成map
+        Map<String, NodeInfo> nodeInfoMap = nodeInfos.stream().collect(Collectors.toMap(NodeInfo::getId, Function.identity()));
+        nodeJsFunctionInfo.getNodeParamConfigList().forEach(nodeParamConfig -> {
+            if (!nodeInfoMap.containsKey(nodeParamConfig.getNodeId())) {
+                return;
+            }
+            NodeInfo nodeInfo = nodeInfoMap.get(nodeParamConfig.getNodeId());
+            nodeParamConfig.setNodeName(nodeInfo.getName());
+        });
+        spiderBusinessFunctionVersionService.lambdaUpdate().set(SpiderBusinessFunctionVersion::getNodeParamInfo, JSON.toJSONString(nodeJsFunctionInfo))
+                .eq(SpiderBusinessFunctionVersion::getId, nodeJsFunctionInfo.getFunctionVersionId()).
+                update();
     }
 
 

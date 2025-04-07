@@ -1,11 +1,10 @@
 package cn.spider.framework.domain.area.function.data;
 
+import cn.spider.framework.domain.sdk.data.NodeParamConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * @BelongsProject: spider-node
@@ -47,7 +46,7 @@ public class ExecuteFunctionInfo {
     private String requestClass;
 
     /**
-     * 返回参数的隐射
+     * 出参的函数配置信息-方便做入参构造的时候使用
      */
-    private Map<String,String> resultMapping;
+    private NodeParamConfig nodeParamConfig;
 }

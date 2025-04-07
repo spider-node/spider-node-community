@@ -1,129 +1,60 @@
 package cn.spider.framework.linker.server.baseinfo;
 
 import cn.spider.framework.common.utils.TaskKeyUtil;
-import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.param.result.build.model.NodeParamInfo;
 import cn.spider.framework.param.result.build.model.NodeParamInfoBath;
 import cn.spider.framework.param.result.build.model.ReportParamInfo;
 import com.alibaba.fastjson.JSON;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class BaseMate {
 
-
-    /**
-     * 版本号的缓存 key为ip + set
-     */
-    private Cache<String, Set<String>> functionKeyCache;
+    // 使用两个Map维护双向关系
+    private Map<String, Set<String>> ipToFunctions;
+    private Map<String, Set<String>> functionToIps;
 
 
-    private final String IP_CNAME = "IP_CNAME";
-
-    private final String FUNCTION_KEY_CNAME = "FUNCTION_KEY_CNAME";
-
-    private RocksdbUtil rocksdbUtil;
-
-    public BaseMate(RocksdbUtil rocksdbUtil) {
-        this.rocksdbUtil = rocksdbUtil;
-        this.functionKeyCache = CacheBuilder.newBuilder()
-                //设置cache的初始大小为10，要合理设置该值
-                .initialCapacity(10)
-                //设置并发数为10，即同一时间最多只能有10个线程往cache执行写入操作
-                .concurrencyLevel(2)
-                //设置cache中的数据在写入之后的存活时间为1分钟
-                .expireAfterWrite(1, TimeUnit.MINUTES)
-                //构建cache实例
-                .build();
+    public BaseMate() {
+        this.ipToFunctions = new HashMap<>();
+        this.functionToIps = new HashMap<>();
     }
 
-
-    /**
-     * 当ip下线的时候，需要做ip对应的信息处理
-     */
-    public void deployOfflineCache(String ip) {
-
-        if (StringUtils.isEmpty(ip)) {
-            return;
-        }
-
-        try {
-            deployOfflineRocksdb(ip);
-        } catch (Exception e) {
-            throw new RuntimeException("deployOffline_error", e);
-        }
-    }
-
-    /**
-     * 告知ip下线，删除缓存中的功能信息,与功能对应的ip，再删除rocksdb中的内容
-     */
-    public void deployOfflineRocksdb(String ip) {
-        try {
-            this.rocksdbUtil.delete(IP_CNAME, ip);
-        } catch (Exception e) {
-            throw new RuntimeException("deployOffline_error", e);
-        }
-    }
-
-    /**
-     * 获取功能对应的ip
-     */
-    public void deleteFunctionInfo(String functionKey, String ip) {
-        try {
-            // 查询 functionKey 对应的ip 在rocksdb
-            String ips = this.rocksdbUtil.get(FUNCTION_KEY_CNAME, functionKey);
-            if (StringUtils.isEmpty(ips)) {
-                return;
-            }
-            Set<String> ipsSet = JSON.parseObject(ips, Set.class);
-            ipsSet.remove(ip);
-            if (CollectionUtils.isEmpty(ipsSet)) {
-                return;
-            }
-            this.rocksdbUtil.put(FUNCTION_KEY_CNAME, functionKey, JSON.toJSONString(ipsSet));
-        } catch (Exception e) {
-            throw new RuntimeException("deleteFunctionInfo_error", e);
-        }
-    }
 
     /**
      * 部署
      */
     public void deploy(ReportParamInfo refreshAreaParam, String ip) {
+        log.info("上线的内容为 {} ip {}", JSON.toJSONString(refreshAreaParam), ip);
         if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getNodeParamInfoBathList())) {
             return;
         }
 
         List<NodeParamInfoBath> areaModels = refreshAreaParam.getNodeParamInfoBathList();
         // areaModels 循环构造functionKey
+        Set<String> functionKeList = new HashSet<>();
         for (NodeParamInfoBath areaModel : areaModels) {
+            if (CollectionUtils.isEmpty(areaModel.getNodeParamInfoList())) {
+                continue;
+            }
             Set<String> functionKeys = areaModel.getNodeParamInfoList()
                     .stream()
                     .map(nodeParamInfo -> TaskKeyUtil.buildComponentKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion()))
                     .collect(Collectors.toSet());
-            try {
-                putIpInfo(ip, functionKeys);
-                for (String functionKey : functionKeys) {
-                    putFunctionInfo(functionKey, Sets.newHashSet(ip));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+            functionKeList.addAll(functionKeys);
         }
-
+        if (CollectionUtils.isEmpty(functionKeList)) {
+            return;
+        }
+        // 把functionKey 添加到ipToFunctions中
+        ipToFunctions.computeIfAbsent(ip, k -> new HashSet<>()).addAll(functionKeList);
+        for (String functionKey : functionKeList) {
+            functionToIps.computeIfAbsent(functionKey, k -> new HashSet<>()).add(ip);
+        }
     }
 
     /**
@@ -133,111 +64,77 @@ public class BaseMate {
         if (Objects.isNull(refreshAreaParam) || CollectionUtils.isEmpty(refreshAreaParam.getNodeParamInfoBathList())) {
             return;
         }
+        log.info("下线的内容为 {} ip {}", JSON.toJSONString(refreshAreaParam), ip);
         List<NodeParamInfoBath> areaModels = refreshAreaParam.getNodeParamInfoBathList();
+        Set<String> functionKeList = new HashSet<>();
         for (NodeParamInfoBath areaModel : areaModels) {
             List<NodeParamInfo> nodeParamInfos = areaModel.getNodeParamInfoList();
+            if(CollectionUtils.isEmpty(nodeParamInfos)){
+                continue;
+            }
             Set<String> functionKeys = nodeParamInfos
                     .stream()
                     .map(nodeParamInfo -> TaskKeyUtil.buildTaskKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService()))
                     .collect(Collectors.toSet());
-            try {
-                removeIpInfo(ip, functionKeys);
-                for (String functionKey : functionKeys) {
-                    removeFunctionInfo(functionKey, Sets.newHashSet(ip));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
 
+            functionKeList.addAll(functionKeys);
         }
-    }
-
-    private void putIpInfo(String ip, Set<String> functionKeys) throws Exception {
-        put(IP_CNAME, ip, functionKeys);
-    }
-
-    private void removeIpInfo(String ip, Set<String> functionKeys) throws Exception {
-        remove(IP_CNAME, ip, functionKeys);
-    }
-
-    private void putFunctionInfo(String functionKey, Set<String> ips) throws Exception {
-        put(FUNCTION_KEY_CNAME, functionKey, ips);
-        // 查询 functionKey 对应的ip
-        Set<String> valuesSet = functionKeyCache.getIfPresent(functionKey);
-        if (CollectionUtils.isEmpty(valuesSet)) {
-            functionKeyCache.put(functionKey, ips);
-        } else {
-            valuesSet.addAll(ips);
-            functionKeyCache.put(functionKey, valuesSet);
-        }
-    }
-
-    private void removeFunctionInfo(String functionKey, Set<String> ips) throws Exception {
-        remove(FUNCTION_KEY_CNAME, functionKey, ips);
-        Set<String> valuesSet = functionKeyCache.getIfPresent(functionKey);
-        if (CollectionUtils.isEmpty(valuesSet)) {
-            functionKeyCache.put(functionKey, ips);
-        } else {
-            valuesSet.removeAll(ips);
-            functionKeyCache.put(functionKey, valuesSet);
-        }
-    }
-
-    private void put(String cfName, String key, Set<String> functionKeys) throws Exception {
-        // rocksdbUtil.put(cfName, key, value);
-        String values = getRocksDb(cfName, key);
-        Set<String> valuesSet = StringUtils.isEmpty(values) ? new HashSet<>() : JSON.parseObject(values, Set.class);
-        valuesSet.addAll(functionKeys);
-        rocksdbUtil.put(cfName, key, JSON.toJSONString(valuesSet));
-    }
-
-    /**
-     * @param cfName
-     * @param key
-     * @param functionKeys
-     * @throws Exception
-     */
-    private void remove(String cfName, String key, Set<String> functionKeys) throws Exception {
-        String values = getRocksDb(cfName, key);
-        if (StringUtils.isEmpty(values)) {
+        if(CollectionUtils.isEmpty(functionKeList)){
             return;
         }
-        Set<String> valuesSet = JSON.parseObject(values, Set.class);
-        valuesSet.removeAll(functionKeys);
-        rocksdbUtil.put(cfName, key, JSON.toJSONString(valuesSet));
-    }
-
-    /**
-     * 查询rocksdb
-     *
-     * @param cfName
-     * @param key
-     * @return
-     * @throws Exception
-     */
-    private String getRocksDb(String cfName, String key) throws Exception {
-        return rocksdbUtil.get(cfName, key);
-    }
-
-
-    /**
-     * 根据functionKey查询ip
-     * @param componentName 组件名称
-     * @param taskServiceName 组件中功能名称
-     * @param version 组件版本信息
-     * @return
-     * @throws Exception rocksdb的异常
-     */
-    public Set<String> queryIpByFunctionKey(String componentName, String taskServiceName, String version) throws Exception {
-        // 查询缓存，缓存查不到，调用getRocksDb
-        String functionKey = TaskKeyUtil.buildComponentKey(componentName, taskServiceName, version);
-        Set<String> valuesSet = functionKeyCache.getIfPresent(functionKey);
-        if (CollectionUtils.isEmpty(valuesSet)) {
-            String values = getRocksDb(FUNCTION_KEY_CNAME, functionKey);
-            valuesSet = StringUtils.isEmpty(values) ? new HashSet<>() : JSON.parseObject(values, Set.class);
-            functionKeyCache.put(functionKey, valuesSet);
+        // 移除函数和IP的对应关系
+        for (String functionKey : functionKeList) {
+            Set<String> ips = functionToIps.get(functionKey);
+            if (CollectionUtils.isNotEmpty(ips)) {
+                ips.remove(ip);
+                if (ips.isEmpty()) {
+                    functionToIps.remove(functionKey);
+                }
+            }
         }
-        return valuesSet;
+        // 移除IP和Function的对应关系
+        ipToFunctions.get(ip).removeAll(functionKeList);
     }
 
+    // IP下线
+    public void removeAllRelationsByIp(String ip) {
+        log.info("removeAllRelationsByIp-IP {} 下线", ip);
+        Set<String> functions = ipToFunctions.get(ip);
+        if (functions == null) return;
+
+        // 遍历所有关联的Function
+        for (String function : functions) {
+            Set<String> ips = functionToIps.get(function);
+            if (CollectionUtils.isNotEmpty(ips)) {
+                ips.remove(ip);    // 从Function反向索引中移除
+                if (ips.isEmpty()) {
+                    functionToIps.remove(function); // 清理空集合
+                }
+            }
+        }
+        ipToFunctions.remove(ip); // 清除正向索引
+    }
+
+
+    // 批量移除Function所有关联（对称操作）
+    public void removeAllRelationsByFunction(String function) {
+        Set<String> ips = functionToIps.get(function);
+        if (ips == null) return;
+
+        for (String ip : ips) {
+            Set<String> functions = ipToFunctions.get(ip);
+            if (functions != null) {
+                functions.remove(function); // 从IP反向索引中移除
+                if (functions.isEmpty()) {
+                    ipToFunctions.remove(ip); // 清理空集合
+                }
+            }
+        }
+        functionToIps.remove(function);
+    }
+
+    public Set<String> queryIpByFunctionKey(String functionKey) {
+        Set<String> ips = functionToIps.get(functionKey);
+        return ips == null ? Collections.emptySet() : ips;
+    }
 }

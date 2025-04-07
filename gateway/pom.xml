@@ -109,6 +109,11 @@
             <version>2.0.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>linker-server</artifactId>
+            <version>2.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

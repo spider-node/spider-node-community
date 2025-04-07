@@ -126,4 +126,13 @@ public class SpiderFlowElementExampleLog extends SpiderLog implements Serializab
      */
     @Field(name = "transactionOperate",type = FieldType.Keyword)
     private String transactionOperate;
+
+    /**
+     * js函数
+     */
+    private String jsFunction;
+    /**
+     * js函数名称
+     */
+    private String jsFunctionName;
 }

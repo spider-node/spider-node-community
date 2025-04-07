@@ -30,7 +30,17 @@ public interface LinkerService {
     Future<JsonObject> submittals(JsonObject data);
 
     /**
+     * 执行事务
+     */
+    Future<JsonObject> transaction(JsonObject data);
+
+    /**
      * 查询-可部署的宿主应用节点
      */
     Future<JsonObject> queryHostApplication(JsonObject data);
+
+    /**
+     * 查询-task部署到了那些节点上
+     */
+    Future<JsonObject> queryTaskDeploy(JsonObject data);
 }

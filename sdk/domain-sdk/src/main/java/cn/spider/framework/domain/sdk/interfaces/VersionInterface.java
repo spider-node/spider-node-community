@@ -45,4 +45,10 @@ public interface VersionInterface {
 
     // 回写java生成数据
     Future<Void> writeJavaEntity(JsonObject data);
+
+    // 发起生成节点代码
+    Future<Void> createNodeParamCoder(JsonObject data);
+
+    // 更新JsFunctionInfo
+    Future<JsonObject> writeJsFunctionInfo(JsonObject data);
 }

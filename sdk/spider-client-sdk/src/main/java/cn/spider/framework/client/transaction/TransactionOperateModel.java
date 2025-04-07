@@ -9,7 +9,7 @@ package cn.spider.framework.client.transaction;
 public class TransactionOperateModel {
     private String xid;
     private String resourceId;
-    private String branchId;
+    private Long branchId;
 
     public String getXid() {
         return xid;
@@ -27,11 +27,11 @@ public class TransactionOperateModel {
         this.resourceId = resourceId;
     }
 
-    public String getBranchId() {
+    public Long getBranchId() {
         return branchId;
     }
 
-    public void setBranchId(String branchId) {
+    public void setBranchId(Long branchId) {
         this.branchId = branchId;
     }
 }

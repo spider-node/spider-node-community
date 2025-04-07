@@ -20,6 +20,7 @@
                 <include>**/*.xml</include>
                 <include>**/*.properties</include>
                 <include>**/*.txt</include>
+                <include>webroot/dist/**/*</include>
             </includes>
             <fileMode>0644</fileMode>
         </fileSet>
