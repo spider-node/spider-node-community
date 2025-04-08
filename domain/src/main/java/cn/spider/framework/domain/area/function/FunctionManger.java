@@ -201,36 +201,16 @@ public class FunctionManger {
      * 获取功能中可执行的版本信息
      */
     public Future<ExecuteFunctionInfo> queryFunctionInfo(QueryExecuteFunctionInfo param) {
-        Promise<ExecuteFunctionInfo> promise = Promise.promise();
-
-        String sql = "select * from spider_business_function where id = #{id}";
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("id", param.getFunctionId());
-        SqlTemplate
-                .forQuery(client, sql.toString())
-                .mapTo(ROW_BUSINESS)
-                .execute(parameters)
-                .onSuccess(function -> {
-                    RowSet<FunctionModel> functions = function;
-                    if (functions.size() == 0) {
-                        promise.fail("没有找到对应的执行功能版本可以执行");
-                    }
-                    QueryVersionFunctionParam versionParam = new QueryVersionFunctionParam();
-                    versionParam.setFunctionId(param.getFunctionId());
-                    versionParam.setFunctionVersionId(param.getFunctionVersionId());
-                    versionParam.setStatus("START");
-                    versionParam.setPage(1);
-                    versionParam.setSize(10);
-                    log.info("查询版本信息-数据 {}", JsonObject.mapFrom(versionParam));
-                    List<ExecuteFunctionInfo> versions = versionManager.selectVersionV2(versionParam);
-                    // TODO 这里需要优化，目前是直接获取第一个版本，需要设计版本命中规则
-                    ExecuteFunctionInfo functionInfo = versions.get(0);
-                    promise.complete(functionInfo);
-                }).onFailure(fail -> {
-                    log.error("查询数据失败 {}", ExceptionMessage.getStackTrace(fail));
-                    promise.fail(fail);
-                });
-        return promise.future();
+        QueryVersionFunctionParam versionParam = new QueryVersionFunctionParam();
+        versionParam.setFunctionId(param.getFunctionId());
+        versionParam.setFunctionVersionId(param.getFunctionVersionId());
+        versionParam.setStatus("START");
+        versionParam.setPage(1);
+        versionParam.setSize(10);
+        log.info("查询版本信息-数据 {}", JsonObject.mapFrom(versionParam));
+        List<ExecuteFunctionInfo> versions = versionManager.selectVersionV2(versionParam);
+        ExecuteFunctionInfo functionInfo = versions.get(0);
+        return Future.succeededFuture(functionInfo);
     }
 
     public QueryBusinessFunctionResult queryBusinessFunction(QueryBusinessFunctionParam param) {

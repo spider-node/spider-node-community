@@ -190,7 +190,7 @@ public class SchedulerManager {
         functionRequest.setServiceName(serviceTask.getTaskService());
         functionRequest.setWorkerName(workerName);
         functionRequest.setParam(paramMap);
-        functionRequest.setXid(serviceTask.getXid());
+        functionRequest.setXid(serviceTask.getId());
         functionRequest.setBranchId(NumberUtil.stringToLong(example.getRequestId(),serviceTask.queryTransactionGroup()));
         functionRequest.setVersion(serviceTask.getVersion());
         functionRequest.setProviderType(ApplicationProviderType.SPIDER_HOST_APPLICATION);

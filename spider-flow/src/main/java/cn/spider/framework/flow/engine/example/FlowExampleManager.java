@@ -378,27 +378,6 @@ public class FlowExampleManager {
      */
     private void normal(ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {
         // 当组的事务id,不为空的情况下，需要先注册事务信息
-        /*if (!StringUtils.isEmpty(transactionGroupId)) {
-            Future<JsonObject> transaction = registerTransaction(serviceTask, example);
-            transaction.onSuccess(suss -> {
-                JsonObject transactionJson = suss;
-                RegisterTransactionResponse response = transactionJson.mapTo(RegisterTransactionResponse.class);
-                example.getTransactionGroupMap().put(transactionGroupId, response.getGroupId());
-                serviceTask.setXid(response.getGroupId());
-                serviceTask.setBranchId(response.getBranchId());
-                runPlan(example);
-                // 设置 groupId
-                elementExampleData.setTransactionGroupId(response.getGroupId());
-                // 设置该实例的 事务id
-                elementExampleData.setBranchId(response.getBranchId());
-                eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
-            }).onFailure(fail -> {
-                // 获取事务事务信息失败-（直接）
-                log.error("获取事务信息失败 {}", ExceptionMessage.getStackTrace(fail));
-                endFlowExampleFail(example, fail);
-            });
-            return;
-        }*/
         elementExampleData.setJsFunction(serviceTask.queryJsCode());
         elementExampleData.setJsFunctionName(serviceTask.queryJsFunctionName());
         eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);

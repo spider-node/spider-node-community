@@ -115,9 +115,6 @@ public class TaskManager {
             return;
         }
         SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
-        /*if (functionVersion.getStatus().equals(NodeStatus.CODING)) {
-            Preconditions.checkArgument(false, "当前版本正在编译中，请稍后再试");
-        }*/
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
         Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(), Set.class);
         SpiderAreaFunction areaFunction = spiderAreaFunctionService.getById(functionVersion.getDomainFunctionId());
@@ -279,6 +276,13 @@ public class TaskManager {
             return Future.failedFuture("在更新中,请稍后在世");
         }
 
+        String datasourceId = queryDatasourceIdByDomainVersion(param.getString("domainFunctionVersionId"));
+        // 更新datasource
+        spiderAreaFunctionVersionService.lambdaUpdate()
+                .set(SpiderAreaFunctionVersion::getDatasourceId, datasourceId)
+                .eq(SpiderAreaFunctionVersion::getId, datasourceId)
+                .update();
+
         Promise<Void> promise = Promise.promise();
         agentVertxClient.updatePlugin(param).onSuccess(suss -> {
             // 发起跟k8s交互
@@ -337,5 +341,14 @@ public class TaskManager {
         result.setSteps(steps);
         result.setTakeTime(between);
         return result;
+    }
+
+    private String queryDatasourceIdByDomainVersion(String domainFunctionVersionId) {
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(domainFunctionVersionId);
+        SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
+        Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(), Set.class);
+        Integer baseInfoId = domainBaseInfoIds.stream().findFirst().orElse(null);
+        String datasource = queryDatasource(baseInfoId);
+        return queryDatasourceId(datasource);
     }
 }

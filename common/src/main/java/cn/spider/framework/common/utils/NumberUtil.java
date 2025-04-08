@@ -1,8 +1,9 @@
 package cn.spider.framework.common.utils;
 
+import java.util.Objects;
+
 public class NumberUtil {
 
-    // 其他已有的方法... underline
     private final static String UNDERLINE = "_";
 
     /**
@@ -15,7 +16,7 @@ public class NumberUtil {
         if (str == null) {
             throw new IllegalArgumentException("Input string cannot be null");
         }
-        return str.hashCode();
+        return Objects.hash(str, str.length());
     }
 
     public static long stringToLong(String requestId, String transactionId) {

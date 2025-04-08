@@ -55,7 +55,7 @@ public class TransactionGroupExample {
                 .transactionGroupId(example.getTransactionGroupId())
                 .requestId(example.getRequestId())
                 .flowElementId(example.getTaskId())
-                .branchId(example.getBranchId())
+                .branchId(String.valueOf(example.getBranchId()))
                 .transactionOperate(TransactionType.COMMIT)
                 .build();
 
@@ -129,7 +129,7 @@ public class TransactionGroupExample {
                 .transactionGroupId(example.getTransactionGroupId())
                 .requestId(example.getRequestId())
                 .flowElementId(example.getTaskId())
-                .branchId(example.getBranchId())
+                .branchId(String.valueOf(example.getBranchId()))
                 .transactionOperate(TransactionType.ROLLBACK)
                 .build();
 

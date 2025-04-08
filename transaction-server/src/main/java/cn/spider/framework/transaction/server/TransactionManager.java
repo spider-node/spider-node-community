@@ -4,6 +4,7 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.EndTransactionData;
 import cn.spider.framework.common.event.data.RegisterTransactionData;
+import cn.spider.framework.common.event.data.StartTransactionData;
 import cn.spider.framework.common.event.enums.TransactionType;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.common.utils.NumberUtil;
@@ -210,11 +211,14 @@ public class TransactionManager {
             throw new RuntimeException(e);
         }
         // 构建消息体 发生事务注册成功的事件
-
-        RegisterTransactionData registerTransactionData = RegisterTransactionData.builder().build();
-        BeanUtils.copyProperties(element, registerTransactionData);
-        // 发送事件+
-        eventManager.sendMessage(EventType.REGISTER_TRANSACTION, registerTransactionData);
+       /* RegisterTransactionData registerTransactionData = RegisterTransactionData.builder()
+                .transactionGroupId(element.getTransactionGroupId())
+                .branchId(element.getBranchId() + "")
+                .requestId(element.getRequestId())
+                .taskId(element.getTaskId())
+                .transactionStatus(cn.spider.framework.common.event.enums.TransactionStatus.INIT)
+                .build();// 发送事件+
+        eventManager.sendMessage(EventType.REGISTER_TRANSACTION, registerTransactionData);*/
     }
 
     /**
@@ -247,7 +251,7 @@ public class TransactionManager {
         example.setTransactionRunType(TransactionRunType.ROLLBACK);
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.ROLLBACK);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
-        Future<JsonObject> rollBackResult = linkerService.submittals(request);
+        Future<JsonObject> rollBackResult = linkerService.transaction(request);
         EndTransactionData endTransactionData = EndTransactionData.builder()
                 .transactionGroupId(example.getTransactionGroupId())
                 .requestId(example.getRequestId())
@@ -298,7 +302,7 @@ public class TransactionManager {
         example.setTransactionRunType(TransactionRunType.COMMIT);
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.SUBMIT);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
-        Future<JsonObject> commitResult = linkerService.submittals(request);
+        Future<JsonObject> commitResult = linkerService.transaction(request);
 
         EndTransactionData endTransactionData = EndTransactionData.builder()
                 .transactionGroupId(example.getTransactionGroupId())
@@ -307,7 +311,6 @@ public class TransactionManager {
                 .branchId(String.valueOf(example.getBranchId()))
                 .transactionOperate(TransactionType.COMMIT)
                 .build();
-
 
         commitResult.onSuccess(suss -> {
             JsonObject result = suss;
@@ -331,7 +334,7 @@ public class TransactionManager {
                 eventManager.sendMessage(EventType.END_TRANSACTION, endTransactionData);
             }
         }).onFailure(fail -> {
-            log.error("transaction-BranchId {} xid {} 提交失败 {}", example.getBranchId(), example.getTransactionGroupId(), ExceptionMessage.getStackTrace(fail));
+            log.error("transaction-BranchId {} xid {} 提交失败 {}", example.getBranchId(), example.getTaskId(), ExceptionMessage.getStackTrace(fail));
             example.setTransactionStatus(TransactionStatus.COMMIT_FAIL);
             example.recordFailNum();
             // 进行注册3秒一次进行retry->每隔十秒一次
@@ -352,6 +355,7 @@ public class TransactionManager {
         TransactionalRequest transactionalRequest = new TransactionalRequest();
         transactionalRequest.setTransactionId(example.getTransactionGroupId());
         transactionalRequest.setBranchId(example.getBranchId());
+        transactionalRequest.setResourceId(example.getDatasourceId());
         transactionalRequest.setWorkerName(example.getWorkerName());
         transactionalRequest.setTransactionalType(transactionalType);
         linkerServerRequest.setExecutionType(ExecutionType.TRANSACTION);

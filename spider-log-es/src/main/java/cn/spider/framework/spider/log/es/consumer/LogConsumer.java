@@ -67,7 +67,7 @@ public class LogConsumer {
                 String data = message.body();
                 //log.info("获取到写入日志的参数 {}",data);
                 switch (eventName) {
-                    case "start_flow_example":
+                    case "start_flow_example" :
                         elementExampleLog.setExampleType(ExampleType.FLOW);
                         SpiderLog spiderFlowExampleLog = buildStartFlowExample(data, brokerName);
                         elementExampleLog.setExampleLog(spiderFlowExampleLog);
@@ -96,7 +96,7 @@ public class LogConsumer {
                         elementExampleLog.setExampleType(ExampleType.ELEMENT);
                         SpiderLog endTransaction = buildEndTransaction(data);
                         elementExampleLog.setExampleLog(endTransaction);
-
+                        break;
                 }
                 queueManager.insertQueue(JSON.toJSONString(elementExampleLog));
                 message.reply("log-receive");

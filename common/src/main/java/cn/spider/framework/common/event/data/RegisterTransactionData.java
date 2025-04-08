@@ -1,11 +1,11 @@
 package cn.spider.framework.common.event.data;
 
 
+import cn.spider.framework.common.event.enums.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.transaction.TransactionStatus;
 
 @AllArgsConstructor
 @NoArgsConstructor
