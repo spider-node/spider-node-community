@@ -2,6 +2,7 @@ package cn.spider.framework.client.transaction;
 
 import cn.spider.framework.transaction.sdk.core.exception.TransactionException;
 import cn.spider.framework.transaction.sdk.datasource.util.JdbcUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.sql.SQLException;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
  * @author: dds
  * @create: 2023-03-06 13:55
  */
+@Slf4j
 public class TransactionManager {
 
     // 获取 dataSource.url
@@ -33,6 +35,7 @@ public class TransactionManager {
      */
     public void commit(String xid, Long branchId, String resourceId) throws TransactionException {
         // 当 xid与brushId不存在的情况下，直接return
+        log.info("commit xid:{},branchId:{},resourceId {}", xid, branchId, resourceId);
         TransactionOperateModel operateModel = new TransactionOperateModel();
         operateModel.setXid(xid);
         operateModel.setBranchId(branchId);
@@ -48,6 +51,7 @@ public class TransactionManager {
      */
     public void rollBack(String xid, Long branchId, String resourceId) throws TransactionException {
         // 当 xid与brushId不存在的情况下，直接return
+        log.info("rollBack xid:{},branchId:{},resourceId {}", xid, branchId, resourceId);
         TransactionOperateModel operateModel = new TransactionOperateModel();
         operateModel.setXid(xid);
         operateModel.setBranchId(branchId);

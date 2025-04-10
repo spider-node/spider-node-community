@@ -21,6 +21,7 @@ import cn.spider.framework.transaction.server.example.enums.ExampleStatus;
 import cn.spider.framework.transaction.server.example.enums.TaskStatus;
 import cn.spider.framework.transaction.server.example.enums.TransactionRunType;
 import cn.spider.framework.transaction.server.queue.TransactionExceptionQueue;
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
@@ -77,12 +78,69 @@ public class TransactionManager {
         return requestId + GROUP_PREFIX + groupId;
     }
 
+    /**
+     * 注册事务
+     *
+     * @param request 注册事务的请求
+     * @return RegisterTransactionResponse
+     */
+    public void registerTransactionV2(RegisterTransactionRequest request) {
+        TransactionElement element = buildTransactionExample(request);
+        // 判断 实例当中是否包含该requestId
+        if (!transactionExamples.containsKey(request.getRequestId())) {
+            TransactionExample transactionExample = TransactionExample.builder()
+                    .requestId(request.getRequestId())
+                    .transactionElementGroup(new HashMap<>())
+                    .exampleStatus(ExampleStatus.INIT)
+                    .build();
+            transactionExamples.put(request.getRequestId(), transactionExample);
+        }
+        // 判断实例中是否存在task
+        TransactionExample transactionExample = transactionExamples.get(request.getRequestId());
+        Map<String, Set<String>> transactionElementGroup = transactionExample.getTransactionElementGroup();
+        if (!transactionElementGroup.containsKey(element.getTransactionGroupId())) {
+            transactionElementGroup.put(element.getTransactionGroupId(), new HashSet<>());
+        }
+        Set<String> taskIds = transactionElementGroup.get(element.getTransactionGroupId());
+        taskIds.add(element.getTaskId());
+        // step2: 获取rocksdbMap
+        RocksDbMap rocksDbMap = new RocksDbMap(buildGroupId(element.getRequestId(), element.getTransactionGroupId()), rocksdbUtil);
+        try {
+            // 事务信息存入 rocksDbMap
+            rocksDbMap.put(element.getTaskId(), element);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 构建事务节点实例
+     *
+     * @param request 注册事务的请求体
+     * @return TransactionElement
+     */
+    private TransactionElement buildTransactionExample(RegisterTransactionRequest request) {
+        orderIncrement();
+        return TransactionElement.builder()
+                .transactionGroupId(request.getGroupId())
+                .transactionStatus(TransactionStatus.INIT)
+                .requestId(request.getRequestId())
+                .taskId(request.getTaskId())
+                .branchId(NumberUtil.stringToLong(request.getRequestId(), request.getGroupId()))
+                .order(this.order.intValue())
+                .workerName(request.getWorkerName())
+                .datasourceId(request.getResourceId())
+                .taskStatus(TaskStatus.INIT)
+                .build();
+    }
+
 
     public void updateTransactionTaskStatus(String groupId, String taskId, TaskStatus taskStatus, String requestId) {
         RocksDbMap rocksDbMap = new RocksDbMap(buildGroupId(requestId, groupId), rocksdbUtil);
         TransactionElement element = rocksDbMap.get(taskId, TransactionElement.class);
         element.setTaskStatus(taskStatus);
-        rocksDbMap.put(element.getTaskId(), element);
+        log.info("更新事务节点状态:{}", JSON.toJSONString(element));
+        rocksDbMap.put(taskId, element);
     }
 
     /**
@@ -122,7 +180,7 @@ public class TransactionManager {
 
         transactionElementGroupMap.forEach((groupId, elements) -> {
             for (TransactionElement element : elements) {
-                if (element.getTaskStatus() == TaskStatus.FAIL) {
+                if (element.getTaskStatus().equals(TaskStatus.FAIL)) {
                     rollbackElements.addAll(elements);
                     return;
                 }
@@ -135,16 +193,24 @@ public class TransactionManager {
         transactionExamples.remove(requestId);
     }
 
-    // 根据requestID获取到所有的事务信息,整理出提交,回滚的事务信息
 
+    /**
+     * 提交前置做的内容
+     * @param commitElements 提交节点
+     */
     public void commitBefore(List<TransactionElement> commitElements) {
         for (TransactionElement element : commitElements) {
             commit(element);
         }
     }
 
+    /**
+     * 回滚前置需要做的内容
+     * @param rollbackElements 回滚的节点
+     * @param requestId 链路的请求id
+     */
     public void rollbackBefore(List<TransactionElement> rollbackElements, String requestId) {
-        if (CollectionUtils.isEmpty(rollbackElements)) {
+        if (CollectionUtils.isNotEmpty(rollbackElements)) {
             // rollbackElements中使用 order 降序的方式排序
             rollbackElements.sort(Comparator.comparingInt(TransactionElement::getOrder).reversed());
             // 遍历rollbackElements,将元素加入到队列中,然后从队列中取出元素进行回滚 使用LinkedList主要为了性能。
@@ -177,70 +243,6 @@ public class TransactionManager {
         rollBack(element);
     }
 
-    /**
-     * 注册事务
-     *
-     * @param request 注册事务的请求
-     * @return RegisterTransactionResponse
-     */
-    public void registerTransactionV2(RegisterTransactionRequest request) {
-        TransactionElement element = buildTransactionExample(request);
-        // 判断 实例当中是否包含该requestId
-        if (!transactionExamples.containsKey(request.getRequestId())) {
-            TransactionExample transactionExample = TransactionExample.builder()
-                    .requestId(request.getRequestId())
-                    .transactionElementGroup(new HashMap<>())
-                    .exampleStatus(ExampleStatus.INIT)
-                    .build();
-            transactionExamples.put(request.getRequestId(), transactionExample);
-        }
-        // 判断实例中是否存在task
-        TransactionExample transactionExample = transactionExamples.get(request.getRequestId());
-        Map<String, Set<String>> transactionElementGroup = transactionExample.getTransactionElementGroup();
-        if (!transactionElementGroup.containsKey(element.getTransactionGroupId())) {
-            transactionElementGroup.put(element.getTransactionGroupId(), new HashSet<>());
-        }
-        Set<String> taskIds = transactionElementGroup.get(element.getTransactionGroupId());
-        taskIds.add(element.getTaskId());
-        // step2: 获取rocksdbMap
-        RocksDbMap rocksDbMap = new RocksDbMap(buildGroupId(element.getRequestId(), element.getTransactionGroupId()), rocksdbUtil);
-        try {
-            // 事务信息存入 rocksDbMap
-            rocksDbMap.put(element.getTaskId(), element);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        // 构建消息体 发生事务注册成功的事件
-       /* RegisterTransactionData registerTransactionData = RegisterTransactionData.builder()
-                .transactionGroupId(element.getTransactionGroupId())
-                .branchId(element.getBranchId() + "")
-                .requestId(element.getRequestId())
-                .taskId(element.getTaskId())
-                .transactionStatus(cn.spider.framework.common.event.enums.TransactionStatus.INIT)
-                .build();// 发送事件+
-        eventManager.sendMessage(EventType.REGISTER_TRANSACTION, registerTransactionData);*/
-    }
-
-    /**
-     * 构建事务节点实例
-     *
-     * @param request 注册事务的请求体
-     * @return TransactionElement
-     */
-    private TransactionElement buildTransactionExample(RegisterTransactionRequest request) {
-        orderIncrement();
-        return TransactionElement.builder()
-                .transactionGroupId(request.getGroupId())
-                .transactionStatus(TransactionStatus.INIT)
-                .requestId(request.getRequestId())
-                .taskId(request.getTaskId())
-                .branchId(NumberUtil.stringToLong(request.getRequestId(),request.getGroupId()))
-                .order(this.order.intValue())
-                .workerName(request.getWorkerName())
-                .datasourceId(request.getResourceId())
-                .taskStatus(TaskStatus.INIT)
-                .build();
-    }
 
     /**
      * 回滚
@@ -251,6 +253,7 @@ public class TransactionManager {
         example.setTransactionRunType(TransactionRunType.ROLLBACK);
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.ROLLBACK);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
+        log.info("回滚请求为-data{}", request.toString());
         Future<JsonObject> rollBackResult = linkerService.transaction(request);
         EndTransactionData endTransactionData = EndTransactionData.builder()
                 .transactionGroupId(example.getTransactionGroupId())
@@ -303,7 +306,7 @@ public class TransactionManager {
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.SUBMIT);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
         Future<JsonObject> commitResult = linkerService.transaction(request);
-
+        log.info("提交请求为-data{}", request.toString());
         EndTransactionData endTransactionData = EndTransactionData.builder()
                 .transactionGroupId(example.getTransactionGroupId())
                 .requestId(example.getRequestId())
@@ -353,7 +356,7 @@ public class TransactionManager {
         // 参数中，移除末尾的 Promise<Object> promise
         LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
         TransactionalRequest transactionalRequest = new TransactionalRequest();
-        transactionalRequest.setTransactionId(example.getTransactionGroupId());
+        transactionalRequest.setTransactionId(example.getTaskId());
         transactionalRequest.setBranchId(example.getBranchId());
         transactionalRequest.setResourceId(example.getDatasourceId());
         transactionalRequest.setWorkerName(example.getWorkerName());

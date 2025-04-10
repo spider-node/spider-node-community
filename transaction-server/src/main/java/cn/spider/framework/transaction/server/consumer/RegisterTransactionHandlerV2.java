@@ -11,8 +11,10 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 public class RegisterTransactionHandlerV2 {
 
     private EventBus eventBus;
@@ -55,6 +57,7 @@ public class RegisterTransactionHandlerV2 {
                 // 说明本节点不需要事务
                 return;
             }
+            log.info("registerTransactionHandlerV2,brokerName:{},data:{}", brokerName, message.body());
             RegisterTransactionRequest registerTransaction = new RegisterTransactionRequest();
             registerTransaction.setGroupId(data.getTransactionGroupId());
             registerTransaction.setRequestId(data.getRequestId());

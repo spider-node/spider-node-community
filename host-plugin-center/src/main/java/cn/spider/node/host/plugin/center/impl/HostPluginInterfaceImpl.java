@@ -2,10 +2,14 @@ package cn.spider.node.host.plugin.center.impl;
 
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.BizHostOfflineData;
 import cn.spider.framework.common.event.data.DeleteDeployData;
 import cn.spider.framework.common.event.data.FunctionDeployData;
 import cn.spider.framework.common.event.data.ScaleUpData;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.linker.sdk.data.QueryTaskDeployParam;
+import cn.spider.framework.linker.sdk.data.QueryTaskDeployResult;
+import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.node.host.plugin.center.application.HostApplicationManager;
 import cn.spider.node.host.plugin.center.model.data.QueryDeployInfoResult;
 import cn.spider.node.host.plugin.center.model.entity.AreaDomainFunctionInfo;
@@ -19,6 +23,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +46,9 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
 
     @Autowired
     private IAreaDomainFunctionInfoService areaDomainFunctionInfoService;
+
+    @Autowired
+    private LinkerService linkerService;
 
     @Override
     public Future<Void> hostOnline(JsonObject data) {
@@ -66,19 +74,44 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
 
     @Override
     public Future<Void> pluginOffline(JsonObject data) {
-        PluginOfflineParam pluginOfflineParam = data.mapTo(PluginOfflineParam.class);
+        Promise<Void> promise = Promise.promise();
         try {
+            PluginOfflineParam pluginOfflineParam = data.mapTo(PluginOfflineParam.class);
             AreaDomainFunctionInfo areaDomainFunctionInfo = areaDomainFunctionInfoService
                     .lambdaQuery()
                     .eq(AreaDomainFunctionInfo::getDomainFunctionVersionId, pluginOfflineParam.getAreaVersionId())
                     .one();
-            String deploymentName = areaDomainFunctionInfo.getFunctionName() + "_" + areaDomainFunctionInfo.getVersion();
-            DeleteDeployData hostApplicationOnlineData = new DeleteDeployData(deploymentName, areaDomainFunctionInfo.getDomainFunctionVersionId());
+            // 发送事件,删除k8s中的deployments-顺带会删除pod
+            DeleteDeployData hostApplicationOnlineData = new DeleteDeployData(areaDomainFunctionInfo.getBizName(), areaDomainFunctionInfo.getDomainFunctionVersionId());
             eventManager.sendMessage(EventType.SCALE_DOWN, hostApplicationOnlineData);
+            promise.complete();
+           /* // 查询该版部署的ip,
+            QueryTaskDeployParam queryTaskDeployParam = new QueryTaskDeployParam();
+            queryTaskDeployParam.setTaskComponent(areaDomainFunctionInfo.getTaskComponent());
+            queryTaskDeployParam.setTaskService(areaDomainFunctionInfo.getTaskService());
+            queryTaskDeployParam.setVersion(areaDomainFunctionInfo.getVersion());
+            linkerService.queryTaskDeploy(JsonObject.mapFrom(queryTaskDeployParam)).onSuccess(result -> {
+                QueryTaskDeployResult queryTaskDeployResult = JSON.parseObject(result.toString(), QueryTaskDeployResult.class);
+                if (Objects.isNull(queryTaskDeployResult) || CollectionUtils.isEmpty(queryTaskDeployResult.getIps())) {
+                    promise.complete();
+                    return;
+                }
+                for (String ip : queryTaskDeployResult.getIps()) {
+                    // 通知基于ip进行下线
+                    BizHostOfflineData bizHostOfflineData = new BizHostOfflineData(areaDomainFunctionInfo.getBizName(), areaDomainFunctionInfo.getBizVersion(), ip);
+                    eventManager.sendMessage(EventType.SCALE_DOWN_NOTIFY_HOST, bizHostOfflineData);
+                }
+                promise.complete();
+                // 发事件进行通知 对应ip中,需要执行那些model的下线
+            }).onFailure(e -> {
+                log.error("功能下线失败 {}", ExceptionMessage.getStackTrace(e));
+                promise.fail(e);
+            });*/
+            // 循环进行调用接口卸载
         } catch (Exception e) {
-            return Future.failedFuture(e);
+            promise.fail(e);
         }
-        return Future.succeededFuture();
+        return promise.future();
     }
 
     @Override
@@ -96,6 +129,7 @@ public class HostPluginInterfaceImpl implements HostPluginInterface {
 
     /**
      * 需要升本版后,进行扩缩容
+     *
      * @param data 宿主应用信息 扩缩容
      * @return
      */

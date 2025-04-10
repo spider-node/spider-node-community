@@ -198,6 +198,7 @@ public class SpiderServerHandler {
         queryCaseInfo();
         syncAiCoderStep();
         updateCoder();
+        uninstallBiz();
         scalePlugin();
         queryTaskStep();
         notifyDataFlowAnalysis();
@@ -1395,6 +1396,23 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     log.info("updateCoder-param:{}", param);
                     aiTaskInterface.updateCoder(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * uninstallBiz
+     */
+    private void uninstallBiz() {
+        router.post("/uninstall_biz")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    aiTaskInterface.uninstallBiz(param).onSuccess(suss -> {
                         response.end(ResponseData.suss());
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));

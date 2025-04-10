@@ -74,7 +74,7 @@ public class BaseMate {
             }
             Set<String> functionKeys = nodeParamInfos
                     .stream()
-                    .map(nodeParamInfo -> TaskKeyUtil.buildTaskKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService()))
+                    .map(nodeParamInfo -> TaskKeyUtil.buildComponentKey(nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getVersion()))
                     .collect(Collectors.toSet());
 
             functionKeList.addAll(functionKeys);

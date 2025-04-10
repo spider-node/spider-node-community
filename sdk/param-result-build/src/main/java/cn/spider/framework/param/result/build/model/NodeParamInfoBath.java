@@ -27,6 +27,7 @@ public class NodeParamInfoBath {
 
     private WorkerType workerType;
 
+
     public List<NodeParamInfo> getNodeParamInfoList() {
         return nodeParamInfoList;
     }

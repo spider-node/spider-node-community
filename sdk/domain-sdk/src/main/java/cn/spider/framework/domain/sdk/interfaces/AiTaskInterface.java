@@ -61,6 +61,11 @@ public interface AiTaskInterface {
     Future<Void> updateCoder(JsonObject param);
 
     /**
+     * 卸载插件
+     */
+    Future<Void> uninstallBiz(JsonObject param);
+
+    /**
      * 需求ai解析
      */
     Future<Void> demandAiParse(JsonObject param);

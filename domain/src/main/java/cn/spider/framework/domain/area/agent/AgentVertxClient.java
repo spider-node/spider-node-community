@@ -123,6 +123,13 @@ public class AgentVertxClient {
     }
 
     /**
+     * uninstallBiz
+     */
+    public Future<JsonObject> uninstallBiz(JsonObject param, String ip, Integer port) {
+        return sendHostApplication(ip, this.unInstallPlugin, port, param);
+    }
+
+    /**
      * 解析 需求
      *
      * @return
@@ -216,12 +223,12 @@ public class AgentVertxClient {
                     try {
                         JsonObject body = res.bodyAsJsonObject();
                         if (body.getString("code").equals("SUCCESS")) {
-                            log.info("请求成功的参数为 {}", param.toString());
+                            log.info("请求成功的参数为-HostApplication {}", param.toString());
                             JsonObject result = body.getJsonObject("data");
                             promise.complete(result);
                         } else {
-                            log.info("执行失败的异常数据 {}", res.bodyAsJsonObject().toString());
-                            promise.fail("对插件操作失败" + res.bodyAsJsonObject().toString());
+                            log.info("执行失败的异常数据-HostApplication {}", res.bodyAsJsonObject().toString());
+                            promise.fail("对插件操作失败-HostApplication" + res.bodyAsJsonObject().toString());
                         }
                     } catch (Exception e) {
                         promise.fail(e);

@@ -17,6 +17,7 @@ import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
 import cn.spider.framework.domain.area.function.version.VersionManager;
+import cn.spider.framework.domain.area.handler.BizUninstallHandler;
 import cn.spider.framework.domain.area.impl.*;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionService;
@@ -41,6 +42,7 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.client.WebClient;
@@ -92,14 +94,14 @@ public class DomainConfig {
     }
 
     @Bean
-    public FunctionManger buildFunctionManger(MySQLPool client, EventManager eventManager, VersionManager versionManager, ISpiderBusinessFunctionService spiderBusinessFunctionService,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
-        return new FunctionManger(client, eventManager, versionManager,spiderBusinessFunctionService,spiderAreaFunctionVersionService);
+    public FunctionManger buildFunctionManger(MySQLPool client, EventManager eventManager, VersionManager versionManager, ISpiderBusinessFunctionService spiderBusinessFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService) {
+        return new FunctionManger(client, eventManager, versionManager, spiderBusinessFunctionService, spiderAreaFunctionVersionService);
     }
 
     @Bean
-    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,LockManager lockManager,AgentVertxClient agentVertxClient,HostPluginInterface hostPluginInterface,
+    public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService, LockManager lockManager, AgentVertxClient agentVertxClient, HostPluginInterface hostPluginInterface,
                                               ISpiderDataFlowService spiderDataFlowService) {
-        return new VersionManager(client, containerService,spiderBusinessFunctionVersionService,lockManager,agentVertxClient,hostPluginInterface,spiderDataFlowService);
+        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService);
     }
 
     @Bean
@@ -108,8 +110,8 @@ public class DomainConfig {
     }
 
     @Bean
-    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,HostPluginInterface hostPluginInterface) {
-        return new NodeManger(client, areaManger,spiderAreaFunctionService,spiderAreaFunctionVersionService,spiderDomainFunctionTaskService,hostPluginInterface);
+    public NodeManger buildNodeManger(MySQLPool client, AreaManger areaManger, ISpiderAreaFunctionService spiderAreaFunctionService, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService, ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService, HostPluginInterface hostPluginInterface) {
+        return new NodeManger(client, areaManger, spiderAreaFunctionService, spiderAreaFunctionVersionService, spiderDomainFunctionTaskService, hostPluginInterface);
     }
 
     @Bean
@@ -124,12 +126,12 @@ public class DomainConfig {
 
     @Bean
     public AreaInterface buildAreaImpl(AreaManger areaManger, ISpiderSonAreaService spiderSonAreaService, DatasourceManager datasourceManager, Executor spiderBusinessPool, ISpiderAreaService spiderAreaService, IAreaDomainBaseInfoService areaDomainBaseInfoService) {
-        return new AreaImpl(areaManger,spiderSonAreaService,datasourceManager,spiderBusinessPool,spiderAreaService,areaDomainBaseInfoService);
+        return new AreaImpl(areaManger, spiderSonAreaService, datasourceManager, spiderBusinessPool, spiderAreaService, areaDomainBaseInfoService);
     }
 
     @Bean
-    public FunctionInterface buildFunctionImpl(FunctionManger functionManger, LogInterface logInterface,Executor spiderBusinessPool) {
-        return new FunctionImpl(functionManger, logInterface,spiderBusinessPool);
+    public FunctionInterface buildFunctionImpl(FunctionManger functionManger, LogInterface logInterface, Executor spiderBusinessPool) {
+        return new FunctionImpl(functionManger, logInterface, spiderBusinessPool);
     }
 
     @Bean
@@ -139,36 +141,36 @@ public class DomainConfig {
 
 
     @Bean
-    public ApplicationPluginManager buildApplicationPluginManager(AgentVertxClient agentClient,AreaManger areaManger){
-        return new ApplicationPluginManager(agentClient,areaManger);
+    public ApplicationPluginManager buildApplicationPluginManager(AgentVertxClient agentClient, AreaManger areaManger) {
+        return new ApplicationPluginManager(agentClient, areaManger);
     }
 
     @Bean
-    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager,HostPluginInterface hostPluginInterface,Executor spiderBusinessPool,ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService,ISpiderDataFlowService spiderDataFlowService,
+    public NodeInterface buildNodeInterface(NodeManger nodeManger, ApplicationPluginManager pluginManager, HostPluginInterface hostPluginInterface, Executor spiderBusinessPool, ISpiderAreaFunctionVersionService spiderAreaFunctionVersionService, ISpiderDataFlowService spiderDataFlowService,
                                             IAreaDomainBaseInfoService areaDomainBaseInfoService,
                                             AgentVertxClient agentVertxClient) {
-        return new NodeInterfaceImpl(nodeManger,pluginManager,hostPluginInterface,spiderBusinessPool,spiderAreaFunctionVersionService,spiderDataFlowService,areaDomainBaseInfoService,agentVertxClient);
+        return new NodeInterfaceImpl(nodeManger, pluginManager, hostPluginInterface, spiderBusinessPool, spiderAreaFunctionVersionService, spiderDataFlowService, areaDomainBaseInfoService, agentVertxClient);
     }
 
     @Bean
-    public HostPluginInterface buildHostPluginInterface(Vertx vertx){
-        return HostPluginInterface.createProxy(vertx,HostPluginInterface.ADDRESS);
+    public HostPluginInterface buildHostPluginInterface(Vertx vertx) {
+        return HostPluginInterface.createProxy(vertx, HostPluginInterface.ADDRESS);
     }
 
     @Bean
-    public ParamInterface buildParamInterface(Vertx vertx){
-        String addr = BrokerInfoUtil.queryBrokerName(vertx)+ ParamInterface.ADDRESS;
-        return ParamInterface.createProxy(vertx,addr);
+    public ParamInterface buildParamInterface(Vertx vertx) {
+        String addr = BrokerInfoUtil.queryBrokerName(vertx) + ParamInterface.ADDRESS;
+        return ParamInterface.createProxy(vertx, addr);
     }
 
     @Bean
-    public VersionInterface buildVersionImpl(VersionManager versionManager,Executor spiderBusinessPool,ParamInterface paramInterface) {
-        return new VersionImpl(versionManager,spiderBusinessPool,paramInterface);
+    public VersionInterface buildVersionImpl(VersionManager versionManager, Executor spiderBusinessPool, ParamInterface paramInterface) {
+        return new VersionImpl(versionManager, spiderBusinessPool, paramInterface);
     }
 
     @Bean
-    public DataFlowInterface buildDataFlowInterface(ISpiderDataFlowService spiderDataFlowService,AgentVertxClient agentVertxClient, TaskManager taskManager){
-        return new DataFlowInterfaceImpl(spiderDataFlowService,agentVertxClient,taskManager);
+    public DataFlowInterface buildDataFlowInterface(ISpiderDataFlowService spiderDataFlowService, AgentVertxClient agentVertxClient, TaskManager taskManager) {
+        return new DataFlowInterfaceImpl(spiderDataFlowService, agentVertxClient, taskManager);
     }
 
     @Bean
@@ -182,17 +184,17 @@ public class DomainConfig {
     }
 
     @Bean
-    public WebClient buildWebClient(Vertx vertx){
+    public WebClient buildWebClient(Vertx vertx) {
         return WebClient.create(vertx);
     }
 
     @Bean
-    public AgentVertxClient buildAgentVertxClient(WebClient webClient,Vertx vertx){
+    public AgentVertxClient buildAgentVertxClient(WebClient webClient, Vertx vertx) {
         SharedData sharedData = vertx.sharedData();
-        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         String agentPrefix = localMap.get("spider_agent_url_host");
         String aiCodePrefix = localMap.get("spider_code_ai_url");
-        return new AgentVertxClient(webClient,agentPrefix,aiCodePrefix);
+        return new AgentVertxClient(webClient, agentPrefix, aiCodePrefix);
     }
 
     @Bean(name = "transactionManager")
@@ -211,7 +213,7 @@ public class DomainConfig {
     }
 
     @Bean(name = "sqlSessionFactory")
-    public SqlSessionFactory sqlSessionFactory(DataSource dataSource,PaginationInterceptor interceptor) throws Exception {
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource, PaginationInterceptor interceptor) throws Exception {
 
         MybatisSqlSessionFactoryBean factory = new MybatisSqlSessionFactoryBean();
         factory.setDataSource(dataSource);
@@ -221,7 +223,7 @@ public class DomainConfig {
     }
 
     @Bean
-    public FlowService buildFlowService(Vertx vertx){
+    public FlowService buildFlowService(Vertx vertx) {
         return FlowService.createProxy(vertx, FlowService.ADDRESS);
     }
 
@@ -229,7 +231,7 @@ public class DomainConfig {
      * 分页插件
      */
     @Bean
-    public PaginationInterceptor buildPaginationInterceptor(){
+    public PaginationInterceptor buildPaginationInterceptor() {
         return new PaginationInterceptor();
     }
 
@@ -316,15 +318,15 @@ public class DomainConfig {
     }
 
     @Bean
-    public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService,Vertx vertx){
-        return new DatasourceManager(datasourceInfoService,vertx);
+    public DatasourceManager buildDatasourceManager(IAreaDatasourceInfoService datasourceInfoService, Vertx vertx) {
+        return new DatasourceManager(datasourceInfoService, vertx);
     }
 
     @Bean
     public AiTaskInterfaceImpl buildAiTask(TaskManager taskManager, Executor spiderBusinessPool,
                                            ISpiderTaskTestInfoService spiderTaskTestInfoService,
-                                           DatasourceManager datasourceManager){
-        return new AiTaskInterfaceImpl(taskManager,spiderBusinessPool,spiderTaskTestInfoService,datasourceManager);
+                                           DatasourceManager datasourceManager) {
+        return new AiTaskInterfaceImpl(taskManager, spiderBusinessPool, spiderTaskTestInfoService, datasourceManager);
     }
 
     @Bean
@@ -333,18 +335,23 @@ public class DomainConfig {
                                         HostPluginInterface hostPluginInterface,
                                         IAreaDomainBaseInfoService baseInfoService,
                                         ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
-                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService,ISpiderDataFlowService dataFlowService,LockManager lockManager){
-        return new TaskManager(spiderAreaFunctionVersionService,spiderAreaFunctionService,baseInfoService,spiderDomainFunctionTaskService,agentVertxClient,stepService,dataFlowService,hostPluginInterface,lockManager);
+                                        AgentVertxClient agentVertxClient, ISpiderDomainFunctionAiCoderStepService stepService, ISpiderDataFlowService dataFlowService, LockManager lockManager, DatasourceManager datasourceManager) {
+        return new TaskManager(spiderAreaFunctionVersionService, spiderAreaFunctionService, baseInfoService, spiderDomainFunctionTaskService, agentVertxClient, stepService, dataFlowService, hostPluginInterface, lockManager, datasourceManager);
     }
 
     @Bean
-    public CoderTimer buildCoderTimer(Vertx vertx, ISpiderTaskTestInfoService taskTestInfoService){
-        return new CoderTimer(vertx,taskTestInfoService);
+    public CoderTimer buildCoderTimer(Vertx vertx, ISpiderTaskTestInfoService taskTestInfoService) {
+        return new CoderTimer(vertx, taskTestInfoService);
     }
 
     @Bean
-    public LockManager buildLockManager(CoderTimer coderTimer){
+    public LockManager buildLockManager(CoderTimer coderTimer) {
         return new LockManager(coderTimer);
+    }
+
+    @Bean
+    public BizUninstallHandler buildBizUninstallHandler(AgentVertxClient agentVertxClient, Vertx vertx) {
+        return new BizUninstallHandler(agentVertxClient, vertx);
     }
 
 }

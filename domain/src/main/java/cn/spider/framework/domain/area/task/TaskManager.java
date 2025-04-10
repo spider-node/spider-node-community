@@ -31,6 +31,7 @@ import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.sdk.data.DemandAnalysisParam;
 import cn.spider.framework.domain.sdk.data.UpdateDemandsParam;
 import cn.spider.node.framework.code.agent.sdk.data.CreateProjectResult;
+import cn.spider.node.host.plugin.center.sdk.data.PluginOfflineParam;
 import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionResult;
 import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionsParam;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
@@ -94,7 +95,7 @@ public class TaskManager {
                        ISpiderDomainFunctionTaskService spiderDomainFunctionTaskService,
                        AgentVertxClient agentVertxClient,
                        ISpiderDomainFunctionAiCoderStepService stepService,
-                       ISpiderDataFlowService dataFlowService, HostPluginInterface hostPluginInterface, LockManager lockManager) {
+                       ISpiderDataFlowService dataFlowService, HostPluginInterface hostPluginInterface, LockManager lockManager, DatasourceManager datasourceManager) {
         this.spiderAreaFunctionVersionService = spiderAreaFunctionVersionService;
         this.spiderAreaFunctionService = spiderAreaFunctionService;
         this.baseInfoService = baseInfoService;
@@ -104,6 +105,7 @@ public class TaskManager {
         this.dataFlowService = dataFlowService;
         this.hostPluginInterface = hostPluginInterface;
         this.lockManager = lockManager;
+        this.datasourceManager = datasourceManager;
     }
 
     // 新增领域功能的任务
@@ -271,16 +273,17 @@ public class TaskManager {
     public Future<Void> updateCoder(JsonObject param) {
 
         log.info("update_coder_info {}", param);
-        String domainFunctionVersionId = this.updateCode + param.getString("domainFunctionVersionId");
-        if (!lockManager.lock(domainFunctionVersionId)) {
+        String domainFunctionVersionId = param.getString("domainFunctionVersionId");
+        String domainFunctionVersionLockId = this.updateCode + domainFunctionVersionId;
+        if (!lockManager.lock(domainFunctionVersionLockId)) {
             return Future.failedFuture("在更新中,请稍后在世");
         }
 
-        String datasourceId = queryDatasourceIdByDomainVersion(param.getString("domainFunctionVersionId"));
+        String datasourceId = queryDatasourceIdByDomainVersion(domainFunctionVersionId);
         // 更新datasource
         spiderAreaFunctionVersionService.lambdaUpdate()
                 .set(SpiderAreaFunctionVersion::getDatasourceId, datasourceId)
-                .eq(SpiderAreaFunctionVersion::getId, datasourceId)
+                .eq(SpiderAreaFunctionVersion::getId, domainFunctionVersionId)
                 .update();
 
         Promise<Void> promise = Promise.promise();
@@ -291,16 +294,16 @@ public class TaskManager {
             hostPluginInterface.pluginOnline(new JsonObject().put("functionId", projectResult.getId())).onFailure(fail -> {
                 log.warn("发起部署失败 {}", ExceptionMessage.getStackTrace(fail));
                 promise.fail(fail);
-                lockManager.unLock(domainFunctionVersionId);
+                lockManager.unLock(domainFunctionVersionLockId);
             }).onSuccess(deploySuss -> {
                 log.warn("发起部署成功 {}", param.toString());
                 promise.complete();
-                lockManager.unLock(domainFunctionVersionId);
+                lockManager.unLock(domainFunctionVersionLockId);
             });
         }).onFailure(fail -> {
             promise.fail(fail);
             log.error("更新插件失败 {}", ExceptionMessage.getStackTrace(fail));
-            lockManager.unLock(domainFunctionVersionId);
+            lockManager.unLock(domainFunctionVersionLockId);
         });
         return promise.future();
     }
@@ -350,5 +353,18 @@ public class TaskManager {
         Integer baseInfoId = domainBaseInfoIds.stream().findFirst().orElse(null);
         String datasource = queryDatasource(baseInfoId);
         return queryDatasourceId(datasource);
+    }
+
+    public Future<Void> uninstallBiz(String domainFunctionVersionId) {
+        Promise<Void> promise = Promise.promise();
+        PluginOfflineParam pluginOfflineParam = new PluginOfflineParam(domainFunctionVersionId);
+        hostPluginInterface.pluginOffline(JsonObject.mapFrom(pluginOfflineParam)).onSuccess(suss -> {
+            log.info("插件下线成功 {}", domainFunctionVersionId);
+            promise.complete();
+        }).onFailure(fail -> {
+            log.info("插件下线失败功能id为 {},异常信息为 {}", domainFunctionVersionId, ExceptionMessage.getStackTrace(fail));
+            promise.fail(fail);
+        });
+        return promise.future();
     }
 }

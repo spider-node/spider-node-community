@@ -34,12 +34,15 @@ public class TransactionExampleBackHandler {
      */
     private String localBrokerName;
 
+    private Vertx vertx;
+
     public TransactionExampleBackHandler(EventBus eventBus, TransactionManager transactionManager, Vertx vertx) {
         this.eventBus = eventBus;
         this.transactionManager = transactionManager;
         // 监听实例的结束事件
         this.eventType = EventType.END_FLOW_EXAMPLE;
         this.localBrokerName = BrokerInfoUtil.queryBrokerName(vertx);
+        this.vertx = vertx;
         registerConsumer();
     }
 
@@ -53,6 +56,17 @@ public class TransactionExampleBackHandler {
                 return;
             }
             EndFlowExampleEventData endFlowExampleEventData = JSON.parseObject(message.body(), EndFlowExampleEventData.class);
+            // 延迟500毫秒更新状态
+            delayDecision(endFlowExampleEventData);
+        });
+    }
+
+    /**
+     * 延迟200毫秒更新状态
+     * @param endFlowExampleEventData
+     */
+    private void delayDecision(EndFlowExampleEventData endFlowExampleEventData) {
+        vertx.setTimer(100, handler -> {
             FlowExampleStatus status = endFlowExampleEventData.getStatus();
             ExampleStatus exampleStatus = status.equals(FlowExampleStatus.SUSS) ? ExampleStatus.SUSS : ExampleStatus.FAIL;
             transactionManager.updateExampleStatus(endFlowExampleEventData.getRequestId(), exampleStatus);

@@ -73,6 +73,11 @@ public class AiTaskInterfaceImpl implements AiTaskInterface {
     }
 
     @Override
+    public Future<Void> uninstallBiz(JsonObject param) {
+        return taskManager.uninstallBiz(param.getString("domainFunctionVersionId"));
+    }
+
+    @Override
     public Future<Void> demandAiParse(JsonObject param) {
         Promise<Void> promise = Promise.promise();
         spiderBusinessPool.execute(() -> {

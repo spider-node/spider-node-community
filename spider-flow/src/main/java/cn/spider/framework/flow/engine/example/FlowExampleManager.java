@@ -353,10 +353,12 @@ public class FlowExampleManager {
             return true;
         }
         if (example.getVerifySumCount() > example.getVerifyCount()) {
+            ServiceTask serviceTask = (ServiceTask) example.getFlowElement();
             EndElementExampleData elementExampleData = EndElementExampleData.builder()
                     .requestId(example.getRequestId())
-                    .flowElementId(example.getFlowElement().getId())
+                    .flowElementId(serviceTask.getId())
                     .status(ElementStatus.FAIL)
+                    .transactionGroupId(serviceTask.queryTransactionGroup())
                     .exception("check结束没有等待到对应的数据")
                     .build();
             eventManager.sendMessage(EventType.ELEMENT_END, elementExampleData);

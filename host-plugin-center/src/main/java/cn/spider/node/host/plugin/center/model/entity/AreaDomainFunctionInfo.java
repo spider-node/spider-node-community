@@ -145,4 +145,9 @@ public class AreaDomainFunctionInfo implements Serializable {
      * 插件版本
      */
     private String bizVersion;
+
+    /**
+     * 当前部署的bizName
+     */
+    private String bizName;
 }

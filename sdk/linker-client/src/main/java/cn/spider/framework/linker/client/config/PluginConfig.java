@@ -17,9 +17,9 @@ public class PluginConfig {
 
     @Bean
     public SpiderPluginManager spiderPluginManager(ApplicationContext applicationContext, @Value("${spring.application.name}") String bizName,
-                                                   @Value("${spider.pom.version}") String version,
-                                                   @Value("${spider.taskId}") String taskId) {
-        return new SpiderPluginManager(applicationContext, bizName, version, taskId);
+                                                   @Value("${spider.pom.version}") String pomVersion,
+                                                   @Value("${spider.taskId}") String taskId,@Value("${spider.biz.version}") String bizVersion) {
+        return new SpiderPluginManager(applicationContext, bizName, pomVersion, taskId,bizVersion);
     }
 
     @Bean

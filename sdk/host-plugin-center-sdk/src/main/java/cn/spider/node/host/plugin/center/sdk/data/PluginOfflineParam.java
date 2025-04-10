@@ -7,6 +7,9 @@ public class PluginOfflineParam {
         this.areaVersionId = areaVersionId;
     }
 
+    public PluginOfflineParam() {
+    }
+
     public String getAreaVersionId() {
         return areaVersionId;
     }

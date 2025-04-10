@@ -1,6 +1,7 @@
 package cn.spider.node.host.plugin.center.config;
 
 import cn.spider.framework.common.event.EventConfig;
+import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.node.host.plugin.center.MainVerticle;
 import cn.spider.node.host.plugin.center.application.HostApplicationManager;
 import cn.spider.node.host.plugin.center.application.http.HostApplicationClient;
@@ -66,6 +67,11 @@ public class SpringConfig {
     }
 
     @Bean
+    public LinkerService buildLinkerService(Vertx vertx) {
+        return LinkerService.createProxy(vertx, LinkerService.ADDRESS);
+    }
+
+    @Bean
     public DataSource dataSource(Vertx vertx) {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
@@ -126,16 +132,16 @@ public class SpringConfig {
     }
 
     @Bean
-    public WebClient buildWebClient(Vertx vertx){
+    public WebClient buildWebClient(Vertx vertx) {
         return WebClient.create(vertx);
     }
 
     @Bean
-    public HostApplicationClient buildApplicationClient(WebClient webClient,Vertx vertx){
+    public HostApplicationClient buildApplicationClient(WebClient webClient, Vertx vertx) {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         Integer hostApplicationPort = Integer.parseInt(localMap.get("host_application_port"));
-        return new HostApplicationClient(webClient,hostApplicationPort);
+        return new HostApplicationClient(webClient, hostApplicationPort);
     }
 
     @Bean(name = "spiderBusinessPool")

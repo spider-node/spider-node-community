@@ -38,16 +38,19 @@ public class SpiderPluginManager {
 
     private String bizName;
 
-    private String version;
+    private String pomVersion;
 
     private String taskId;
 
-    public SpiderPluginManager(ApplicationContext applicationContext, String bizName, String version, String taskId) {
+    private String bizVersion;
+
+    public SpiderPluginManager(ApplicationContext applicationContext, String bizName, String pomVersion, String taskId, String bizVersion) {
         this.applicationContext = applicationContext;
         this.methodMap = new HashMap<>();
         this.bizName = bizName;
-        this.version = version;
+        this.pomVersion = pomVersion;
         this.taskId = taskId;
+        this.bizVersion = bizVersion;
     }
 
     public void buildPlugin() {
@@ -59,16 +62,13 @@ public class SpiderPluginManager {
         beansOfClassAnnotation.values().forEach(item -> {
             Class<?> targetClass = ProxyUtil.noneProxyClass(item);
             NodeParamInfoBath nodeParamInfoBath = this.doInit(targetClass, true, item);
-            nodeParamInfoBath.getNodeParamInfoList().forEach(param -> {
-                param.setVersion(this.version);
-            });
             nodeParamInfos.addAll(nodeParamInfoBath.getNodeParamInfoList());
         });
         try {
             this.nodeParamInfoBath = new NodeParamInfoBath();
             this.nodeParamInfoBath.setNodeParamInfoList(nodeParamInfos);
             nodeParamInfoBath.setTaskId(this.taskId);
-            nodeParamInfoBath.setPluginKey(PluginKeyUtil.buildPluginKey(this.bizName, this.version));
+            nodeParamInfoBath.setPluginKey(PluginKeyUtil.buildPluginKey(this.bizName, this.pomVersion));
         } catch (Exception e) {
             log.error("获取参数失败");
         }
@@ -89,10 +89,10 @@ public class SpiderPluginManager {
             NodeParamInfo nodeParamInfo = new NodeParamInfo();
             nodeParamInfo.setTaskComponent(taskComponent.name());
             nodeParamInfo.setTaskService(taskServiceName);
-            nodeParamInfo.setVersion(this.version);
+            nodeParamInfo.setVersion(this.bizVersion);
             nodeParamInfo.setTaskId(this.taskId);
             nodeParamInfos.add(nodeParamInfo);
-            String key = nodeParamInfo.getTaskComponent() + "@" + nodeParamInfo.getTaskService() + "@" + this.version;
+            String key = nodeParamInfo.getTaskComponent() + "@" + nodeParamInfo.getTaskService() + "@" + this.bizVersion;
             SpiderPlugin spiderPlugin = new SpiderPlugin(method, target, key, nodeParamInfo.getTaskComponent(), nodeParamInfo.getTaskService(), nodeParamInfo.getMethod());
             methodMap.put(spiderPlugin.getKey(), spiderPlugin);
         });
@@ -100,25 +100,6 @@ public class SpiderPluginManager {
         nodeParamInfoBath.setNodeParamInfoList(nodeParamInfos);
         return nodeParamInfoBath;
     }
-
-    private List<NodeField> convertInputParam(List<ParamInjectDef> params) {
-        if (CollectionUtils.isEmpty(params)) {
-            return new ArrayList<>();
-        }
-        return params.stream().map(item -> {
-            NodeField nodeField = new NodeField(item.getFieldName(), item.getTargetName(), item.getParamType().getName());
-            if (CollectionUtils.isEmpty(item.getFieldInjectDefList())) {
-                return nodeField;
-            }
-            List<NodeObjectStructure> nodeParamStructure = item.getFieldInjectDefList().stream().map(fieldItem -> {
-                NodeObjectStructure nodeObjectStructure = new NodeObjectStructure(fieldItem.getParamType().getName(), fieldItem.getFieldName());
-                return nodeObjectStructure;
-            }).collect(Collectors.toList());
-            nodeField.setNodeParamStructure(nodeParamStructure);
-            return nodeField;
-        }).collect(Collectors.toList());
-    }
-
 
     private List<Method> filterTaskServiceMethods(Method[] taskServiceMethods, Class<?> targetClass,
                                                   boolean scanSuper) {

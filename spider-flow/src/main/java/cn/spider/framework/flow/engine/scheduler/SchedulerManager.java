@@ -10,6 +10,7 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.common.utils.NumberUtil;
 import cn.spider.framework.container.sdk.data.SimpleStartResult;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.engine.example.data.FlowExample;
 import cn.spider.framework.linker.sdk.data.*;
@@ -21,10 +22,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @BelongsProject: spider-node
@@ -73,6 +76,7 @@ public class SchedulerManager {
                 .requestParam(param.toString())
                 .requestId(requestId)
                 .flowElementId(serviceTask.getId())
+                .transactionGroupId(serviceTask.queryTransactionGroup())
                 .status(ElementStatus.SUSS)
                 .build();
         Map<String, Object> paramMap = param.getMap();
@@ -135,6 +139,9 @@ public class SchedulerManager {
     }
 
     private Future<JsonObject> businessFunctionRun(JsonObject request, String functionId) {
+        if (Objects.isNull(flowService)) {
+            this.flowService = SpiderCoreVerticle.factory.getBean(FlowService.class);
+        }
         JsonObject param = new JsonObject();
         param.put(REQUEST, request);
         param.put(FUNCTION_ID, functionId);
@@ -190,8 +197,11 @@ public class SchedulerManager {
         functionRequest.setServiceName(serviceTask.getTaskService());
         functionRequest.setWorkerName(workerName);
         functionRequest.setParam(paramMap);
-        functionRequest.setXid(serviceTask.getId());
-        functionRequest.setBranchId(NumberUtil.stringToLong(example.getRequestId(),serviceTask.queryTransactionGroup()));
+        if (StringUtils.isNotEmpty(serviceTask.queryTransactionGroup())) {
+            functionRequest.setXid(serviceTask.getId());
+            functionRequest.setBranchId(NumberUtil.stringToLong(example.getRequestId(), serviceTask.queryTransactionGroup()));
+
+        }
         functionRequest.setVersion(serviceTask.getVersion());
         functionRequest.setProviderType(ApplicationProviderType.SPIDER_HOST_APPLICATION);
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
