@@ -155,5 +155,14 @@ public class Constant {
     //spider.worker.type
     public final static String WORKER_TYPE = "SPIDER_WORKER_TYPE";
 
+    public final static String GET = "GET";
+    public final static String POST = "POST";
+
+    public final static String BUSINESS_FUNCTION = "BUSINESS_FUNCTION";
+
+    public final static String DOMAIN_FUNCTION = "DOMAIN_FUNCTION";
+
+    public final static String HTTP_FUNCTION = "HTTP_FUNCTION";
+
 
 }

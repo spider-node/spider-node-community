@@ -1,18 +1,18 @@
 package cn.spider.framework.linker.server.external;
 
 import cn.spider.framework.common.config.Constant;
-import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.common.utils.TaskKeyUtil;
+import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.domain.sdk.data.FlowElementModel;
 import cn.spider.framework.domain.sdk.data.FlowExampleModel;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
-import cn.spider.framework.linker.sdk.interfaces.VertxRpcTaskInterface;
 import cn.spider.framework.linker.server.baseinfo.BaseManager;
+import cn.spider.framework.linker.server.http.HttpActuator;
+import cn.spider.framework.linker.server.http.data.HttpTestData;
 import cn.spider.framework.linker.server.socket.ClientInfo;
-import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.proto.grpc.TransferRequest;
 import cn.spider.framework.proto.grpc.TransferResponse;
@@ -26,7 +26,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -47,14 +46,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class LinkerServiceImpl implements LinkerService {
 
-    private ClientRegisterCenter clientRegisterCenter;
-
-    private Boolean isVertxRpc;
-
-    private Map<String, VertxRpcTaskInterface> rpcTaskInterfaceMap;
-
-    private Vertx vertx;
-
     private FunctionInterface functionInterface;
 
     private WorkerRegisterManager workerRegisterManager;
@@ -63,16 +54,22 @@ public class LinkerServiceImpl implements LinkerService {
 
     private BaseManager baseManager;
 
-    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx, FunctionInterface functionInterface, WorkerRegisterManager workerRegisterManager, HostPluginInterface hostPluginInterface, BaseManager baseManager) {
-        this.clientRegisterCenter = clientRegisterCenter;
-        String rpcType = BrokerInfoUtil.queryRpcType(vertx);
-        this.isVertxRpc = rpcType.equals("vertxRpc");
-        this.rpcTaskInterfaceMap = new HashMap<>();
-        this.vertx = vertx;
+    private FlowService flowService;
+
+    private HttpActuator httpActuator;
+
+    private final String REQUEST = "request";
+
+    private final String FUNCTION_ID = "functionId";
+
+
+    public LinkerServiceImpl(FunctionInterface functionInterface, WorkerRegisterManager workerRegisterManager, HostPluginInterface hostPluginInterface, BaseManager baseManager, HttpActuator httpActuator, FlowService flowService) {
         this.functionInterface = functionInterface;
         this.workerRegisterManager = workerRegisterManager;
         this.hostPluginInterface = hostPluginInterface;
         this.baseManager = baseManager;
+        this.httpActuator = httpActuator;
+        this.flowService = flowService;
     }
 
     /**
@@ -129,10 +126,52 @@ public class LinkerServiceImpl implements LinkerService {
                     });
             return promise.future();
         }
-        runBusinessRequest(linkerServerRequest.getFunctionRequest(), promise, param);
+        JsonObject request = new JsonObject(linkerServerRequest.getFunctionRequest().getParam());
+        switch (linkerServerRequest.getFunctionRequest().getFunctionType()) {
+            case Constant.BUSINESS_FUNCTION:
+
+                businessFunctionRun(request, linkerServerRequest.getFunctionRequest().getFunctionVersionId(), promise);
+                break;
+            case Constant.DOMAIN_FUNCTION:
+                runBusinessRequest(linkerServerRequest.getFunctionRequest(), promise, param);
+                break;
+            case Constant.HTTP_FUNCTION:
+                runHttpFunction(request, promise, linkerServerRequest.getFunctionRequest().getHttpUrl(), linkerServerRequest.getFunctionRequest().getHttpType(), linkerServerRequest.getFunctionRequest().getHttpHeader());
+                break;
+        }
+
 
         // 解析请求，是走功能请求，还是事务操作的请求
         return promise.future();
+    }
+
+    private void runHttpFunction(JsonObject param, Promise<JsonObject> promise, String url, String httpType, Map<String, String> header) {
+        switch (httpType) {
+            case Constant.GET:
+                httpActuator.get(url, param, promise, header);
+                break;
+            case Constant.POST:
+                httpActuator.post(url, param, promise, header);
+                break;
+        }
+    }
+
+
+    private void businessFunctionRun(JsonObject request, String functionId, Promise<JsonObject> promise) {
+        JsonObject param = new JsonObject();
+        param.put(REQUEST, request);
+        param.put(FUNCTION_ID, functionId);
+        Future<JsonObject> resultFuture = flowService.startFlowV2(param);
+        LinkerServerResponse linkerServerResponse = new LinkerServerResponse();
+        resultFuture.onSuccess(suss -> {
+            linkerServerResponse.setResultCode(ResultCode.SUSS);
+            linkerServerResponse.setResultData(JSONObject.parseObject(suss.toString()));
+            promise.complete(JsonObject.mapFrom(linkerServerResponse));
+        }).onFailure(fail -> {
+            linkerServerResponse.setResultCode(ResultCode.FAIL);
+            linkerServerResponse.setExceptional(ExceptionMessage.getStackTrace(fail));
+            promise.complete(JsonObject.mapFrom(linkerServerResponse));
+        });
     }
 
     @Override
@@ -156,6 +195,21 @@ public class LinkerServiceImpl implements LinkerService {
         Set<String> ips = baseManager.queryIpByFunctionKey(queryTaskDeployParam.getTaskComponent(), queryTaskDeployParam.getTaskService(), queryTaskDeployParam.getVersion());
         QueryTaskDeployResult queryTaskDeployResult = new QueryTaskDeployResult(ips);
         return Future.succeededFuture(JsonObject.mapFrom(queryTaskDeployResult));
+    }
+
+    @Override
+    public Future<JsonObject> httpTest(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        HttpTestData httpTestData = data.mapTo(HttpTestData.class);
+        switch (httpTestData.getHttpType()) {
+            case Constant.GET:
+                httpActuator.get(httpTestData.getHttpUrl(), httpTestData.getParam(), promise, httpTestData.getHttpHeader());
+                break;
+            case Constant.POST:
+                httpActuator.post(httpTestData.getHttpUrl(), httpTestData.getParam(), promise, httpTestData.getHttpHeader());
+                break;
+        }
+        return promise.future();
     }
 
     /**

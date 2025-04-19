@@ -18,6 +18,8 @@ import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionS
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
 import cn.spider.framework.domain.area.function.version.VersionManager;
 import cn.spider.framework.domain.area.handler.BizUninstallHandler;
+import cn.spider.framework.domain.area.http.HttpFunctionImpl;
+import cn.spider.framework.domain.area.http.service.ISpiderToolHttpService;
 import cn.spider.framework.domain.area.impl.*;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.node.service.ISpiderAreaFunctionService;
@@ -31,6 +33,8 @@ import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionAiCoder
 import cn.spider.framework.domain.area.task.service.ISpiderDomainFunctionTaskService;
 import cn.spider.framework.domain.area.task.service.ISpiderTaskTestInfoService;
 import cn.spider.framework.domain.area.timer.CoderTimer;
+import cn.spider.framework.domain.area.tool.FrameworkInterfaceImpl;
+import cn.spider.framework.domain.area.tool.service.ISpiderToolFrameworkService;
 import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.area.util.OkHttpUtil;
 import cn.spider.framework.domain.area.worker.WorkerImpl;
@@ -85,7 +89,8 @@ import java.util.concurrent.TimeUnit;
         "cn.spider.framework.domain.area.node.mapper",
         "cn.spider.framework.domain.area.task.mapper",
         "cn.spider.framework.domain.area.domain.mapper",
-        "cn.spider.framework.domain.area.aiTask.manger"})
+        "cn.spider.framework.domain.area.tool.mapper",
+        "cn.spider.framework.domain.area.http.mapper"})
 public class DomainConfig {
 
     @Bean
@@ -100,8 +105,8 @@ public class DomainConfig {
 
     @Bean
     public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService, LockManager lockManager, AgentVertxClient agentVertxClient, HostPluginInterface hostPluginInterface,
-                                              ISpiderDataFlowService spiderDataFlowService) {
-        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService);
+                                              ISpiderDataFlowService spiderDataFlowService,ISpiderToolHttpService spiderToolHttpService) {
+        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService,spiderToolHttpService);
     }
 
     @Bean
@@ -174,6 +179,11 @@ public class DomainConfig {
     }
 
     @Bean
+    public FrameworkInterface buildFrameworkInterface(ISpiderToolFrameworkService spiderToolFrameworkService, Executor spiderBusinessPool) {
+        return new FrameworkInterfaceImpl(spiderToolFrameworkService, spiderBusinessPool);
+    }
+
+    @Bean
     public OkHttpClient buildHttp() throws NoSuchAlgorithmException, KeyManagementException {
         return new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
@@ -181,6 +191,11 @@ public class DomainConfig {
                 .sslSocketFactory(OkHttpUtil.getIgnoreInitedSslContext().getSocketFactory(), OkHttpUtil.IGNORE_SSL_TRUST_MANAGER_X509)
                 .hostnameVerifier(OkHttpUtil.getIgnoreSslHostnameVerifier())
                 .build();
+    }
+
+    @Bean
+    public HttpFunctionInterface buildHttpFunctionInterface(ISpiderToolHttpService spiderToolHttpService, Executor spiderBusinessPool) {
+        return new HttpFunctionImpl(spiderToolHttpService, spiderBusinessPool);
     }
 
     @Bean

@@ -1,4 +1,5 @@
 package cn.spider.framework.domain.area;
+
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.domain.area.config.DomainConfig;
 import cn.spider.framework.domain.sdk.interfaces.*;
@@ -84,6 +85,18 @@ public class AreaVerticle extends AbstractVerticle {
         MessageConsumer<JsonObject> aiTaskConsumer = this.binder.setAddress(AiTaskInterface.ADDRESS)
                 .register(AiTaskInterface.class, aiTaskInterface);
 
+        FrameworkInterface frameworkInterface = this.factory.getBean(FrameworkInterface.class);
+
+        MessageConsumer<JsonObject> frameworkInterfaceConsumer = this.binder.setAddress(FrameworkInterface.ADDRESS)
+                .register(FrameworkInterface.class, frameworkInterface);
+
+        HttpFunctionInterface httpFunctionInterface = this.factory.getBean(HttpFunctionInterface.class);
+
+        MessageConsumer<JsonObject> httpFunctionInterfaceConsumer = this.binder.setAddress(HttpFunctionInterface.ADDRESS)
+                .register(HttpFunctionInterface.class, httpFunctionInterface);
+
+        this.containerConsumers.add(httpFunctionInterfaceConsumer);
+
         this.containerConsumers.add(dataFlowConsumer);
 
         this.containerConsumers.add(versionConsumer);
@@ -93,12 +106,13 @@ public class AreaVerticle extends AbstractVerticle {
         this.containerConsumers.add(workerConsumer);
 
         this.containerConsumers.add(aiTaskConsumer);
+        this.containerConsumers.add(frameworkInterfaceConsumer);
         log.info("domain-start-suss");
         startPromise.complete();
     }
 
     @Override
-    public void stop(Promise<Void> stopPromise){
+    public void stop(Promise<Void> stopPromise) {
         factory.close();
         for (MessageConsumer<JsonObject> consumer : containerConsumers) {
             this.binder.unregister(consumer);

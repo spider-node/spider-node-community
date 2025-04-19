@@ -43,4 +43,9 @@ public interface LinkerService {
      * 查询-task部署到了那些节点上
      */
     Future<JsonObject> queryTaskDeploy(JsonObject data);
+
+    /**
+     * 发起http请求测试
+     */
+    Future<JsonObject> httpTest(JsonObject data);
 }

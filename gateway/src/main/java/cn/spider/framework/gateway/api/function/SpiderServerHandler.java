@@ -69,6 +69,11 @@ public class SpiderServerHandler {
 
     private LinkerService linkerService;
 
+    private FrameworkInterface frameworkInterface;
+
+    private HttpFunctionInterface httpFunctionInterface;
+
+
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
                                BusinessService businessService,
@@ -81,7 +86,7 @@ public class SpiderServerHandler {
                                Vertx vertx,
                                EventManager eventManager, DataFlowInterface dataFlowInterface,
                                AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface,
-                               LinkerService linkerService) {
+                               LinkerService linkerService, FrameworkInterface frameworkInterface, HttpFunctionInterface httpFunctionInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -97,6 +102,8 @@ public class SpiderServerHandler {
         this.aiTaskInterface = aiTaskInterface;
         this.hostPluginInterface = hostPluginInterface;
         this.linkerService = linkerService;
+        this.frameworkInterface = frameworkInterface;
+        this.httpFunctionInterface = httpFunctionInterface;
     }
 
     public void init(Router router) {
@@ -213,6 +220,11 @@ public class SpiderServerHandler {
         createNodeParamCoder();
         writeJsFunctionInfo();
         queryTaskDeploy();
+        queryFramework();
+        insertFramework();
+        queryHttpFunction();
+        upsertHttpFunction();
+        httpTest();
     }
 
     public void selectBpmn() {
@@ -1725,6 +1737,92 @@ public class SpiderServerHandler {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * queryFramework
+     */
+    private void queryFramework() {
+        router.post("/query/framework")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    frameworkInterface.queryFramework(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+
+    }
+
+    /**
+     * insertFramework
+     */
+    private void insertFramework() {
+        router.post("/insert/framework")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    frameworkInterface.insertFramework(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 查询http功能
+     */
+    private void queryHttpFunction() {
+        router.post("/query/http_function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    httpFunctionInterface.queryHttpFunction(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * 修改更新http功能
+     */
+    private void upsertHttpFunction() {
+        router.post("/upsert/http_function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    httpFunctionInterface.upsertHttpFunction(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    /**
+     * httpTest
+     */
+    private void httpTest() {
+        router.post("/http_test")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    linkerService.httpTest(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send();
                     });
                 });
     }

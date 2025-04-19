@@ -266,6 +266,11 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
 
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.FUNCTION_TYPE).ifPresent(serviceTaskImpl::setFunctionType);
 
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.HTTP_URL).ifPresent(serviceTaskImpl::setHttpUrl);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.HTTP_TYPE).ifPresent(serviceTaskImpl::setHttpType);
+
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.HTTP_HEADER).ifPresent(serviceTaskImpl::setHttpHeader);
 
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.JS_FUNCTION_PARAM_LIST_REAL).ifPresent(serviceTaskImpl::setJsParamReal);
 

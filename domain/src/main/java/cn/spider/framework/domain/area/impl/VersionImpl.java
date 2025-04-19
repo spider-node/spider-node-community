@@ -2,13 +2,10 @@ package cn.spider.framework.domain.area.impl;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
-import cn.spider.framework.domain.area.function.version.data.QueryFunctionVersionResult;
+import cn.spider.framework.domain.area.function.version.data.*;
 import cn.spider.framework.domain.sdk.data.NodeJsFunctionInfo;
 import cn.spider.framework.domain.sdk.data.QueryBpmnUrlResult;
 import cn.spider.framework.domain.area.function.version.VersionManager;
-import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
-import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
-import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
 import cn.spider.framework.domain.sdk.data.RefreshBpmnParam;
 import cn.spider.framework.domain.sdk.data.StartNodeJsParam;
 import cn.spider.framework.domain.sdk.interfaces.VersionInterface;
@@ -132,7 +129,8 @@ public class VersionImpl implements VersionInterface {
         Promise<Void> promise = Promise.promise();
         spiderBusinessPool.execute(() -> {
             try {
-                versionManager.configToJavaEntity(data.getString("functionVersionId"));
+                ToJavaParam toJavaParam = data.mapTo(ToJavaParam.class);
+                versionManager.configToJavaEntity(toJavaParam);
                 promise.complete();
             } catch (Exception e) {
                 log.error("configToJavaEntityError {}", ExceptionMessage.getStackTrace(e));

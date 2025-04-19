@@ -2,6 +2,7 @@ package cn.spider.framework.linker.server.config;
 
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.config.DbRocksConfig;
 import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
@@ -10,6 +11,7 @@ import cn.spider.framework.domain.sdk.interfaces.WorkerInterface;
 import cn.spider.framework.linker.server.LinkerMainVerticle;
 import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.consumer.EscalationHandler;
+import cn.spider.framework.linker.server.http.HttpActuator;
 import cn.spider.framework.linker.server.socket.HostWorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
@@ -18,6 +20,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.net.NetServer;
+import io.vertx.ext.web.client.WebClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -68,6 +71,21 @@ public class SpringConfig {
     public NetServer createNetServer(Vertx vertx) {
         NetServer server = vertx.createNetServer();
         return server;
+    }
+
+    @Bean
+    public WebClient buildWebClient(Vertx vertx) {
+        return WebClient.create(vertx);
+    }
+
+    @Bean
+    public HttpActuator buildHttpActuator(WebClient webClient) {
+        return new HttpActuator(webClient);
+    }
+
+    @Bean
+    public FlowService buildFlowService(Vertx vertx) {
+        return FlowService.createProxy(vertx, FlowService.ADDRESS);
     }
 
     /**

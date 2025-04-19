@@ -173,6 +173,25 @@ public interface ServiceTask extends Task {
      */
     String queryDatasourceId();
 
+
+    /**
+     * 查询http_url
+     */
+    String getHttpUrl();
+
+    /**
+     * 查询http_type
+     */
+    String getHttpType();
+
+    /**
+     * http的header
+     * @return
+     */
+    Map<String,String> getHttpHeader();
+
+    Boolean queryHttps();
+
     /**
      * 获取Service Task 构造器
      *

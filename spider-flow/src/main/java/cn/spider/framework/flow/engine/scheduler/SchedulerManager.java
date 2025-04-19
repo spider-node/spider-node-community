@@ -50,8 +50,6 @@ public class SchedulerManager {
 
     private EventManager eventManager;
 
-    private FlowService flowService;
-
     private final String REQUEST = "request";
 
     private final String FUNCTION_ID = "functionId";
@@ -88,7 +86,7 @@ public class SchedulerManager {
         LinkerServerRequest linkerServerRequest = buildRequestEntityNew(paramMap, serviceTask, workerName, methodName, example);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
 
-        Future<JsonObject> result = invoke(request, param, serviceTask);
+        Future<JsonObject> result = invoke(request);
         result.onSuccess(suss -> {
             LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject(Constant.DATA).toString(), LinkerServerResponse.class);
             // 校验返回的code
@@ -122,44 +120,14 @@ public class SchedulerManager {
         });
     }
 
-    private Future<JsonObject> invoke(JsonObject request, JsonObject param, ServiceTask serviceTask) {
-        FunctionType functionType = serviceTask.queryFunctionType();
-        switch (functionType) {
-            case DOMAIN_FUNCTION:
-                return domainFunctionRun(request);
-            case BUSINESS_FUNCTION:
-                return businessFunctionRun(param, serviceTask.queryFunctionId());
-        }
-        return Future.failedFuture("没有找到功能类型,请检查模型");
+    private Future<JsonObject> invoke(JsonObject request) {
+        return domainFunctionRun(request);
     }
 
 
     private Future<JsonObject> domainFunctionRun(JsonObject request) {
         return linkerService.submittals(request);
     }
-
-    private Future<JsonObject> businessFunctionRun(JsonObject request, String functionId) {
-        if (Objects.isNull(flowService)) {
-            this.flowService = SpiderCoreVerticle.factory.getBean(FlowService.class);
-        }
-        JsonObject param = new JsonObject();
-        param.put(REQUEST, request);
-        param.put(FUNCTION_ID, functionId);
-        Promise<JsonObject> promise = Promise.promise();
-        Future<JsonObject> resultFuture = flowService.startFlowV2(param);
-        LinkerServerResponse linkerServerResponse = new LinkerServerResponse();
-        resultFuture.onSuccess(suss -> {
-            linkerServerResponse.setResultCode(ResultCode.SUSS);
-            linkerServerResponse.setResultData(JSONObject.parseObject(suss.toString()));
-            promise.complete(JsonObject.mapFrom(linkerServerResponse));
-        }).onFailure(fail -> {
-            linkerServerResponse.setResultCode(ResultCode.FAIL);
-            linkerServerResponse.setExceptional(ExceptionMessage.getStackTrace(fail));
-            promise.complete(JsonObject.mapFrom(linkerServerResponse));
-        });
-        return promise.future();
-    }
-
 
     public Future<JsonObject> simpleInvoke(Map<String, Object> paramMap, String workerName, String method, String taskComponent, String taskService, String version) {
         Promise<JsonObject> promise = Promise.promise();
@@ -197,10 +165,16 @@ public class SchedulerManager {
         functionRequest.setServiceName(serviceTask.getTaskService());
         functionRequest.setWorkerName(workerName);
         functionRequest.setParam(paramMap);
+        functionRequest.setFunctionType(serviceTask.queryFunctionType().name());
+        functionRequest.setFunctionVersionId(serviceTask.queryFunctionVersionId());
+        functionRequest.setHttpUrl(serviceTask.getHttpUrl());
+        functionRequest.setHttpType(serviceTask.getHttpType());
+        functionRequest.setHttpHeader(serviceTask.getHttpHeader());
+        functionRequest.setHttps(serviceTask.queryHttps());
+
         if (StringUtils.isNotEmpty(serviceTask.queryTransactionGroup())) {
             functionRequest.setXid(serviceTask.getId());
             functionRequest.setBranchId(NumberUtil.stringToLong(example.getRequestId(), serviceTask.queryTransactionGroup()));
-
         }
         functionRequest.setVersion(serviceTask.getVersion());
         functionRequest.setProviderType(ApplicationProviderType.SPIDER_HOST_APPLICATION);

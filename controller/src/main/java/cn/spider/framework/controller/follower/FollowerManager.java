@@ -1,42 +1,31 @@
 package cn.spider.framework.controller.follower;
 
 import cn.spider.framework.common.config.Constant;
-import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.NotifyLeaderCommissionData;
 import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.container.sdk.interfaces.LeaderService;
 import cn.spider.framework.controller.BrokerRoleManager;
-import cn.spider.framework.controller.ControllerVerticle;
 import cn.spider.framework.controller.broker.BrokerManager;
 import cn.spider.framework.controller.impl.FollowerHeartServiceImpl;
 import cn.spider.framework.controller.leader.Leader;
-import cn.spider.framework.controller.leader.LeaderManager;
 import cn.spider.framework.controller.sdk.data.FollowerInfo;
 import cn.spider.framework.controller.sdk.data.QueryLeaderInfoResult;
 import cn.spider.framework.controller.sdk.interfaces.FollowerHeartService;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.controller.timer.ControllerTimer;
 import com.alibaba.fastjson.JSON;
-import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.NetClient;
-import io.vertx.core.net.NetClientOptions;
 import io.vertx.serviceproxy.ServiceBinder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.beans.BeansException;
+
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @BelongsProject: spider-node

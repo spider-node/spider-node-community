@@ -47,8 +47,40 @@ public class FunctionRequest {
     // 应用类型
     private ApplicationProviderType providerType;
 
+    private String functionType;
+
+    /**
+     * http_url
+     */
+    private String httpUrl;
+
+    /**
+     * http_header
+     */
+    private Map<String, String> httpHeader;
+
+    /**
+     * http/https的类型
+     */
+    private String httpType;
+
+    /**
+     * 功能id
+     */
+    private String functionVersionId;
+
+    private Boolean https;
+
     // 宿主机判断如何调用插件
     private String uniqueId;
+
+    public Boolean getHttps() {
+        return https;
+    }
+
+    public void setHttps(Boolean https) {
+        this.https = https;
+    }
 
     public String getUniqueId() {
         return uniqueId;
@@ -137,5 +169,45 @@ public class FunctionRequest {
 
     public void setParam(Map<String, Object> param) {
         this.param = param;
+    }
+
+    public String getFunctionType() {
+        return functionType;
+    }
+
+    public void setFunctionType(String functionType) {
+        this.functionType = functionType;
+    }
+
+    public String getHttpUrl() {
+        return httpUrl;
+    }
+
+    public void setHttpUrl(String httpUrl) {
+        this.httpUrl = httpUrl;
+    }
+
+    public Map<String, String> getHttpHeader() {
+        return httpHeader;
+    }
+
+    public void setHttpHeader(Map<String, String> httpHeader) {
+        this.httpHeader = httpHeader;
+    }
+
+    public String getHttpType() {
+        return httpType;
+    }
+
+    public void setHttpType(String httpType) {
+        this.httpType = httpType;
+    }
+
+    public String getFunctionVersionId() {
+        return functionVersionId;
+    }
+
+    public void setFunctionVersionId(String functionVersionId) {
+        this.functionVersionId = functionVersionId;
     }
 }

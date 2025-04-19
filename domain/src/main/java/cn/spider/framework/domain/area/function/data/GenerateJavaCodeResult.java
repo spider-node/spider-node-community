@@ -1,9 +1,12 @@
 package cn.spider.framework.domain.area.function.data;
 
 import cn.spider.framework.domain.area.function.enums.GenerateCoderType;
+import cn.spider.framework.domain.area.function.version.enums.ToJavaEntitySource;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 public class GenerateJavaCodeResult {
     private String functionVersionId;
 
@@ -11,27 +14,7 @@ public class GenerateJavaCodeResult {
 
     private List<String> codes;
 
-    public String getFunctionVersionId() {
-        return functionVersionId;
-    }
+    private ToJavaEntitySource source;
 
-    public void setFunctionVersionId(String functionVersionId) {
-        this.functionVersionId = functionVersionId;
-    }
-
-    public GenerateCoderType getGenerateCoderType() {
-        return generateCoderType;
-    }
-
-    public void setGenerateCoderType(GenerateCoderType generateCoderType) {
-        this.generateCoderType = generateCoderType;
-    }
-
-    public List<String> getCodes() {
-        return codes;
-    }
-
-    public void setCodes(List<String> codes) {
-        this.codes = codes;
-    }
+    private Integer httpFunctionId;
 }

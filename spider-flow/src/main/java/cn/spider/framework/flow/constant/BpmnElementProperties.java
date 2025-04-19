@@ -138,4 +138,10 @@ public interface BpmnElementProperties {
 
     String DATASOURCE_ID = "datasource_id";
 
+    String HTTP_URL = "http_url";
+
+    String HTTP_TYPE = "http_type";
+
+    String HTTP_HEADER = "http_header";
+
 }

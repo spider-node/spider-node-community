@@ -40,6 +40,7 @@ public class LinkerServerRequest {
      */
     private String nowNodeId;
 
+
     public String getNowNodeId() {
         return nowNodeId;
     }

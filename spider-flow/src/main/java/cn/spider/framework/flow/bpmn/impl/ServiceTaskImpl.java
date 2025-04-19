@@ -27,11 +27,9 @@ import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import cn.spider.framework.linker.sdk.data.ApplicationProviderType;
 import cn.spider.framework.param.sdk.data.enums.FunctionType;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONValidator;
-import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.*;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -178,12 +176,61 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
      */
     private String datasourceId;
 
+    private String httpUrl;
+
+    private Map<String, String> httpHeader;
+
+    private String httpType;
+
+    private Boolean https;
+
+    public void setHttpHeader(String headerStr) {
+        if (StringUtils.isEmpty(headerStr)) {
+            return;
+        }
+        this.httpHeader = JSON.parseObject(headerStr, new TypeReference<Map<String, String>>() {
+        });
+    }
+
+    public void setHttpUrl(String httpUrl) {
+        if (StringUtils.isNotEmpty(httpUrl) && httpUrl.contains("https")) {
+            this.https = true;
+        }else {
+            this.https = false;
+        }
+        this.httpUrl = httpUrl;
+    }
+
+    public void setHttpType(String httpType) {
+        this.httpType = httpType;
+    }
+
     public void setDatasourceId(String datasourceId) {
         this.datasourceId = datasourceId;
     }
 
     public String queryDatasourceId() {
         return this.datasourceId;
+    }
+
+    @Override
+    public String getHttpUrl() {
+        return this.httpUrl;
+    }
+
+    @Override
+    public String getHttpType() {
+        return this.httpType;
+    }
+
+    @Override
+    public Map<String, String> getHttpHeader() {
+        return this.httpHeader;
+    }
+
+    @Override
+    public Boolean queryHttps() {
+        return this.https;
     }
 
     public void setPollElExpression(String pollElExpression) {
@@ -209,16 +256,15 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
     }
 
 
-   public void setJsParamReal(String jsParamReal) {
-    if (StringUtils.isEmpty(jsParamReal)) {
-        return;
+    public void setJsParamReal(String jsParamReal) {
+        if (StringUtils.isEmpty(jsParamReal)) {
+            return;
+        }
+        // 去除前后的空格并按逗号分割
+        String[] paramsArray = jsParamReal.trim().split(",");
+        // 将数组转换为 Set
+        this.jsParamReal = new HashSet<>(Arrays.asList(paramsArray));
     }
-    // 去除前后的空格并按逗号分割
-    String[] paramsArray = jsParamReal.trim().split(",");
-    // 将数组转换为 Set
-    this.jsParamReal = new HashSet<>(Arrays.asList(paramsArray));
-}
-
 
 
     public void setFunctionVersionId(String functionVersionId) {
@@ -257,7 +303,7 @@ public class ServiceTaskImpl extends TaskImpl implements ServiceTask {
         return this.jsParamReal;
     }
 
-    public String queryPollElExpression(){
+    public String queryPollElExpression() {
         return this.pollElExpression;
     }
 

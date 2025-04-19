@@ -1,10 +1,12 @@
 package cn.spider.framework.linker.server;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.domain.sdk.interfaces.FunctionInterface;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.linker.server.baseinfo.BaseManager;
 import cn.spider.framework.linker.server.config.SpringConfig;
 import cn.spider.framework.linker.server.external.LinkerServiceImpl;
+import cn.spider.framework.linker.server.http.HttpActuator;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
 import cn.spider.framework.linker.server.socket.WorkerRegisterManager;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
@@ -46,12 +48,13 @@ public class LinkerMainVerticle extends AbstractVerticle {
         this.vertxNew = vertx;
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
         this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
-        ClientRegisterCenter clientRegisterCenter = factory.getBean(ClientRegisterCenter.class);
         FunctionInterface functionInterface = factory.getBean(FunctionInterface.class);
         WorkerRegisterManager workerRegisterManager = factory.getBean(WorkerRegisterManager.class);
         HostPluginInterface hostPluginInterface = factory.getBean(HostPluginInterface.class);
         BaseManager baseManager = factory.getBean(BaseManager.class);
-        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx,functionInterface,workerRegisterManager,hostPluginInterface,baseManager);
+        HttpActuator httpActuator = factory.getBean(HttpActuator.class);
+        FlowService flowService = factory.getBean(FlowService.class);
+        LinkerService linkerService = new LinkerServiceImpl(functionInterface,workerRegisterManager,hostPluginInterface,baseManager,httpActuator,flowService);
         // 发布接口
         this.binder = new ServiceBinder(vertx);
         MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(LinkerService.ADDRESS)

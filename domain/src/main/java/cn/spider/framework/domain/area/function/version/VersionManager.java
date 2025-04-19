@@ -16,11 +16,11 @@ import cn.spider.framework.domain.area.function.data.GenerateJavaCodeResult;
 import cn.spider.framework.domain.area.function.entity.SpiderBusinessFunctionVersion;
 import cn.spider.framework.domain.area.function.enums.GenerateCoderType;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionVersionService;
-import cn.spider.framework.domain.area.function.version.data.FunctionVersionModel;
-import cn.spider.framework.domain.area.function.version.data.QueryFunctionVersionResult;
-import cn.spider.framework.domain.area.function.version.data.QueryVersionFunctionParam;
-import cn.spider.framework.domain.area.function.version.data.VersionStopStartParam;
+import cn.spider.framework.domain.area.function.version.data.*;
 import cn.spider.framework.domain.area.function.version.data.enums.VersionStatus;
+import cn.spider.framework.domain.area.function.version.enums.ToJavaEntitySource;
+import cn.spider.framework.domain.area.http.entity.SpiderToolHttp;
+import cn.spider.framework.domain.area.http.service.ISpiderToolHttpService;
 import cn.spider.framework.domain.area.node.NodeManger;
 import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.sdk.data.*;
@@ -80,6 +80,9 @@ public class VersionManager {
 
     private LockManager lockManager;
 
+    private ISpiderToolHttpService spiderToolHttpService;
+
+
     private final String BUILD_JS_PARAM = "BUILD_JS_PARAM";
 
     public VersionManager(MySQLPool client,
@@ -88,7 +91,7 @@ public class VersionManager {
                           LockManager lockManager,
                           AgentVertxClient agentVertxClient,
                           HostPluginInterface hostPluginInterface,
-                          ISpiderDataFlowService spiderDataFlowService) {
+                          ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService) {
         this.hostPluginInterface = hostPluginInterface;
         this.spiderDataFlowService = spiderDataFlowService;
         this.client = client;
@@ -96,6 +99,7 @@ public class VersionManager {
         this.spiderBusinessFunctionVersionService = spiderBusinessFunctionVersionService;
         this.lockManager = lockManager;
         this.agentVertxClient = agentVertxClient;
+        this.spiderToolHttpService = spiderToolHttpService;
     }
 
     private RowMapper<FunctionVersionModel> ROW_BUSINESS = row -> {
@@ -574,23 +578,91 @@ public class VersionManager {
         agentVertxClient.buildNodeParam(JsonObject.mapFrom(paramBuildInfo));
     }
 
-    public void configToJavaEntity(String functionVersionId) {
-        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(functionVersionId);
-        Map<String, List<FunctionParamConfigModel>> runObjectConfig = spiderBusinessFunctionVersion.getRunObjectConfig();
-        GenerateJavaCodeParam generateJavaCodeParam = new GenerateJavaCodeParam(functionVersionId, runObjectConfig, GenerateCoderType.INPUT);
-        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam));
-        Map<String, List<FunctionParamConfigModel>> resultObjectConfig = spiderBusinessFunctionVersion.getResultObjectConfig();
-        GenerateJavaCodeParam generateJavaCodeParam2 = new GenerateJavaCodeParam(functionVersionId, resultObjectConfig, GenerateCoderType.OUTPUT);
-        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam2));
+    /**
+     * 根据业务功能/http功能生成java实体
+     *
+     * @param toJavaParam
+     */
+    public void configToJavaEntity(ToJavaParam toJavaParam) {
+        switch (toJavaParam.getSource()) {
+            case BUSINESS_FUNCTION:
+                businessToClass(toJavaParam);
+                break;
+            case HTTP_FUNCTION:
+                httpParamToClass(toJavaParam);
+                break;
+        }
     }
+
+    private void businessToClass(ToJavaParam toJavaParam) {
+        Map<String, List<FunctionParamConfigModel>> runObjectConfig = queryBusinessFunctionVersionRunObjectConfig(toJavaParam.getFunctionVersionId());
+        GenerateJavaCodeParam generateJavaCodeParam = new GenerateJavaCodeParam(toJavaParam.getFunctionVersionId(), runObjectConfig, GenerateCoderType.INPUT, toJavaParam.getSource(), null);
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam));
+        Map<String, List<FunctionParamConfigModel>> resultObjectConfig = queryBusinessFunctionVersionResultObjectConfig(toJavaParam.getFunctionVersionId());
+        GenerateJavaCodeParam generateJavaCodeParam2 = new GenerateJavaCodeParam(toJavaParam.getFunctionVersionId(), resultObjectConfig, GenerateCoderType.OUTPUT, toJavaParam.getSource(), null);
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam2));
+
+    }
+
+    private void httpParamToClass(ToJavaParam toJavaParam) {
+        Map<String, List<FunctionParamConfigModel>> runObjectConfig = queryHttpFunctionRunObjectConfig(toJavaParam.getHttpFunctionId());
+        GenerateJavaCodeParam generateJavaCodeParam = new GenerateJavaCodeParam(null, runObjectConfig, GenerateCoderType.INPUT, toJavaParam.getSource(), toJavaParam.getHttpFunctionId());
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam));
+        Map<String, List<FunctionParamConfigModel>> resultObjectConfig = queryHttpFunctionResultObjectConfig(toJavaParam.getHttpFunctionId());
+        GenerateJavaCodeParam generateJavaCodeParam2 = new GenerateJavaCodeParam(null, resultObjectConfig, GenerateCoderType.OUTPUT, toJavaParam.getSource(), toJavaParam.getHttpFunctionId());
+        agentVertxClient.jsonToJavaEntity(JsonObject.mapFrom(generateJavaCodeParam2));
+
+    }
+
+
+    private Map<String, List<FunctionParamConfigModel>> queryBusinessFunctionVersionRunObjectConfig(String functionVersionId) {
+        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(functionVersionId);
+        return spiderBusinessFunctionVersion.getRunObjectConfig();
+    }
+
+    private Map<String, List<FunctionParamConfigModel>> queryBusinessFunctionVersionResultObjectConfig(String functionVersionId) {
+        SpiderBusinessFunctionVersion spiderBusinessFunctionVersion = spiderBusinessFunctionVersionService.getById(functionVersionId);
+        return spiderBusinessFunctionVersion.getResultObjectConfig();
+    }
+
+    private Map<String, List<FunctionParamConfigModel>> queryHttpFunctionResultObjectConfig(Integer httpFunctionId) {
+        SpiderToolHttp spiderToolHttp = spiderToolHttpService.getById(httpFunctionId);
+        return spiderToolHttp.getHttpFunctionResultObject();
+    }
+
+    private Map<String, List<FunctionParamConfigModel>> queryHttpFunctionRunObjectConfig(Integer httpFunctionId) {
+        SpiderToolHttp spiderToolHttp = spiderToolHttpService.getById(httpFunctionId);
+        return spiderToolHttp.getHttpFunctionParamObject();
+    }
+
 
     public void writeJavaEntity(JsonObject param) {
         GenerateJavaCodeResult generateJavaCodeResult = param.mapTo(GenerateJavaCodeResult.class);
+        switch (generateJavaCodeResult.getSource()) {
+            case BUSINESS_FUNCTION:
+                writeJavaEntityBusiness(generateJavaCodeResult);
+                break;
+            case HTTP_FUNCTION:
+                writeJavaEntityHttp(generateJavaCodeResult);
+                break;
+
+        }
+
+    }
+
+    private void writeJavaEntityBusiness(GenerateJavaCodeResult generateJavaCodeResult) {
         spiderBusinessFunctionVersionService.lambdaUpdate()
                 .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.INPUT), SpiderBusinessFunctionVersion::getInputParamJavaClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
                 .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.OUTPUT), SpiderBusinessFunctionVersion::getOutputParamJavaClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
                 .eq(SpiderBusinessFunctionVersion::getId, generateJavaCodeResult.getFunctionVersionId())
                 .update();
+    }
+
+    private void writeJavaEntityHttp(GenerateJavaCodeResult generateJavaCodeResult) {
+        spiderToolHttpService.lambdaUpdate()
+                .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.INPUT), SpiderToolHttp::getHttpFunctionParamClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
+                .set(generateJavaCodeResult.getGenerateCoderType().equals(GenerateCoderType.OUTPUT), SpiderToolHttp::getHttpFunctionResultClass, JSON.toJSONString(generateJavaCodeResult.getCodes()))
+                .eq(SpiderToolHttp::getId, generateJavaCodeResult.getHttpFunctionId()).update();
     }
 
     public void writeJsFunctionInfo(NodeJsFunctionInfo nodeJsFunctionInfo) {
