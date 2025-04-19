@@ -28,36 +28,18 @@ import cn.spider.framework.flow.bpmn.StartEvent;
 import cn.spider.framework.flow.bus.BasicStoryBus;
 import cn.spider.framework.flow.bus.ScopeData;
 import cn.spider.framework.flow.bus.ScopeDataQuery;
-import cn.spider.framework.flow.constant.GlobalProperties;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
-import cn.spider.framework.flow.engine.future.AdminFuture;
-import cn.spider.framework.flow.engine.future.FlowTaskSubscriber;
-import cn.spider.framework.flow.engine.future.MonoFlowFuture;
-import cn.spider.framework.flow.engine.thread.FlowTask;
-import cn.spider.framework.flow.engine.thread.MonoFlowTask;
-import cn.spider.framework.flow.engine.thread.hook.ThreadSwitchHook;
-import cn.spider.framework.flow.engine.thread.hook.ThreadSwitchHookProcessor;
-import cn.spider.framework.flow.enums.AsyncTaskState;
 import cn.spider.framework.flow.exception.BusinessException;
 import cn.spider.framework.flow.exception.ExceptionEnum;
-import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.monitor.RecallStory;
 import cn.spider.framework.flow.role.BusinessRoleRepository;
-import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.role.ServiceTaskRole;
 import cn.spider.framework.flow.util.*;
 import cn.spider.framework.param.sdk.interfaces.ParamInterface;
-import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import reactor.core.publisher.Mono;
-
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -83,11 +65,12 @@ public class StoryEngine {
 
     private ParamInterface paramInterface;
 
-    public StoryEngine(StoryEngineModule storyEngineModule, BusinessRoleRepository businessRoleRepository) {
+    public StoryEngine(StoryEngineModule storyEngineModule, BusinessRoleRepository businessRoleRepository,ParamInterface paramInterface) {
         AssertUtil.anyNotNull(businessRoleRepository, storyEngineModule);
         this.businessRoleRepository = businessRoleRepository;
         this.storyEngineModule = storyEngineModule;
         this.flowExampleManager = new FlowExampleManager(storyEngineModule);
+        this.paramInterface = paramInterface;
     }
 
     public Future<TaskResponse<Object>> fire(StoryRequest<Object> storyRequest) {

@@ -43,6 +43,7 @@ import cn.spider.framework.flow.role.BusinessRole;
 import cn.spider.framework.flow.role.BusinessRoleRegister;
 import cn.spider.framework.flow.role.BusinessRoleRepository;
 import cn.spider.framework.flow.util.*;
+import cn.spider.framework.param.sdk.interfaces.ParamInterface;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -117,7 +118,7 @@ public class KstryContextResolver implements ApplicationContextAware, Initializi
     @Bean
     public StoryEngine getFlowEngine(StartEventContainer startEventContainer, RoleDynamicComponent roleDynamicComponent,
                                      TaskContainer taskContainer, List<TaskThreadPoolExecutor> taskThreadPoolExecutor,
-                                     ThreadSwitchHookProcessor threadSwitchHookProcessor) {
+                                     ThreadSwitchHookProcessor threadSwitchHookProcessor, ParamInterface paramInterface) {
         StoryEngineModule storyEngineModule = new StoryEngineModule(taskThreadPoolExecutor, startEventContainer, taskContainer, def -> {
             AssertUtil.notNull(def);
             if (def.isSpringInitialization()) {
@@ -125,7 +126,7 @@ public class KstryContextResolver implements ApplicationContextAware, Initializi
             }
             return ElementParserUtil.newInstance(def.getParamType()).orElse(null);
         }, getSubProcessInterceptorRepository(), getTaskInterceptorRepository(), threadSwitchHookProcessor, applicationContext);
-        return new StoryEngine(storyEngineModule, getBusinessRoleRepository(roleDynamicComponent));
+        return new StoryEngine(storyEngineModule, getBusinessRoleRepository(roleDynamicComponent),paramInterface);
     }
 
     @Bean
