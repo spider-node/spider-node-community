@@ -48,4 +48,16 @@ public class EndElementExampleData extends EventData {
      */
     private ElementStatus status;
 
+    /**
+     * 事务id
+     */
+    private String transactionGroupId;
+
+    /**
+     * 工作服务的名称
+     */
+    private String workerName;
+
+
+
 }

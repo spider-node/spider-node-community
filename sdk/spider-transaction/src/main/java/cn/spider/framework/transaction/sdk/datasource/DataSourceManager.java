@@ -113,7 +113,9 @@ public class DataSourceManager extends AbstractResourceManager {
             if (!undoLogManager.checkUndoLogExist(xid, branchId, conn)) {
                 return BranchStatus.PhaseTwo_Rollbacked;
             }
+            // 第二阶段回滚
             isolateManager.rollbackDataValidStatus(undoLogManager, conn, TransactionOperationStatus.ROLL_BACK, xid, branchId);
+            // 这儿就是执行
             UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType()).undo(dataSourceProxy, xid, branchId, conn);
         } catch (TransactionException | SQLException te) {
             return BranchStatus.PhaseTwo_RollbackFailed_Retryable;

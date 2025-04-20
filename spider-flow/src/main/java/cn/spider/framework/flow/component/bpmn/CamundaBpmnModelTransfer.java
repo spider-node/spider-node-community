@@ -237,6 +237,8 @@ public class CamundaBpmnModelTransfer implements BpmnModelTransfer<BpmnModelInst
         // service_类型-- 等待节点，需要被唤醒才能让流程继续走
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.SERVICE_TASK_TYPE).ifPresent(serviceTaskImpl::setServiceTaskType);
 
+        ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.RESOURCE_ID).ifPresent(serviceTaskImpl::setResourceId);
+
         ElementPropertyUtil.getNodeProperty(flowNode, BpmnElementProperties.SERVICE_TASK_TYPE_NEW).ifPresent(serviceTaskImpl::setServiceTaskType);
 
         // 设置轮询次数

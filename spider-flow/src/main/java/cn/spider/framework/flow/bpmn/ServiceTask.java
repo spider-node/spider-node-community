@@ -99,12 +99,11 @@ public interface ServiceTask extends Task {
      */
     String getTaskInstructContent();
 
-
-    void setTaskServicePromise(Promise<Object> taskServicePromise);
-
     String queryTransactionGroup();
 
     ServerTaskTypeEnum queryServiceTaskType();
+
+    String queryResourceId();
 
     String getXid();
 

@@ -7,6 +7,7 @@ import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.enums.ElementStatus;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.common.utils.NumberUtil;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.engine.example.data.FlowExample;
 import cn.spider.framework.flow.exception.ExceptionEnum;
@@ -18,6 +19,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -70,7 +72,9 @@ public class SchedulerManager {
         EndElementExampleData elementExampleData = EndElementExampleData.builder()
                 .requestParam(JSON.toJSONString(paramMap))
                 .requestId(requestId)
+                .transactionGroupId(serviceTask.queryTransactionGroup())
                 .flowElementId(serviceTask.getId())
+                .workerName(workerName)
                 .status(ElementStatus.SUSS)
                 .build();
         // 因为异步，直接告诉流程，可以进行下一步操作
@@ -115,25 +119,6 @@ public class SchedulerManager {
         });
     }
 
-    private LinkerServerRequest buildRequestEntity(Map<String, Object> paramMap, Method method, ServiceTask serviceTask, String workerName) {
-        // 参数中，移除末尾的 Promise<Object> promise
-        String componentName = serviceTask.getTaskComponent();
-        LinkerServerRequest linkerServerRequest = new LinkerServerRequest();
-        FunctionRequest functionRequest = new FunctionRequest();
-        functionRequest.setComponentName(componentName);
-        functionRequest.setMethodName(method.getName());
-        TaskService annotation = method.getAnnotation(TaskService.class);
-        functionRequest.setServiceName(annotation.name());
-        functionRequest.setWorkerName(workerName);
-        functionRequest.setParam(paramMap);
-        functionRequest.setXid(serviceTask.getXid());
-        functionRequest.setBranchId(serviceTask.getBranchId());
-        linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
-        linkerServerRequest.setFunctionRequest(functionRequest);
-        return linkerServerRequest;
-    }
-
-
     private LinkerServerRequest buildRequestEntityNew(Map<String, Object> paramMap, ServiceTask serviceTask, String workerName,String method,FlowExample example) {
         // 参数中，移除末尾的 Promise<Object> promise
         String componentName = serviceTask.getTaskComponent();
@@ -144,8 +129,10 @@ public class SchedulerManager {
         functionRequest.setServiceName(serviceTask.getTaskService());
         functionRequest.setWorkerName(workerName);
         functionRequest.setParam(paramMap);
-        functionRequest.setXid(serviceTask.getXid());
-        functionRequest.setBranchId(serviceTask.getBranchId());
+        if (StringUtils.isNotEmpty(serviceTask.queryTransactionGroup())) {
+            functionRequest.setXid(serviceTask.getId());
+            functionRequest.setBranchId(NumberUtil.stringToLong(example.getRequestId(), serviceTask.queryTransactionGroup()));
+        }
         linkerServerRequest.setExecutionType(ExecutionType.FUNCTION);
         linkerServerRequest.setFunctionRequest(functionRequest);
         linkerServerRequest.setParentRequestId(example.getParentRequestId());

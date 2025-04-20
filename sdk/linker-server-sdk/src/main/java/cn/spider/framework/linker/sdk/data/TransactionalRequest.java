@@ -19,6 +19,8 @@ public class TransactionalRequest {
      */
     private String workerName;
 
+    private String resourceId;
+
     public String getTransactionId() {
         return transactionId;
     }
@@ -49,5 +51,13 @@ public class TransactionalRequest {
 
     public void setWorkerName(String workerName) {
         this.workerName = workerName;
+    }
+
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 }

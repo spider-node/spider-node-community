@@ -6,6 +6,7 @@ import cn.spider.framework.linker.sdk.data.LinkerServerResponse;
 import cn.spider.framework.linker.sdk.data.ResultCode;
 import cn.spider.framework.linker.sdk.data.TransactionalType;
 import cn.spider.framework.proto.grpc.TransferResponse;
+import cn.spider.framework.transaction.sdk.context.RootContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Promise;
@@ -18,6 +19,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -170,11 +172,13 @@ public class TaskManager {
         // 获取事务的xid
         String xid = request.getFunctionRequest().getXid();
         // 获取事务的 branchId
-        String branchId = request.getFunctionRequest().getBranchId();
+        Long branchId = request.getFunctionRequest().getBranchId();
         /**
          * 当需要事务的情况下，使用编程事务
          */
-        if (StringUtils.isNotEmpty(xid) && StringUtils.isNotEmpty(branchId)) {
+        if (StringUtils.isNotEmpty(xid) && Objects.nonNull(branchId)) {
+            RootContext.bind(xid);
+            RootContext.bindBranchId(branchId + "");
             TransactionStatus transaction = platformTransactionManager.getTransaction(transactionDefinition);
             try {
                 Object result = ReflectionUtils.invokeMethod(methodNew, target, params);
@@ -190,6 +194,7 @@ public class TaskManager {
         return ReflectionUtils.invokeMethod(methodNew, target, params);
 
     }
+
 
     /**
      * 事务操作

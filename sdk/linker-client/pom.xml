@@ -72,6 +72,12 @@
         </dependency>
 
         <dependency>
+            <groupId>cn.spider-node</groupId>
+            <artifactId>spider-transaction</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-hazelcast</artifactId>
             <version>${vertx.version}</version>

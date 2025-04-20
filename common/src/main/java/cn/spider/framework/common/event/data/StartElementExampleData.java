@@ -50,4 +50,19 @@ public class StartElementExampleData extends EventData {
      * 是否需要获取下一个节点
      */
     private Boolean isNext;
+
+    /**
+     * 资源id
+     */
+    private String datasourceId;
+
+    /**
+     * 运行类型
+     */
+    private String runType;
+
+    /**
+     * 运行节点-的服务名称
+     */
+    private String workerName;
 }

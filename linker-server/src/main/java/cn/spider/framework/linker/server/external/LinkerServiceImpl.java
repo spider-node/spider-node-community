@@ -47,7 +47,7 @@ public class LinkerServiceImpl implements LinkerService {
 
     private FunctionInterface functionInterface;
 
-    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx,FunctionInterface functionInterface) {
+    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx, FunctionInterface functionInterface) {
         this.clientRegisterCenter = clientRegisterCenter;
         String rpcType = BrokerInfoUtil.queryRpcType(vertx);
         this.isVertxRpc = rpcType.equals("vertxRpc");
@@ -73,7 +73,7 @@ public class LinkerServiceImpl implements LinkerService {
             functionInterface.queryRunHistoryElementData(queryHistoryParam)
                     .onSuccess(suss -> {
                         FlowExampleModel flowExampleModel = suss.mapTo(FlowExampleModel.class);
-                        log.info("--------执行虚拟数据ComponentName {} service {}",linkerServerRequest.getFunctionRequest().getComponentName(),linkerServerRequest.getFunctionRequest().getServiceName());
+                        log.info("--------执行虚拟数据ComponentName {} service {}", linkerServerRequest.getFunctionRequest().getComponentName(), linkerServerRequest.getFunctionRequest().getServiceName());
                         if (CollectionUtils.isEmpty(flowExampleModel.getFlowElementModelList())) {
                             promise.fail("没有找到对应的节点数据");
                             return;
@@ -110,12 +110,45 @@ public class LinkerServiceImpl implements LinkerService {
         return promise.future();
     }
 
+    @Override
+    public Future<JsonObject> transaction(JsonObject data) {
+        Promise<JsonObject> promise = Promise.promise();
+        LinkerServerRequest linkerServerRequest = JSON.parseObject(data.toString(), LinkerServerRequest.class);
+        ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(linkerServerRequest.getTransactionalRequest().getWorkerName());
+        runTransaction(promise, data, clientInfo);
+        return promise.future();
+    }
+
+    /**
+     * 执行事务请求
+     *
+     * @param promise
+     */
+    private void runTransaction(Promise<JsonObject> promise, JsonObject param, ClientInfo clientInfo) {
+        // vertx-rpc调用
+        VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
+        TransferRequest transferRequest = TransferRequest.newBuilder()
+                .setBody(param.toString())
+                .setHeader(Constant.SPIDER_FUNCTION)
+                .build();
+        Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
+        response.onSuccess(suss -> {
+            TransferResponse result = suss;
+            log.info("runTransaction-result {}", JSON.toJSONString(result));
+            LinkerServerResponse responseNew = buildLinkerServerResponse(result);
+            promise.complete(new JsonObject().put(Constant.DATA, JsonObject.mapFrom(responseNew)));
+        }).onFailure(fail -> {
+            log.error(fail.getMessage());
+            promise.fail(fail);
+        });
+    }
+
     /**
      * 执行业务请求
      *
      * @param functionRequest 功能请求参数信息
      * @param promise
-     * @param param 请求参数
+     * @param param           请求参数
      */
     private void runBusinessRequest(FunctionRequest functionRequest, Promise<JsonObject> promise, JsonObject param) {
         //grpc调用

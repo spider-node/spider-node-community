@@ -94,7 +94,7 @@ public interface BpmnElementProperties {
      */
     String ITERATE_STRIDE = "ite-stride";
 
-    String TASK_TRANSACTION_GROUP_ID = "transaction-group-id";
+    String TASK_TRANSACTION_GROUP_ID = "transaction_group_id";
 
     String RETRY_COUNT = "retry-count";
 
@@ -118,4 +118,6 @@ public interface BpmnElementProperties {
     String APPOINT = "appoint_param";
 
     String CONVERSION_PARAM = "conversion_param";
+
+    String RESOURCE_ID = "resource_id";
 }

@@ -2,14 +2,12 @@ package cn.spider.framework.linker.client.config;
 
 import cn.spider.framework.linker.client.task.TaskManager;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import io.vertx.ext.web.client.WebClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 

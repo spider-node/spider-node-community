@@ -269,13 +269,15 @@ public class FlowExampleManager {
                     .flowElementName(flowElement.getName())
                     .functionName(example.getFunctionName())
                     .requestId(example.getRequestId())
+                    .transactionGroupId(transactionGroupId)
+                    .datasourceId(serviceTask.queryResourceId())
                     .functionId(example.getFunctionId())
                     .build();
 
             switch (taskType) {
                 // 正常系欸但
                 case NORMAL:
-                    normal(transactionGroupId, serviceTask, example, elementExampleData);
+                    normal(example, elementExampleData);
                     break;
                 //轮询节点
                 case POLL:
@@ -291,7 +293,7 @@ public class FlowExampleManager {
                     break;
                 case DELAY:
                     example.endRequest();
-                    delayRun(serviceTask.queryDelayTime(), isQuit, transactionGroupId, serviceTask, example, elementExampleData);
+                    delayRun(serviceTask.queryDelayTime(), isQuit, example, elementExampleData);
                     break;
             }
 
@@ -302,14 +304,12 @@ public class FlowExampleManager {
 
     private void delayRun(Integer time,
                           Boolean isQuit,
-                          String transactionGroupId,
-                          ServiceTask serviceTask,
                           FlowExample example,
                           StartElementExampleData elementExampleData) {
         if (!isQuit) {
             // 设置允许移除
             example.setAllowRemove(true);
-            normal(transactionGroupId, serviceTask, example, elementExampleData);
+            normal(example, elementExampleData);
             return;
         }
         example.setAllowRemove(false);
@@ -346,9 +346,11 @@ public class FlowExampleManager {
             return true;
         }
         if (example.getVerifySumCount() > example.getVerifyCount()) {
+            ServiceTask serviceTask = (ServiceTask) example.getFlowElement();
             EndElementExampleData elementExampleData = EndElementExampleData.builder()
                     .requestId(example.getRequestId())
                     .flowElementId(example.getFlowElement().getId())
+                    .transactionGroupId(serviceTask.queryTransactionGroup())
                     .status(ElementStatus.FAIL)
                     .exception("check结束没有等待到对应的数据")
                     .build();
@@ -365,34 +367,11 @@ public class FlowExampleManager {
     /**
      * 正常
      *
-     * @param transactionGroupId 事务组Id
-     * @param serviceTask task
      * @param example 流程实例
      * @param elementExampleData 实例data
      */
-    private void normal(String transactionGroupId, ServiceTask serviceTask, FlowExample example, StartElementExampleData elementExampleData) {
+    private void normal(FlowExample example, StartElementExampleData elementExampleData) {
         // 当组的事务id,不为空的情况下，需要先注册事务信息
-        if (!StringUtils.isEmpty(transactionGroupId)) {
-            Future<JsonObject> transaction = registerTransaction(serviceTask, example);
-            transaction.onSuccess(suss -> {
-                JsonObject transactionJson = suss;
-                RegisterTransactionResponse response = transactionJson.mapTo(RegisterTransactionResponse.class);
-                example.getTransactionGroupMap().put(transactionGroupId, response.getGroupId());
-                serviceTask.setXid(response.getGroupId());
-                serviceTask.setBranchId(response.getBranchId());
-                runPlan(example);
-                // 设置 groupId
-                elementExampleData.setTransactionGroupId(response.getGroupId());
-                // 设置该实例的 事务id
-                elementExampleData.setBranchId(response.getBranchId());
-                eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
-            }).onFailure(fail -> {
-                // 获取事务事务信息失败-（直接）
-                log.error("获取事务信息失败 {}", ExceptionMessage.getStackTrace(fail));
-                endFlowExampleFail(example, fail);
-            });
-            return;
-        }
         eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
         runPlan(example);
     }
@@ -409,7 +388,7 @@ public class FlowExampleManager {
         if (!isQuit) {
             // 具体执行
             example.setAllowRemove(true);
-            normal(transactionGroupId, serviceTask, example, elementExampleData);
+            normal(example, elementExampleData);
             return;
         }
         example.autoincrementPollCount();
@@ -486,71 +465,7 @@ public class FlowExampleManager {
 
     }
 
-    /**
-     * 操作- 实例执行完后的事务
-     *
-     * @param example
-     */
-    private void transactionGroupOperate(FlowExample example) {
-        // 获取事务组map
-        Map<String, String> transactionGroupMap = example.getTransactionGroupMap();
-        // 校验事务是否结束
-
-        for (String taskGroupId : transactionGroupMap.keySet()) {
-            if (example.getTransactionGroupSussIds().contains(taskGroupId) || example.getTransactionGroupFailIds().contains(taskGroupId)) {
-                continue;
-            }
-            String groupId = transactionGroupMap.get(taskGroupId);
-            Future<JsonObject> transactionFuture = transaction(example, groupId, taskGroupId);
-            transactionFuture.onSuccess(suss -> {
-                example.addFailTransactionGroupSuss(taskGroupId);
-                checkExampleTransactionIsFinish(example);
-                // 校验是否 事务完毕
-            }).onFailure(fail -> {
-                // 因为已经重试了- 10次，不需要再重试了
-                example.addFailTransactionGroupFailId(taskGroupId);
-                example.getTransactionPromise().fail(fail);
-            });
-            break;
-        }
-    }
-
     // 转正相关内容
-
-
-    private void checkExampleTransactionIsFinish(FlowExample example) {
-        Map<String, String> transactionMap = example.getTransactionGroupMap();
-        Boolean isFinish = true;
-        for (String taskGroupId : transactionMap.keySet()) {
-            if (example.getTransactionGroupFailIds().contains(taskGroupId) || example.getTransactionGroupSussIds().contains(taskGroupId)) {
-                continue;
-            }
-            isFinish = false;
-            break;
-        }
-        if (isFinish) {
-            example.getTransactionPromise().complete();
-        }
-    }
-
-    /**
-     * 处理事务组
-     *
-     * @param example
-     * @param groupId
-     * @param taskGroupId
-     */
-    private Future<JsonObject> transaction(FlowExample example, String groupId, String taskGroupId) {
-        // 防止- 事务接口为空
-        init();
-        if (example.getTransactionGroupFailIds().contains(taskGroupId)) {
-            Future<JsonObject> future = transactionInterface.rollBack(new JsonObject().put("groupId", groupId));
-            return future;
-        }
-        // 进行提交
-        Future<JsonObject> future = transactionInterface.commit(new JsonObject().put("groupId", groupId));
-        return future;
-    }
 
     /**
      * 执行具体的节点

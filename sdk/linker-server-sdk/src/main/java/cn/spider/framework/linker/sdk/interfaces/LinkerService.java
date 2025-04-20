@@ -28,4 +28,9 @@ public interface LinkerService {
      * @return
      */
     Future<JsonObject> submittals(JsonObject data);
+
+    /**
+     * 执行事务
+     */
+    Future<JsonObject> transaction(JsonObject data);
 }

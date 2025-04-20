@@ -18,6 +18,16 @@ public class RegisterTransactionRequest {
 
     private String taskGroupId;
 
+    private String resourceId;
+
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }
+
     public String getWorkerName() {
         return workerName;
     }

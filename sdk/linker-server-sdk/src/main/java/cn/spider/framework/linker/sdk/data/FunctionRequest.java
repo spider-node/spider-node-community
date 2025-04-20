@@ -31,7 +31,7 @@ public class FunctionRequest {
 
     private String xid;
 
-    private String branchId;
+    private Long branchId;
 
     /**
      * 请求参数
@@ -66,11 +66,11 @@ public class FunctionRequest {
         this.xid = xid;
     }
 
-    public String getBranchId() {
+    public Long getBranchId() {
         return branchId;
     }
 
-    public void setBranchId(String branchId) {
+    public void setBranchId(Long branchId) {
         this.branchId = branchId;
     }
 
