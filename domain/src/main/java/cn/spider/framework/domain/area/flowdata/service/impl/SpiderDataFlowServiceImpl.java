@@ -2,9 +2,11 @@ package cn.spider.framework.domain.area.flowdata.service.impl;
 
 import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataParam;
 import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataResult;
+import cn.spider.framework.domain.area.flowdata.data.UpdateFlowDescParam;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import cn.spider.framework.domain.area.flowdata.mapper.SpiderDataFlowMapper;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -44,5 +46,10 @@ public class SpiderDataFlowServiceImpl extends ServiceImpl<SpiderDataFlowMapper,
     public Map<String, String> mateParamMapping() {
 
         return null;
+    }
+
+    @Override
+    public void updateFlowDataDesc(UpdateFlowDescParam param) {
+        super.lambdaUpdate().set(SpiderDataFlow::getFlowDataDesc, JSON.toJSONString(param.getFlowDataDesc())).eq(SpiderDataFlow::getId, param.getId()).update();
     }
 }

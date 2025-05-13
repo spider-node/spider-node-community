@@ -1,26 +1,20 @@
 package cn.spider.framework.domain.area.task.data;
 
 import java.util.List;
+import java.util.Map;
 
 public class AiAnalysisDemandParam {
-    private String dataFlowAnalysis;
+
+    private Map<String, Object> dataFlowInfo;
 
     private List<String> originalDemands;
 
     private String domainFunctionVersionId;
 
-    public AiAnalysisDemandParam(String dataFlowAnalysis, List<String> originalDemands, String domainFunctionVersionId) {
-        this.dataFlowAnalysis = dataFlowAnalysis;
+    public AiAnalysisDemandParam(Map<String, Object> dataFlowInfo, List<String> originalDemands, String domainFunctionVersionId) {
         this.originalDemands = originalDemands;
         this.domainFunctionVersionId = domainFunctionVersionId;
-    }
-
-    public String getDataFlowAnalysis() {
-        return dataFlowAnalysis;
-    }
-
-    public void setDataFlowAnalysis(String dataFlowAnalysis) {
-        this.dataFlowAnalysis = dataFlowAnalysis;
+        this.dataFlowInfo = dataFlowInfo;
     }
 
     public List<String> getOriginalDemands() {
@@ -37,5 +31,9 @@ public class AiAnalysisDemandParam {
 
     public void setDomainFunctionVersionId(String domainFunctionVersionId) {
         this.domainFunctionVersionId = domainFunctionVersionId;
+    }
+
+    public Map<String, Object> getDataFlowInfo() {
+        return dataFlowInfo;
     }
 }

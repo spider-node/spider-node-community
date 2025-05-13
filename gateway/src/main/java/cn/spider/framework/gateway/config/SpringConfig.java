@@ -114,7 +114,9 @@ public class SpringConfig {
                                                         EventManager eventManager,
                                                         DataFlowInterface dataFlowInterface,
                                                         AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface,
-                                                        LinkerService linkerService,FrameworkInterface frameworkInterface,HttpFunctionInterface httpFunctionInterface) {
+                                                        LinkerService linkerService,FrameworkInterface frameworkInterface,
+                                                        HttpFunctionInterface httpFunctionInterface,
+                                                        DomainObjectInterface domainObjectInterface) {
         return new SpiderServerHandler(containerService,
                 flowService,
                 businessService,
@@ -123,7 +125,12 @@ public class SpringConfig {
                 areaInterface,
                 functionInterface,
                 nodeInterface,
-                versionInterface, vertx, eventManager, dataFlowInterface, aiTaskInterface,hostPluginInterface,linkerService,frameworkInterface,httpFunctionInterface);
+                versionInterface, vertx, eventManager, dataFlowInterface, aiTaskInterface,hostPluginInterface,linkerService,frameworkInterface,httpFunctionInterface,domainObjectInterface);
+    }
+
+    @Bean
+    public DomainObjectInterface buildDomainObjectInterface(Vertx vertx) {
+        return DomainObjectInterface.createProxy(vertx, DomainObjectInterface.ADDRESS);
     }
 
     @Bean

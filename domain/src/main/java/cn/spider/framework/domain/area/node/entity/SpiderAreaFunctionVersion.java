@@ -89,6 +89,8 @@ public class SpiderAreaFunctionVersion{
     @TableField(value = "result_analysis", typeHandler = FastjsonTypeHandler.class)
     private NotifyAnalysisResultInfo resultAnalysis;
 
+    private String flowGroupParentId;
+
     /**
      * 创建时间
      */
@@ -99,6 +101,14 @@ public class SpiderAreaFunctionVersion{
     private String dataFlowName;
 
     private String datasourceId;
+
+    public String getFlowGroupParentId() {
+        return flowGroupParentId;
+    }
+
+    public void setFlowGroupParentId(String flowGroupParentId) {
+        this.flowGroupParentId = flowGroupParentId;
+    }
 
     public Integer getDataFlowId() {
         return dataFlowId;

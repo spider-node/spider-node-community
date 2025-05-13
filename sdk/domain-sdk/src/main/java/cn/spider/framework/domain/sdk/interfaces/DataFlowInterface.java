@@ -29,4 +29,7 @@ public interface DataFlowInterface {
     Future<Void> upsertDataFlowParse(JsonObject param);
 
     Future<Void> generateDataFlowInfo(JsonObject param);
+
+    // 更新数据流描述
+    Future<Void> updateDataFlowDesc(JsonObject param);
 }

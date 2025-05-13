@@ -1,5 +1,6 @@
 package cn.spider.framework.domain.area.flowdata.entity;
 
+import cn.spider.framework.domain.area.flowdata.data.FlowDataDesc;
 import cn.spider.framework.domain.sdk.data.DataFlowAnalysisModel;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -48,7 +49,8 @@ public class SpiderDataFlow {
     /**
      * 描述
      */
-    private String flowDataDesc;
+    @TableField(value = "flow_data_desc", typeHandler = FastjsonTypeHandler.class)
+    private FlowDataDesc flowDataDesc;
 
     /**
      * 创建时间
@@ -58,12 +60,11 @@ public class SpiderDataFlow {
     @TableField(value = "data_flow_analysis_model", typeHandler = FastjsonTypeHandler.class)
     private DataFlowAnalysisModel dataFlowAnalysisModel;
 
-
-    public String getFlowDataDesc() {
+    public FlowDataDesc getFlowDataDesc() {
         return flowDataDesc;
     }
 
-    public void setFlowDataDesc(String flowDataDesc) {
+    public void setFlowDataDesc(FlowDataDesc flowDataDesc) {
         this.flowDataDesc = flowDataDesc;
     }
 

@@ -567,11 +567,12 @@ public class VersionManager {
         DataFlowAnalysisModel dataFlowAnalysisModel = spiderDataFlow.getDataFlowAnalysisModel();
         String bpmnString = spiderBusinessFunctionVersion.getBpmnXml();
         JSONObject flowData = spiderDataFlow.getData();
+        //spiderDataFlow.getFlowDataDesc()
         ParamBuildInfo paramBuildInfo = new ParamBuildInfo(aiNodeInfoList,
                 bpmnString,
                 flowData,
                 id,
-                spiderDataFlow.getFlowDataDesc(),
+                "",
                 spiderBusinessFunctionVersion.getInputParamJavaClass(),
                 spiderBusinessFunctionVersion.getOutputParamJavaClass(), dataFlowAnalysisModel.getDomainInfoResult(), startNodeJsParam.getNodeId(), startNodeJsParam.getParamJsDemand());
         log.info("paramBuildInfo {}", JSON.toJSONString(paramBuildInfo));

@@ -36,14 +36,17 @@ import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionResult;
 import cn.spider.node.host.plugin.center.sdk.data.QueryFunctionVersionsParam;
 import cn.spider.node.host.plugin.center.sdk.interfaces.HostPluginInterface;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
@@ -118,7 +121,14 @@ public class TaskManager {
         }
         SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(versionId);
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(functionVersion.getDataFlowId());
-        Set<Integer> domainBaseInfoIds = JSON.parseObject(spiderDataFlow.getSonAreaIds(), Set.class);
+
+        String groupId = functionVersion.getFlowGroupParentId();
+
+
+        Map<String, Object> dataFlowInfo = buildFlowInfo(groupId, spiderDataFlow);
+        List<Integer> domainBaseIdList = JSON.parseArray(JSON.toJSONString(dataFlowInfo.get("domainBaseIds")), Integer.class);
+        Set<Integer> domainBaseIds = Sets.newHashSet(domainBaseIdList);
+        // 查询
         SpiderAreaFunction areaFunction = spiderAreaFunctionService.getById(functionVersion.getDomainFunctionId());
         String projectName = areaFunction.getName() + "_" + functionVersion.getVersion();
         String domainId = areaFunction.getAreaId();
@@ -146,14 +156,14 @@ public class TaskManager {
             QueryFunctionVersionsParam param = new QueryFunctionVersionsParam(reuseFunction.getId());
             hostPluginInterface.queryVersionParam(JsonObject.mapFrom(param)).onSuccess(res -> {
                 QueryFunctionVersionResult queryFunctionVersionResult = res.mapTo(QueryFunctionVersionResult.class);
-                createCoder(domainBaseInfoIds,
+                createCoder(domainBaseIds,
                         domainBaseInfos,
                         areaFunction,
                         projectName,
                         functionVersion,
                         versionId,
                         domainId,
-                        spiderDataFlow,
+                        dataFlowInfo,
                         queryFunctionVersionResult.getAreaFunctionParamClass(),
                         queryFunctionVersionResult.getAreaFunctionResultClass(),
                         queryFunctionVersionResult.getServiceName());
@@ -165,20 +175,21 @@ public class TaskManager {
         QueryFunctionVersionsParam param = new QueryFunctionVersionsParam(functionVersion.getId());
         hostPluginInterface.queryVersionParam(JsonObject.mapFrom(param)).onSuccess(res -> {
             QueryFunctionVersionResult queryFunctionVersionResult = res.mapTo(QueryFunctionVersionResult.class);
-            createCoder(domainBaseInfoIds,
+            createCoder(domainBaseIds,
                     domainBaseInfos,
                     areaFunction,
                     projectName,
                     functionVersion,
                     versionId,
                     domainId,
-                    spiderDataFlow,
+                    dataFlowInfo,
                     null,
                     null, queryFunctionVersionResult.getServiceName());
         }).onFailure(fail -> {
             log.error("查询版本信息失败 {}", ExceptionMessage.getStackTrace(fail));
         });
     }
+
 
     private void createCoder(Set<Integer> domainBaseInfoIds,
                              JsonObject domainBaseInfos,
@@ -187,7 +198,10 @@ public class TaskManager {
                              SpiderAreaFunctionVersion functionVersion,
                              String versionId,
                              String domainId,
-                             SpiderDataFlow spiderDataFlow, String inputParam, String outParam, String serviceName) {
+                             Map<String, Object> dataFlowInfo,
+                             String inputParam,
+                             String outParam,
+                             String serviceName) {
         List<JsonObject> domainBaseInfoJson = buildDomainInfo(domainBaseInfoIds);
         domainBaseInfos.put("domainBaseInfos", domainBaseInfoJson);
         domainBaseInfos.put("taskComponent", firstLowerCase(areaFunction.getTaskComponent()));
@@ -198,6 +212,7 @@ public class TaskManager {
         // 根据参数来判断，是否采用预定参数
         createCoderParam.setCustomizedParam(StringUtils.isNotEmpty(inputParam));
         createCoderParam.setOutParam(outParam);
+        createCoderParam.setDataFlow(dataFlowInfo);
         // 创建任务
         SpiderDomainFunctionTask spiderDomainFunctionTasks = spiderDomainFunctionTaskService.lambdaQuery().eq(SpiderDomainFunctionTask::getDomainFunctionVersionId, versionId).one();
         SpiderDomainFunctionTask domainFunctionTask = new SpiderDomainFunctionTask();
@@ -222,10 +237,10 @@ public class TaskManager {
                 .eq(SpiderAreaFunctionVersion::getId, versionId)
                 .update();
         createCoderParam.setDatasource(datasource);
-
-        createCoderParam.setDomainInfoAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getDomainInfoResult());
-        createCoderParam.setDataFlowAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult());
-        createCoderParam.setDataFlow(spiderDataFlow.getData());
+        // 重新给领域对象信息 + 数据流程信息
+        //createCoderParam.setDomainInfoAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getDomainInfoResult());
+        //createCoderParam.setDataFlowAnalysis(spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult());
+        //createCoderParam.setDataFlow(spiderDataFlow.getData());
         createCoderParam.setNeedDataFlow(Boolean.TRUE);
         createCoderParam.setDomainFunctionVersionId(versionId);
         if (StringUtils.isEmpty(serviceName)) {
@@ -246,9 +261,57 @@ public class TaskManager {
     public void analysisDemand(DemandAnalysisParam param) {
         log.info("analysis_demand_param {}", JSON.toJSONString(param));
         SpiderDataFlow spiderDataFlow = dataFlowService.getById(param.getFlowId());
-        String flowDataResult = spiderDataFlow.getDataFlowAnalysisModel().getFlowDataResult();
-        AiAnalysisDemandParam analysisDemandParam = new AiAnalysisDemandParam(flowDataResult, param.getDemands(), param.getFunctionVersionId());
+        SpiderAreaFunctionVersion functionVersion = spiderAreaFunctionVersionService.getById(param.getFunctionVersionId());
+        Map<String, Object> dataFlowInfo = buildFlowInfo(functionVersion.getFlowGroupParentId(), spiderDataFlow);
+        AiAnalysisDemandParam analysisDemandParam = new AiAnalysisDemandParam(dataFlowInfo, param.getDemands(), param.getFunctionVersionId());
         agentVertxClient.analysisDemand(JsonObject.mapFrom(analysisDemandParam));
+    }
+
+
+    private Map<String, Object> buildFlowInfo(String groupId, SpiderDataFlow spiderDataFlow) {
+        JSONArray cells = spiderDataFlow.getData().getJSONArray("cells");
+        List<JSONObject> selectedCells = new ArrayList<>();
+        // 用于存groupId组中的节点id
+        Set<String> domainIds = new HashSet<>();
+        Set<Integer> domainBaseIds = new HashSet<>();
+        for (int i = 0; i < cells.size(); i++) {
+            JSONObject cell = cells.getJSONObject(i);
+            String shape = cell.getString("shape");
+            if (StringUtils.equals(shape, "custom-group-node") || StringUtils.equals(shape, "er-rect")) {
+                if (cell.getString("id").equals(groupId) || (StringUtils.isNotEmpty(cell.getString("parent"))
+                        && StringUtils.equals(groupId, cell.getString("parent")))) {
+                    selectedCells.add(cell);
+                    domainIds.add(cell.getString("id"));
+                    if (StringUtils.equals(shape, "er-rect")) {
+                        domainBaseIds.add(cell.getInteger("id"));
+                    }
+                }
+            }
+        }
+        // 获取连线-edge的内容信息
+        if (CollectionUtils.isNotEmpty(selectedCells)) {
+            // 说明领域中数据不为空
+            for (int i = 0; i < cells.size(); i++) {
+                JSONObject cell = cells.getJSONObject(i);
+                String shape = cell.getString("shape");
+                if (StringUtils.equals(shape, "edge")) {
+                    JSONObject source = cell.getJSONObject("source");
+                    JSONObject target = cell.getJSONObject("target");
+                    String sourceId = source.getString("cell");
+                    String targetId = target.getString("cell");
+                    if (domainIds.contains(sourceId) && domainIds.contains(targetId)) {
+                        selectedCells.add(cell);
+                    }
+                }
+            }
+        }
+        List<JSONObject> desc = spiderDataFlow.getFlowDataDesc().getFlowDataDescMap().get(groupId);
+
+        Map<String, Object> dataFlowInfo = new HashMap<>();
+        dataFlowInfo.put("flow_desc", desc);
+        dataFlowInfo.put("flow_data", selectedCells);
+        dataFlowInfo.put("domainBaseIds", domainBaseIds);
+        return dataFlowInfo;
     }
 
     public List<JsonObject> buildDomainInfo(Set<Integer> ids) {

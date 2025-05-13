@@ -12,6 +12,7 @@ import cn.spider.framework.domain.area.agent.AgentVertxClient;
 import cn.spider.framework.domain.area.datasource.DatasourceManager;
 import cn.spider.framework.domain.area.datasource.service.IAreaDatasourceInfoService;
 import cn.spider.framework.domain.area.domain.service.ISpiderAreaService;
+import cn.spider.framework.domain.area.domain.service.ISpiderDomainObjectService;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.function.FunctionManger;
 import cn.spider.framework.domain.area.function.service.ISpiderBusinessFunctionService;
@@ -90,7 +91,7 @@ import java.util.concurrent.TimeUnit;
         "cn.spider.framework.domain.area.task.mapper",
         "cn.spider.framework.domain.area.domain.mapper",
         "cn.spider.framework.domain.area.tool.mapper",
-        "cn.spider.framework.domain.area.http.mapper"})
+        "cn.spider.framework.domain.area.http.mapper","cn.spider.framework.domain.area.domain.mapper"})
 public class DomainConfig {
 
     @Bean
@@ -105,8 +106,8 @@ public class DomainConfig {
 
     @Bean
     public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService, LockManager lockManager, AgentVertxClient agentVertxClient, HostPluginInterface hostPluginInterface,
-                                              ISpiderDataFlowService spiderDataFlowService,ISpiderToolHttpService spiderToolHttpService) {
-        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService,spiderToolHttpService);
+                                              ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService) {
+        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService, spiderToolHttpService);
     }
 
     @Bean
@@ -367,6 +368,11 @@ public class DomainConfig {
     @Bean
     public BizUninstallHandler buildBizUninstallHandler(AgentVertxClient agentVertxClient, Vertx vertx) {
         return new BizUninstallHandler(agentVertxClient, vertx);
+    }
+
+    @Bean
+    public DomainObjectInterface buildDomainObject(ISpiderDomainObjectService spiderDomainObjectService) {
+        return new DomainObjectInterfaceImpl(spiderDomainObjectService);
     }
 
 }

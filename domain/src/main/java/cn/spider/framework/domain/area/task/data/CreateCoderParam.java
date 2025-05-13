@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class CreateCoderParam {
@@ -29,7 +31,7 @@ public class CreateCoderParam {
      */
     private String domainFunctionVersionId;
 
-    private JSONObject dataFlow;
+    private Map<String, Object> dataFlow;
     // 数据流描述
     private String dataFlowAnalysis;
 
@@ -104,11 +106,11 @@ public class CreateCoderParam {
         this.domainFunctionVersionId = domainFunctionVersionId;
     }
 
-    public JSONObject getDataFlow() {
+    public Map<String, Object> getDataFlow() {
         return dataFlow;
     }
 
-    public void setDataFlow(JSONObject dataFlow) {
+    public void setDataFlow(Map<String, Object> dataFlow) {
         this.dataFlow = dataFlow;
     }
 

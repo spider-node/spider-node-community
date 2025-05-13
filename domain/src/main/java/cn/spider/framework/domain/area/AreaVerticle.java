@@ -95,6 +95,13 @@ public class AreaVerticle extends AbstractVerticle {
         MessageConsumer<JsonObject> httpFunctionInterfaceConsumer = this.binder.setAddress(HttpFunctionInterface.ADDRESS)
                 .register(HttpFunctionInterface.class, httpFunctionInterface);
 
+        DomainObjectInterface domainObjectInterface = this.factory.getBean(DomainObjectInterface.class);
+
+        MessageConsumer<JsonObject> domainObjectInterfaceConsumer = this.binder.setAddress(DomainObjectInterface.ADDRESS)
+                .register(DomainObjectInterface.class, domainObjectInterface);
+
+        this.containerConsumers.add(domainObjectInterfaceConsumer);
+
         this.containerConsumers.add(httpFunctionInterfaceConsumer);
 
         this.containerConsumers.add(dataFlowConsumer);

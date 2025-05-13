@@ -73,6 +73,8 @@ public class SpiderServerHandler {
 
     private HttpFunctionInterface httpFunctionInterface;
 
+    private DomainObjectInterface domainObjectInterface;
+
 
     public SpiderServerHandler(ContainerService containerService,
                                FlowService flowService,
@@ -86,7 +88,9 @@ public class SpiderServerHandler {
                                Vertx vertx,
                                EventManager eventManager, DataFlowInterface dataFlowInterface,
                                AiTaskInterface aiTaskInterface, HostPluginInterface hostPluginInterface,
-                               LinkerService linkerService, FrameworkInterface frameworkInterface, HttpFunctionInterface httpFunctionInterface) {
+                               LinkerService linkerService,
+                               FrameworkInterface frameworkInterface,
+                               HttpFunctionInterface httpFunctionInterface, DomainObjectInterface domainObjectInterface) {
         this.containerService = containerService;
         this.flowService = flowService;
         this.businessService = businessService;
@@ -104,6 +108,7 @@ public class SpiderServerHandler {
         this.linkerService = linkerService;
         this.frameworkInterface = frameworkInterface;
         this.httpFunctionInterface = httpFunctionInterface;
+        this.domainObjectInterface = domainObjectInterface;
     }
 
     public void init(Router router) {
@@ -225,6 +230,9 @@ public class SpiderServerHandler {
         queryHttpFunction();
         upsertHttpFunction();
         httpTest();
+        queryDomainObject();
+        upsertDomainObject();
+        updateDataFlowDesc();
     }
 
     public void selectBpmn() {
@@ -1134,7 +1142,6 @@ public class SpiderServerHandler {
     private void querySonAreaInfos() {
         router.post("/query/son_area_infos")
                 .handler(ctx -> {
-                    System.out.println("22222222");
                     HttpServerResponse response = ctx.response();
                     response.putHeader("content-type", "application/json");
                     JsonObject param = ctx.getBodyAsJson();
@@ -1823,6 +1830,51 @@ public class SpiderServerHandler {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         response.send();
+                    });
+                });
+    }
+
+    // 查询domainObject
+    private void queryDomainObject() {
+        router.post("/query/domain_object")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    domainObjectInterface.queryDomainObject(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // 新增更新domainObject
+    private void upsertDomainObject() {
+        router.post("/upsert/domain_object")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    domainObjectInterface.upsertDomainObject(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    // 更新流程描述
+    private void updateDataFlowDesc() {
+        router.post("/update/data_flow_desc")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    dataFlowInterface.updateDataFlowDesc(param).onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        response.send(ResponseData.fail(fail));
                     });
                 });
     }

@@ -2,6 +2,7 @@ package cn.spider.framework.domain.area.flowdata.service;
 
 import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataParam;
 import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataResult;
+import cn.spider.framework.domain.area.flowdata.data.UpdateFlowDescParam;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -23,4 +24,6 @@ public interface ISpiderDataFlowService extends IService<SpiderDataFlow> {
     QueryFlowDataResult querySpiderDataFlow(QueryFlowDataParam param);
     // 解析数据流
     Map<String,String> mateParamMapping();
+
+    void updateFlowDataDesc(UpdateFlowDescParam param);
 }

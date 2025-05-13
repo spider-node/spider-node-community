@@ -2,10 +2,7 @@ package cn.spider.framework.domain.area.impl;
 
 import cn.spider.framework.domain.area.agent.AgentVertxClient;
 import cn.spider.framework.domain.area.data.AnalysisDataFowModel;
-import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataInfoParam;
-import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataParam;
-import cn.spider.framework.domain.area.flowdata.data.QueryFlowDataResult;
-import cn.spider.framework.domain.area.flowdata.data.UpdateFlowDataStatus;
+import cn.spider.framework.domain.area.flowdata.data.*;
 import cn.spider.framework.domain.area.flowdata.entity.SpiderDataFlow;
 import cn.spider.framework.domain.area.flowdata.service.ISpiderDataFlowService;
 import cn.spider.framework.domain.area.task.TaskManager;
@@ -88,6 +85,13 @@ public class DataFlowInterfaceImpl implements DataFlowInterface {
         AnalysisDataFowModel analysisDataFowModel = new AnalysisDataFowModel(flow.getId(), domainInfo, dataFlow);
         analysisDataFowModel.setDataFlowDesc(flow.getFlowDataDesc());
         agentVertxClient.analysisDataFlow(JsonObject.mapFrom(analysisDataFowModel));
+        return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<Void> updateDataFlowDesc(JsonObject param) {
+        UpdateFlowDescParam descParam = param.mapTo(UpdateFlowDescParam.class);
+        spiderDataFlowService.updateFlowDataDesc(descParam);
         return Future.succeededFuture();
     }
 }
