@@ -22,6 +22,7 @@ import cn.spider.framework.domain.area.function.version.enums.ToJavaEntitySource
 import cn.spider.framework.domain.area.http.entity.SpiderToolHttp;
 import cn.spider.framework.domain.area.http.service.ISpiderToolHttpService;
 import cn.spider.framework.domain.area.node.NodeManger;
+import cn.spider.framework.domain.area.task.TaskManager;
 import cn.spider.framework.domain.area.util.LockManager;
 import cn.spider.framework.domain.sdk.data.*;
 import cn.spider.framework.domain.sdk.data.enums.UploadBpmnStatus;
@@ -35,6 +36,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
@@ -85,13 +87,15 @@ public class VersionManager {
 
     private final String BUILD_JS_PARAM = "BUILD_JS_PARAM";
 
+    private TaskManager taskManager;
+
     public VersionManager(MySQLPool client,
                           ContainerService containerService,
                           ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService,
                           LockManager lockManager,
                           AgentVertxClient agentVertxClient,
                           HostPluginInterface hostPluginInterface,
-                          ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService) {
+                          ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService,TaskManager taskManager) {
         this.hostPluginInterface = hostPluginInterface;
         this.spiderDataFlowService = spiderDataFlowService;
         this.client = client;
@@ -100,6 +104,7 @@ public class VersionManager {
         this.lockManager = lockManager;
         this.agentVertxClient = agentVertxClient;
         this.spiderToolHttpService = spiderToolHttpService;
+        this.taskManager = taskManager;
     }
 
     private RowMapper<FunctionVersionModel> ROW_BUSINESS = row -> {
@@ -564,9 +569,13 @@ public class VersionManager {
             }
         }
         SpiderDataFlow spiderDataFlow = spiderDataFlowService.getById(spiderBusinessFunctionVersion.getDataFlowId());
-        DataFlowAnalysisModel dataFlowAnalysisModel = spiderDataFlow.getDataFlowAnalysisModel();
+        //DataFlowAnalysisModel dataFlowAnalysisModel = spiderDataFlow.getDataFlowAnalysisModel();
+        List<Integer> domainBaseIdList = JSON.parseArray(spiderDataFlow.getSonAreaIds(), Integer.class);
+        Set<Integer> domainBaseIds = Sets.newHashSet(domainBaseIdList);
+        List<JsonObject> domainInfos = taskManager.buildDomainInfo(domainBaseIds);
         String bpmnString = spiderBusinessFunctionVersion.getBpmnXml();
         JSONObject flowData = spiderDataFlow.getData();
+        // 获取到领域对象信息
         //spiderDataFlow.getFlowDataDesc()
         ParamBuildInfo paramBuildInfo = new ParamBuildInfo(aiNodeInfoList,
                 bpmnString,
@@ -574,7 +583,7 @@ public class VersionManager {
                 id,
                 "",
                 spiderBusinessFunctionVersion.getInputParamJavaClass(),
-                spiderBusinessFunctionVersion.getOutputParamJavaClass(), dataFlowAnalysisModel.getDomainInfoResult(), startNodeJsParam.getNodeId(), startNodeJsParam.getParamJsDemand());
+                spiderBusinessFunctionVersion.getOutputParamJavaClass(), domainInfos, startNodeJsParam.getNodeId(), startNodeJsParam.getParamJsDemand());
         log.info("paramBuildInfo {}", JSON.toJSONString(paramBuildInfo));
         agentVertxClient.buildNodeParam(JsonObject.mapFrom(paramBuildInfo));
     }

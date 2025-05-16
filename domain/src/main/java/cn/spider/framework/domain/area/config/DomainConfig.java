@@ -106,8 +106,8 @@ public class DomainConfig {
 
     @Bean
     public VersionManager buildVersionManager(MySQLPool client, ContainerService containerService, ISpiderBusinessFunctionVersionService spiderBusinessFunctionVersionService, LockManager lockManager, AgentVertxClient agentVertxClient, HostPluginInterface hostPluginInterface,
-                                              ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService) {
-        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService, spiderToolHttpService);
+                                              ISpiderDataFlowService spiderDataFlowService, ISpiderToolHttpService spiderToolHttpService,TaskManager taskManager) {
+        return new VersionManager(client, containerService, spiderBusinessFunctionVersionService, lockManager, agentVertxClient, hostPluginInterface, spiderDataFlowService, spiderToolHttpService,taskManager);
     }
 
     @Bean

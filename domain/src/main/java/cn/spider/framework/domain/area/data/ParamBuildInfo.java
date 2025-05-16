@@ -1,6 +1,7 @@
 package cn.spider.framework.domain.area.data;
 
 import com.alibaba.fastjson.JSONObject;
+import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 import java.util.Set;
@@ -20,7 +21,7 @@ public class ParamBuildInfo {
 
     private List<String> businessFunctionReturnsClass;
 
-    private String domainInfoResult;
+    private List<JsonObject> domainInfos;
 
     private String nodeId;
 
@@ -32,7 +33,7 @@ public class ParamBuildInfo {
                           String functionVersionId,
                           String flowDataDesc,
                           List<String> businessFunctionParametersClass,
-                          List<String> businessFunctionReturnsClass,String domainInfoResult,String nodeId,Set<String> paramJsDemand) {
+                          List<String> businessFunctionReturnsClass,List<JsonObject> domainInfos,String nodeId,Set<String> paramJsDemand) {
         this.aiNodeInfoList = aiNodeInfoList;
         this.bpmnString = bpmnString;
         this.flowData = flowData;
@@ -40,9 +41,9 @@ public class ParamBuildInfo {
         this.flowDataDesc = flowDataDesc;
         this.businessFunctionParametersClass = businessFunctionParametersClass;
         this.businessFunctionReturnsClass = businessFunctionReturnsClass;
-        this.domainInfoResult = domainInfoResult;
         this.nodeId = nodeId;
         this.paramJsDemand = paramJsDemand;
+        this.domainInfos = domainInfos;
     }
 
     public List<AiNodeInfo> getAiNodeInfoList() {
@@ -101,14 +102,6 @@ public class ParamBuildInfo {
         this.businessFunctionReturnsClass = businessFunctionReturnsClass;
     }
 
-    public String getDomainInfoResult() {
-        return domainInfoResult;
-    }
-
-    public void setDomainInfoResult(String domainInfoResult) {
-        this.domainInfoResult = domainInfoResult;
-    }
-
     public String getNodeId() {
         return nodeId;
     }
@@ -123,5 +116,13 @@ public class ParamBuildInfo {
 
     public void setParamJsDemand(Set<String> paramJsDemand) {
         this.paramJsDemand = paramJsDemand;
+    }
+
+    public List<JsonObject> getDomainInfos() {
+        return domainInfos;
+    }
+
+    public void setDomainInfos(List<JsonObject> domainInfos) {
+        this.domainInfos = domainInfos;
     }
 }
