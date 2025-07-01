@@ -305,7 +305,8 @@ public class TaskManager {
                 }
             }
         }
-        List<JSONObject> desc = spiderDataFlow.getFlowDataDesc().getFlowDataDescMap().get(groupId);
+
+        List<JSONObject> desc = Objects.nonNull(spiderDataFlow.getFlowDataDesc()) ? spiderDataFlow.getFlowDataDesc().getFlowDataDescMap().get(groupId) : null;
 
         Map<String, Object> dataFlowInfo = new HashMap<>();
         dataFlowInfo.put("flow_desc", desc);
