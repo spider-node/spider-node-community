@@ -15,7 +15,6 @@ public class JsFunctionExecutor {
 
     private Map<String, Map<String, Value>> threadFunctionCache;
 
-
     public JsFunctionExecutor() {
         this.contextMap = new ConcurrentHashMap<>();
         this.threadFunctionCache = new ConcurrentHashMap<>();
@@ -63,6 +62,23 @@ public class JsFunctionExecutor {
             throw new RuntimeException("Failed to load JS function: " + functionName, e);
         } finally {
             context.leave();
+        }
+    }
+
+    public void unloadFunction(String functionName, String threadName) {
+        Map<String, Value> functionCache = threadFunctionCache.get(threadName);
+        if (functionCache != null) {
+            functionCache.remove(functionName);
+        }
+        // 可以考虑在JS上下文中删除函数定义
+        Context context = contextMap.get(threadName);
+        if (context != null) {
+            try {
+                context.enter();
+                context.getBindings("js").removeMember(functionName);
+            } finally {
+                context.leave();
+            }
         }
     }
 

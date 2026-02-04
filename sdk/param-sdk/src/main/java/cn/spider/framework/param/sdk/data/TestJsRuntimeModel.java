@@ -1,9 +1,5 @@
 package cn.spider.framework.param.sdk.data;
-
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import java.util.List;
 import java.util.Set;
 
 public class TestJsRuntimeModel {

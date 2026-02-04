@@ -58,8 +58,6 @@ public class SpiderFlowElementExampleServiceEsXImpl implements SpiderFlowElement
         Map<String, List<SpiderFlowElementExampleLog>> flowElementMap = logs.stream().collect(Collectors.groupingBy(SpiderFlowElementExampleLog::getId));
         List<SpiderFlowElementExampleLog> insert = Lists.newArrayList();
 
-        Map<String, SpiderFlowElementExampleLog> updateMap = new HashMap<>();
-
         List<Object> updates = Lists.newArrayList();
 
         try {

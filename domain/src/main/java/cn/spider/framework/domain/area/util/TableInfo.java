@@ -10,7 +10,7 @@ public class TableInfo {
     /**
      * 表描述
      */
-    private String name;
+    private String desc;
 
     /**
      * 数据源
@@ -19,7 +19,7 @@ public class TableInfo {
 
     public TableInfo(String tableName, String tableDesc) {
         this.tableName = tableName;
-        this.name = tableDesc;
+        this.desc = tableDesc;
     }
 
     public String getTableName() {
@@ -30,12 +30,12 @@ public class TableInfo {
         this.tableName = tableName;
     }
 
-    public String getName() {
-        return name;
+    public String getDesc() {
+        return desc;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 
     public String getDatasource() {

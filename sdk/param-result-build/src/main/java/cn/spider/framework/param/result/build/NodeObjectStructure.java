@@ -1,8 +1,15 @@
 package cn.spider.framework.param.result.build;
 
 public class NodeObjectStructure {
+
+    /**
+     * 参数类型
+     */
     private String paramType;
 
+    /**
+     * 参数名称
+     */
     private String fieldName;
 
 

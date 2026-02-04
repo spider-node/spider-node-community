@@ -163,7 +163,7 @@ public class ParamFunctionImpl implements ParamInterface {
     @Override
     public Future<JsonObject> testJsRuntime(JsonObject param) {
         Promise<JsonObject> promise = Promise.promise();
-        executor.execute(() -> {
+        this.executor.execute(() -> {
             TestJsRuntimeParam testJsRuntimeParam = param.mapTo(TestJsRuntimeParam.class);
             List<TestJsRuntimeModel> testJsRuntimeModelList = testJsRuntimeParam.getTestJsRuntimeModelList();
             List<Future> needFutures = new ArrayList<>();

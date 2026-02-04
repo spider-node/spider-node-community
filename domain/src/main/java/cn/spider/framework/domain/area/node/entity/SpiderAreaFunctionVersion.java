@@ -74,7 +74,18 @@ public class SpiderAreaFunctionVersion{
     private ParamPack runMapping;
 
     /**
-     * 状态
+     * 节点状态
+     * // 初始化
+     *     INIT,
+     *     //编译完成
+     *     COMPILE,
+     *     // 部署完成
+     *     DEPLOY,
+     *     CODING,
+     *
+     *     CODING_FAIL,
+     *     // 卸载完成
+     *     UNINSTALL,
      */
     private NodeStatus status;
 
@@ -89,6 +100,9 @@ public class SpiderAreaFunctionVersion{
     @TableField(value = "result_analysis", typeHandler = FastjsonTypeHandler.class)
     private NotifyAnalysisResultInfo resultAnalysis;
 
+    /**
+     * 父级流程组id
+     */
     private String flowGroupParentId;
 
     /**
@@ -96,10 +110,19 @@ public class SpiderAreaFunctionVersion{
      */
     private Date createTime;
 
+    /**
+     * 数据流id
+     */
     private Integer dataFlowId;
 
+    /**
+     * 数据流程名称
+     */
     private String dataFlowName;
 
+    /**
+     * 数据源id
+     */
     private String datasourceId;
 
     public String getFlowGroupParentId() {

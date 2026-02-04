@@ -33,7 +33,7 @@ public class JsEngine {
      */
     public Future<JsRunResult> run(String jsCode, String jsFunctionName, Map<String, Object> mockDataMap, String nodeId) {
         Promise<JsRunResult> promise = Promise.promise();
-        executor.execute(() -> {
+        this.executor.execute(() -> {
             String threadName = Thread.currentThread().getName();
             JsRunResult jsRunResult = new JsRunResult();
             jsRunResult.setFunctionName(jsFunctionName);
